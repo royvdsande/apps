@@ -35,6 +35,17 @@
       ],
       "badge": "Game",
       "dateAdded": "2025-10-07"
+    },
+            {
+      "id": "tetris",
+      "name": "Tetris",
+      "description": "Tetris is een puzzelspel waarin je vallende blokken passend moet stapelen.",
+      "path": "apps/tetris.html",
+      "tags": [
+        "game"
+      ],
+      "badge": "Game",
+      "dateAdded": "2025-10-07"
     }
   ]
 }
