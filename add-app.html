@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rvds • Voeg app toe</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <style>
+    main { max-width: 960px; margin: 0 auto; padding: 32px 24px 72px; }
+    form { display: grid; gap: 14px; background: var(--card-bg); border:1px solid var(--card-bd); border-radius: 16px; padding: 16px; }
+    label { display: grid; gap: 6px; font-weight: 600; }
+    input, textarea { width: 100%; padding: 12px 14px; border-radius: 12px; border:1px solid var(--card-bd); background:#0f1020; color:#fff; }
+    textarea { min-height: 100px; }
+    .row { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .panel { background: rgba(255,255,255,0.04); border:1px solid var(--card-bd); padding: 14px; border-radius: 14px; }
+    pre { background: #0b0c14; border:1px solid var(--card-bd); padding: 12px; border-radius: 12px; overflow: auto; }
+    .muted { color: var(--text-dim); }
+    .inline { display:flex; align-items:center; gap:8px; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">Rvds</div>
+    <nav class="site-nav">
+      <a href="index.html">← Terug naar apps</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Nieuwe app toevoegen</h1>
+    <p class="muted">Er zijn twee manieren: <strong>Copy‑paste</strong> (veilig en simpel) of via de <strong>GitHub API</strong> (rechtstreeks pushen naar je repo).</p>
+
+    <form id="appForm" autocomplete="off">
+      <div class="row">
+        <label>
+          Naam
+          <input id="name" required placeholder="Bijv. Rabdom Password Generator" />
+        </label>
+        <label>
+          ID/slug
+          <input id="id" required placeholder="bijv. rabdom-password-generator" />
+        </label>
+      </div>
+      <label>
+        Beschrijving
+        <textarea id="desc" placeholder="Korte beschrijving…"></textarea>
+      </label>
+      <div class="row">
+        <label>
+          Pad naar HTML (relatief)
+          <input id="path" placeholder="bijv. apps/rabdom-password-generator/index.html" />
+        </label>
+        <label>
+          Tags (komma‑gescheiden)
+          <input id="tags" placeholder="utility, security" />
+        </label>
+      </div>
+      <div class="row">
+        <label>
+          Badge (optioneel)
+          <input id="badge" placeholder="Tool / Game / Math…" />
+        </label>
+        <label>
+          Datum (YYYY-MM-DD)
+          <input id="date" value="{today}" />
+        </label>
+      </div>
+
+      <div class="panel">
+        <div class="inline">
+          <input id="makeStub" type="checkbox" />
+          <label for="makeStub" style="margin:0; font-weight:600;">Maak ook een starter HTML-bestand</label>
+        </div>
+        <p class="muted">Als aangevinkt, wordt er een minimalistische <code>index.html</code> aangemaakt in <code>apps/&lt;slug&gt;/</code> (alleen via de GitHub API modus).</p>
+      </div>
+
+      <div class="row" style="margin-top:6px">
+        <button type="button" class="btn" id="genJson">Genereer JSON (copy‑paste)</button>
+        <button type="button" class="btn primary" id="pushGithub">Push naar GitHub</button>
+      </div>
+    </form>
+
+    <h2 style="margin-top:28px">Resultaat (copy‑paste)</h2>
+    <pre id="jsonOut">—</pre>
+
+    <h2 style="margin-top:28px">GitHub API instellingen</h2>
+    <div class="panel">
+      <div class="row">
+        <label>Owner <input id="ghOwner" placeholder="jouw-github-naam" /></label>
+        <label>Repo <input id="ghRepo" placeholder="rvds-site" /></label>
+        <label>Branch <input id="ghBranch" value="main" /></label>
+      </div>
+      <div class="row">
+        <label>apps.json pad <input id="ghAppsPath" value="apps.json" /></label>
+        <label>Persoonlijke toegangstoken (PAT) <input id="ghToken" type="password" placeholder="nooit committen!" /></label>
+      </div>
+      <p class="muted">Tip: Maak een <strong>fine‑grained PAT</strong> met alleen <em>Contents: Read &amp; Write</em> voor dit repo. Je token wordt lokaal in je browser opgeslagen (localStorage) en <strong>niet</strong> geüpload naar de site.</p>
+    </div>
+
+    <div id="status" class="muted" style="margin-top:10px"></div>
+  </main>
+
+  <script src="assets/js/add-app.js" defer></script>
+</body>
+</html>
