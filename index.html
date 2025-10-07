@@ -1,38 +1,74 @@
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mijn App Overzicht</title>
-    style.css
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rvds • Apps</title>
+  <meta name="description" content="Rvds – Een mooie showcase van mijn web-apps en HTML-projecten." />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0a0a'/><text x='50' y='58' font-size='50' text-anchor='middle' fill='%23fff' font-family='Arial, Helvetica, sans-serif'>R</text></svg>" />
 </head>
 <body>
-    <header>
-        <h1>📱 Mijn Apps</h1>
-        <p>Overzicht van handige tools voor training, voeding en planning</p>
-    </header>
+  <header class="site-header">
+    <div class="brand" aria-label="Rvds" title="Rvds">Rvds</div>
+    <nav class="site-nav">
+      <a href="#apps">Apps</a>
+      <a href="add-app.html">Voeg app toe</a>
+      <a class="gh" href="https://github.com/" target="_blank" rel="noopener" aria-label="GitHub">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 .5a12 12 0 0 0-3.79 23.4c.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.41-4.04-1.41-.55-1.41-1.34-1.79-1.34-1.79-1.09-.75.08-.73.08-.73 1.2.08 1.83 1.23 1.83 1.23 1.07 1.83 2.82 1.3 3.51.99.11-.78.42-1.3.77-1.6-2.67-.3-5.47-1.34-5.47-5.97 0-1.32.47-2.4 1.23-3.25-.12-.3-.53-1.52.12-3.16 0 0 1-.32 3.3 1.24a11.44 11.44 0 0 1 6 0c2.3-1.56 3.3-1.24 3.3-1.24.65 1.64.24 2.86.12 3.16.77.85 1.23 1.93 1.23 3.25 0 4.64-2.8 5.67-5.47 5.97.43.37.82 1.1.82 2.23v3.3c0 .32.21.7.82.58A12 12 0 0 0 12 .5Z"/></svg>
+      </a>
+    </nav>
+  </header>
 
-    <main id="app-list" class="grid-container"></main>
+  <main>
+    <section class="hero">
+      <h1>Mijn Web‑apps</h1>
+      <p>Een strakke en snelle showcase van mijn HTML-projecten. Klik, ontdek en speel.</p>
+      <div class="actions">
+        <a class="btn primary" href="#apps">Bekijk apps</a>
+        <a class="btn ghost" href="add-app.html">Nieuwe app toevoegen</a>
+      </div>
+    </section>
 
-    <footer>
-        <p>&copy; 2025 Roy van der Sande</p>
-    </footer>
+    <section id="apps" class="apps-section" aria-label="App overzicht">
+      <div class="toolbar">
+        <div class="search">
+          <input id="searchInput" type="search" placeholder="Zoek op naam, tags…" aria-label="Zoeken" />
+        </div>
+        <div id="tagsContainer" class="tags" aria-label="Filter op tags"></div>
+      </div>
 
-    <script>
-        fetch('apps.json')
-            .then(response => response.json())
-            .then(data => {
-                const appList = document.getElementById('app-list');
-                data.apps.forEach(app => {
-                    const appCard = document.createElement('div');
-                    appCard.className = 'app-card';
-                    appCard.innerHTML = `
-                        <h2>${app.name}</h2>
-                        <p>${app.description}</p>
-                    `;
-                    appList.appendChild(appCard);
-                });
-            });
-    </script>
+      <div id="appsGrid" class="grid" role="list" aria-busy="true"></div>
+
+      <template id="cardTemplate">
+        <article class="card" role="listitem">
+          <div class="card-top">
+            <div class="badge"></div>
+            <h3 class="title"></h3>
+            <p class="desc"></p>
+          </div>
+          <div class="card-bottom">
+            <div class="meta">
+              <span class="tags"></span>
+              <span class="date"></span>
+            </div>
+            <div class="buttons">
+              <a class="btn small primary" target="_blank" rel="noopener">Openen</a>
+            </div>
+          </div>
+        </article>
+      </template>
+
+      <div id="emptyState" class="empty hidden">Geen apps gevonden. Pas je filter aan.</div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>© 2025 Rvds</span>
+    <span>Gemaakt met ❤️ en pure HTML/CSS/JS</span>
+  </footer>
+
+  <script src="assets/js/main.js" defer></script>
 </body>
 </html>
