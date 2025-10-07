@@ -18,8 +18,7 @@
       "description": "Minesweeper is een puzzelspel waarin je mijnen moet vermijden.",
       "path": "apps/minesweeper",
       "tags": [
-        "game",
-        "math"
+        "game"
       ],
       "badge": "Game",
       "dateAdded": "2025-10-07"
