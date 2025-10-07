@@ -1,5 +1,4 @@
 <!doctype html>
-
 <html lang="nl">
 <head>
 <meta charset="utf-8">
@@ -7,13 +6,8 @@
 <title>Code Generator</title>
 
 <!-- Thema -->
-
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)">
-
-<!-- Favicon -->
-
-<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAZlBMVEX///+qqqr09PT39/fu7u7i4uL4+Pj09PTn5+f7+/v8/Pzv7+/y8vL5+fnx8fHe3t7w8PDu7u7R0dHFxcWLi4u2tra9vb3S0tIuLi4nJycZGRn////hB5NdAAAAIUlEQVQY02NgQAYMZGRkYGBg4TBgYGBgYQ+gBQiAwCAgAlHgQ/3pb3DAAAAABJRU5ErkJggg==">
 
 <style>
 :root {
@@ -25,7 +19,9 @@
   --shadow: 0 1px 2px rgba(0,0,0,.08), 0 8px 30px rgba(0,0,0,.08);
   --btn-gen: #3f51b5;
   --btn-clear: #e53935;
+  --btn-copy: #f9fafc;
 }
+
 @media (prefers-color-scheme: dark){
   :root {
     --bg: #1c1c1e;
@@ -36,6 +32,7 @@
     --shadow: 0 1px 4px rgba(0,0,0,.6), 0 6px 20px rgba(0,0,0,.5);
     --btn-gen: #0a84ff;
     --btn-clear: #ff453a;
+    --btn-copy: #3a3a3c;
   }
 }
 
@@ -44,14 +41,13 @@ html, body {
   padding: 0;
   height: 100%;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background: linear-gradient(180deg, var(--bg), #eef1f7);
+  background: var(--bg);
   display: flex;
   justify-content: center;
   align-items: center;
   color: var(--text);
 }
 
-/* Kaartcontainer */
 .card {
   background: var(--panel);
   padding: 20px;
@@ -76,9 +72,9 @@ input {
   border-radius: 10px;
   border: 1px solid var(--border);
   margin-bottom: 14px;
-  background: var(--bg);
+  background: var(--panel);
   color: var(--text);
-  box-shadow: inset 0 1px 3px rgba(0,0,0,.05);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.1);
 }
 
 button {
@@ -89,16 +85,15 @@ button {
   margin: 4px;
   cursor: pointer;
   box-shadow: var(--shadow);
-  background: var(--panel);
+  background: var(--btn-copy);
   color: var(--text);
   transition: all .15s ease;
 }
-button:hover { filter: brightness(0.96); }
+button:hover { filter: brightness(0.95); }
 button:active { transform: translateY(1px); }
 
 .gen { background: var(--btn-gen); color: #fff; border: none; }
 .clear { background: var(--btn-clear); color: #fff; border: none; }
-.copy { background: #f9fafc; color: var(--text); }
 
 #history {
   margin-top: 14px;
@@ -109,9 +104,8 @@ button:active { transform: translateY(1px); }
   padding: 8px;
   border-radius: 10px;
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(245,247,251,0.7));
+  background: var(--panel);
   color: var(--text);
-  -webkit-overflow-scrolling: touch;
   box-shadow: inset 0 1px 2px rgba(0,0,0,.05);
 }
 
@@ -122,21 +116,21 @@ button:active { transform: translateY(1px); }
   transition: background .15s;
 }
 .history-item:hover {
-  background: rgba(63,81,181,0.08);
+  background: rgba(63,81,181,0.15);
 }
 </style>
-
 </head>
+
 <body>
 <div class="card">
-<h1>Willekeurige Code Generator</h1>
-<input id="code" readonly value="Klik op 'Genereer code'">
-<div>
-<button class="gen" onclick="generateCode()">Genereer code</button>
-<button class="copy" onclick="copyCode()">Kopieer huidige</button>
-<button class="clear" onclick="clearHistory()">Verwijder geschiedenis</button>
-</div>
-<div id="history"></div>
+  <h1>Willekeurige Code Generator</h1>
+  <input id="code" readonly value="Klik op 'Genereer code'">
+  <div>
+    <button class="gen" onclick="generateCode()">Genereer code</button>
+    <button class="copy" onclick="copyCode()">Kopieer huidige</button>
+    <button class="clear" onclick="clearHistory()">Verwijder geschiedenis</button>
+  </div>
+  <div id="history"></div>
 </div>
 
 <script>
@@ -197,6 +191,5 @@ function clearHistory() {
 
 generateCode();
 </script>
-
 </body>
 </html>
