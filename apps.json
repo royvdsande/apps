@@ -1,24 +1,24 @@
-[
-  {
-    "id": "mini-geo",
-    "title": "Mini GeoGebra",
-    "href": "geogebra.html",
-    "desc": "Plot y=f(x), param, polair; sliders, analyse, integralen.",
-    "icon": "📈",
-    "color": "linear-gradient(135deg,#2d7ef7,#6aa8ff)",
-    "tags": ["wiskunde","grafieken","tools"],
-    "featured": true,
-    "addedAt": "2025-10-07"
-  },
-  {
-    "id": "todo",
-    "title": "Simple To‑Do",
-    "href": "todo.html",
-    "desc": "Minimalistische to‑do app met localStorage.",
-    "icon": "✅",
-    "color": "#00b894",
-    "tags": ["productiviteit","tools"],
-    "featured": false,
-    "addedAt": "2025-10-07"
-  }
-]
+{
+    "apps": [
+        {
+            "name": "Voetbal Tracker",
+            "description": "Houd je trainingsschema en prestaties bij met statistieken en grafieken."
+        },
+        {
+            "name": "Gym Planner",
+            "description": "Plan je workouts, stel doelen en volg je progressie per spiergroep."
+        },
+        {
+            "name": "Voeding Logboek",
+            "description": "Log je maaltijden, macro’s en calorie-inname op een overzichtelijke manier."
+        },
+        {
+            "name": "Herstel Monitor",
+            "description": "Volg je slaap, rusthartslag en herstelstatus na trainingen."
+        },
+        {
+            "name": "Wedstrijd Analyse",
+            "description": "Analyseer je wedstrijden met video, heatmaps en statistieken."
+        }
+    ]
+}
