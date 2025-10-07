@@ -1,1 +1,191 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Code Generator</title>
 
+<!-- Status bar kleur -->
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)">
+
+<!-- Favicon voor browsers -->
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAZlBMVEX///+qqqr09PT39/fu7u7i4uL4+Pj09PTn5+f7+/v8/Pzv7+/y8vL5+fnx8fHe3t7w8PDu7u7R0dHFxcWLi4u2tra9vb3S0tIuLi4nJycZGRn////hB5NdAAAAIUlEQVQY02NgQAYMZGRkYGBg4TBgYGBgYQ+gBQiAwCAgAlHgQ/3pb3DAAAAABJRU5ErkJggg==">
+
+<!-- Apple Touch Icon voor iPhone Add to Home Screen -->
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAZlBMVEX///+qqqr09PT39/fu7u7i4uL4+Pj09PTn5+f7+/v8/Pzv7+/y8vL5+fnx8fHe3t7w8PDu7u7R0dHFxcWLi4u2tra9vb3S0tIuLi4nJycZGRn////hB5NdAAAAIUlEQVQY02NgQAYMZGRkYGBg4TBgYGBgYQ+gBQiAwCAgAlHgQ/3pb3DAAAAABJRU5ErkJggg==">
+
+<style>
+:root {
+  --bg: #f4f5f9;
+  --card-bg: #fff;
+  --text: #111; /* header & input text in light mode */
+  --btn-gen: #007aff;
+  --btn-copy: #eee;
+  --btn-copy-text: #111;
+  --btn-clear: #ff3b30;
+}
+@media (prefers-color-scheme: dark){
+  :root {
+    --bg: #1c1c1e;
+    --card-bg: #2c2c2e;
+    --text: #f2f2f7; /* header & input text in dark mode */
+    --btn-gen: #0a84ff;
+    --btn-copy: #444;
+    --btn-copy-text: #f2f2f7;
+    --btn-clear: #ff453a;
+  }
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden; /* pagina zelf niet scrollen */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.card {
+  background: var(--card-bg);
+  padding:16px;
+  border-radius:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+  text-align:center;
+  max-width:320px;
+  width:90%;
+}
+
+h1 {
+  font-size:18px;
+  margin-bottom:8px;
+  color: var(--text);
+}
+
+input {
+  font-size:22px;
+  text-align:center;
+  width:90%;
+  max-width:260px;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ddd;
+  margin-bottom:10px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button {
+  font-size:16px;
+  border:none;
+  border-radius:8px;
+  padding:8px 12px;
+  margin:4px;
+  cursor:pointer;
+}
+
+.gen { background: var(--btn-gen); color:#fff; }
+.copy { background: var(--btn-copy); color: var(--btn-copy-text); }
+.clear { background: var(--btn-clear); color:#fff; }
+
+#history {
+  margin-top:12px;
+  font-size:14px;
+  text-align:left;
+  max-height:120px;
+  overflow-y:auto; /* scroll alleen binnen dit venster */
+  padding:6px;
+  border-radius:8px;
+  border:1px solid #ddd;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-overflow-scrolling: touch; /* soepel scrollen op iPhone */
+}
+.history-item {
+  cursor:pointer;
+  padding:2px 4px;
+}
+.history-item:hover {
+  background: rgba(0,0,0,0.05);
+  border-radius:4px;
+}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>Willekeurige Code Generator</h1>
+<input id="code" readonly value="Klik op 'Genereer code'">
+<div>
+<button class="gen" onclick="generateCode()">Genereer code</button>
+<button class="copy" onclick="copyCode()">Kopieer huidige</button>
+<button class="clear" onclick="clearHistory()">Verwijder geschiedenis</button>
+</div>
+<div id="history"></div>
+</div>
+
+<script>
+const codeField = document.getElementById('code');
+const historyDiv = document.getElementById('history');
+
+// Laad codes van lokale opslag
+let codes = JSON.parse(localStorage.getItem('codes') || '[]');
+
+function updateHistory() {
+  historyDiv.innerHTML = '';
+  codes.slice().reverse().forEach(c => {
+    const div = document.createElement('div');
+    div.textContent = c;
+    div.className = 'history-item';
+    div.onclick = ()=> { codeField.value = c; }
+    historyDiv.appendChild(div);
+  });
+}
+updateHistory();
+
+function randomLetter() {
+  const letters = "abcdefghijklmnopqrstuvwxyz";
+  return letters[Math.floor(Math.random()*letters.length)];
+}
+
+function generateCode() {
+  let arr = [];
+  for(let i=0;i<18;i++) arr.push(randomLetter());
+  const numIndex = Math.floor(Math.random()*18);
+  arr[numIndex] = String(Math.floor(Math.random()*10));
+  let upperIndex;
+  do{ upperIndex = Math.floor(Math.random()*18); }
+  while(upperIndex===numIndex);
+  arr[upperIndex] = arr[upperIndex].toUpperCase();
+  const code = arr.slice(0,6).join('')+'-'+arr.slice(6,12).join('')+'-'+arr.slice(12,18).join('');
+  codeField.value = code;
+
+  if(!codes.includes(code)){
+    codes.push(code);
+    localStorage.setItem('codes', JSON.stringify(codes));
+    updateHistory();
+  }
+}
+
+function copyCode() {
+  codeField.select();
+  codeField.setSelectionRange(0,99999);
+  document.execCommand('copy');
+  alert('Code gekopieerd!');
+}
+
+function clearHistory() {
+  if(confirm('Weet je zeker dat je alle codes wilt verwijderen?')) {
+    codes = [];
+    localStorage.removeItem('codes');
+    updateHistory();
+  }
+}
+
+// genereer direct bij laden
+generateCode();
+</script>
+</body>
+</html>
