@@ -27,7 +27,7 @@
       "id": "tetris",
       "name": "Tetris",
       "description": "Tetris is een puzzelspel waarin je vallende blokken passend moet stapelen.",
-      "path": "apps/tetris",
+      "path": "tetris",
       "tags": [
         "game"
       ],
