@@ -30,9 +30,11 @@ function renderApps(apps) {
     node.querySelector('.tags').textContent = (app.tags || []).map(t => `#${t}`).join(' ');
     node.querySelector('.date').textContent = app.dateAdded ? `Toegevoegd: ${fmtDate(app.dateAdded)}` : '';
     const openBtn = node.querySelector('.btn.primary');
-    openBtn.href = app.path; // Respecteer relatieve paden in apps.json
+    openBtn.href = app.path;
     openBtn.setAttribute('aria-label', `Open ${app.name}`);
+    openBtn.setAttribute('target', '_self'); // Nieuw toegevoegd
     els.grid.appendChild(node);
+
   }
   els.grid.setAttribute('aria-busy','false');
 }
