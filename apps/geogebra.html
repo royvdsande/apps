@@ -133,7 +133,7 @@
         <button id="addCartesian">+ Cartesisch</button>
         <button id="addParametric">+ Parametrisch</button>
         <button id="addPolar">+ Polair</button>
-        <button id="autoscaleBtn">Autoscale (Y)</button>
+        <button id="autoscaleBtn">Autoscale</button>
         <button id="resetViewBtn">Reset zicht</button>
       </div>
 
@@ -407,7 +407,7 @@
     if (activeFuncId == null) activeFuncId = e.id;
     rebuildUI();
     compileAll();
-    autoscaleY();
+    autoFit({ axis: 'both' });
     drawAll();
   }
 
@@ -416,7 +416,7 @@
     if (activeFuncId === id) activeFuncId = exprs[0]?.id ?? null;
     rebuildUI();
     compileAll();
-    autoscaleY();
+    autoFit({ axis: 'both' });
     drawAll();
   }
 
@@ -599,8 +599,8 @@
   function drawAll() {
     drawGrid();
     for (const e of exprs) drawExpr(e);
-    drawHover();
     drawIntegralShading();
+    drawHover();
   }
 
   // ======= Hover / Trace / Tangent =======
@@ -687,48 +687,104 @@
     }
   }
 
-  // ======= Autoscale Y across all visible =======
-  function autoscaleY() {
-    let ymin = +Infinity, ymax = -Infinity, count=0;
-    const w = canvas.width;
-    const N = Math.max(500, Math.floor(w));
-    const sScope = currentSliderScope();
+  // ======= Autofit view =======
+  function collectBounds(range, { restrictX = false } = {}) {
+    if (!range || !isFinite(range.xmin) || !isFinite(range.xmax)) return null;
+    const xmin = Math.min(range.xmin, range.xmax);
+    const xmax = Math.max(range.xmin, range.xmax);
+    const sliderScope = currentSliderScope();
+    const bounds = { xmin: +Infinity, xmax: -Infinity, ymin: +Infinity, ymax: -Infinity, count: 0 };
+    const sampleCount = Math.max(500, Math.floor(canvas.width));
+
+    const includePoint = (x, y) => {
+      if (!isFinite(x) || !isFinite(y)) return;
+      if (Math.abs(x) > 1e9 || Math.abs(y) > 1e9) return;
+      if (restrictX && (x < xmin || x > xmax)) return;
+      bounds.xmin = Math.min(bounds.xmin, x);
+      bounds.xmax = Math.max(bounds.xmax, x);
+      bounds.ymin = Math.min(bounds.ymin, y);
+      bounds.ymax = Math.max(bounds.ymax, y);
+      bounds.count++;
+    };
+
     for (const e of exprs) {
       if (!e.visible) continue;
       if (e.mode === MODE.CART && e.compiled) {
-        for (let i=0;i<=N;i++){
-          const t = i/N;
-          const x = view.xmin + t*(view.xmax - view.xmin);
-          const y = safeEval(e.compiled, { ...sScope, x });
-          if (isFinite(y)) { ymin = Math.min(ymin, y); ymax = Math.max(ymax, y); count++; }
+        if (!isFinite(xmin) || !isFinite(xmax) || xmin === xmax) continue;
+        for (let i = 0; i <= sampleCount; i++) {
+          const t = i / sampleCount;
+          const x = xmin + t * (xmax - xmin);
+          const y = safeEval(e.compiled, { ...sliderScope, x });
+          includePoint(x, y);
         }
       } else if (e.mode === MODE.PARA && e.compiledX && e.compiledY) {
-        for (let i=0;i<=N;i++){
-          const u = i/N;
-          const t = e.tmin + u*(e.tmax - e.tmin);
-          const x = safeEval(e.compiledX, { ...sScope, t });
-          const y = safeEval(e.compiledY, { ...sScope, t });
-          if (isFinite(x) && isFinite(y) && x>=view.xmin && x<=view.xmax) {
-            ymin = Math.min(ymin, y); ymax = Math.max(ymax, y); count++;
-          }
+        const tmin = isFinite(e.tmin) ? e.tmin : 0;
+        const tmax = isFinite(e.tmax) ? e.tmax : tmin + 1;
+        if (tmin === tmax) continue;
+        for (let i = 0; i <= sampleCount; i++) {
+          const u = i / sampleCount;
+          const t = tmin + u * (tmax - tmin);
+          const x = safeEval(e.compiledX, { ...sliderScope, t });
+          const y = safeEval(e.compiledY, { ...sliderScope, t });
+          includePoint(x, y);
         }
       } else if (e.mode === MODE.POLAR && e.compiledR) {
-        for (let i=0;i<=N;i++){
-          const u = i/N;
-          const θ = e.thmin + u*(e.thmax - e.thmin);
-          const r = safeEval(e.compiledR, { ...sScope, θ });
+        const thmin = isFinite(e.thmin) ? e.thmin : 0;
+        const thmax = isFinite(e.thmax) ? e.thmax : thmin + 2*Math.PI;
+        if (thmin === thmax) continue;
+        for (let i = 0; i <= sampleCount; i++) {
+          const u = i / sampleCount;
+          const θ = thmin + u * (thmax - thmin);
+          const r = safeEval(e.compiledR, { ...sliderScope, θ });
           if (!isFinite(r)) continue;
-          const x = r*Math.cos(θ), y = r*Math.sin(θ);
-          if (x>=view.xmin && x<=view.xmax && isFinite(y)) {
-            ymin = Math.min(ymin, y); ymax = Math.max(ymax, y); count++;
-          }
+          const x = r * Math.cos(θ);
+          const y = r * Math.sin(θ);
+          includePoint(x, y);
         }
       }
     }
-    if (count === 0 || !isFinite(ymin) || !isFinite(ymax)) { view.ymin=-6; view.ymax=6; return; }
-    const pad = 0.1 * (ymax - ymin || 1);
-    view.ymin = ymin - pad;
-    view.ymax = ymax + pad;
+
+    if (!bounds.count || !isFinite(bounds.ymin) || !isFinite(bounds.ymax)) return null;
+    return bounds;
+  }
+
+  function autoFit({ axis = 'both', range } = {}) {
+    const targetRange = range || { xmin: view.xmin, xmax: view.xmax };
+    const restrictX = axis === 'y';
+    const attempts = [{ range: targetRange, restrictX }];
+    if (axis !== 'y') attempts.push({ range: { xmin: -10, xmax: 10 }, restrictX: false });
+
+    let bounds = null;
+    for (const attempt of attempts) {
+      bounds = collectBounds(attempt.range, { restrictX: attempt.restrictX });
+      if (bounds) break;
+    }
+
+    if (!bounds) {
+      view = { xmin: -10, xmax: 10, ymin: -6, ymax: 6 };
+      return;
+    }
+
+    const padY = 0.1 * (bounds.ymax - bounds.ymin || 1);
+    view.ymin = bounds.ymin - padY;
+    view.ymax = bounds.ymax + padY;
+
+    if (axis !== 'y') {
+      const padX = 0.08 * (bounds.xmax - bounds.xmin || 1);
+      view.xmin = bounds.xmin - padX;
+      view.xmax = bounds.xmax + padX;
+    }
+
+    if (view.ymin === view.ymax) {
+      const adjust = Math.abs(view.ymin) || 1;
+      view.ymin -= 0.5 * adjust;
+      view.ymax += 0.5 * adjust;
+    }
+    if (view.xmin === view.xmax) {
+      const adjust = Math.abs(view.xmin) || 1;
+      view.xmin -= 0.5 * adjust;
+      view.xmax += 0.5 * adjust;
+    }
   }
 
   // =========== Interaction (pan/zoom) ===========
@@ -758,6 +814,15 @@
     view.ymax = dragStart[5] + yShift;
     drawAll();
   });
+  canvas.addEventListener('pointerleave', () => {
+    hover.world = null;
+    isDragging = false;
+    drawAll();
+  });
+  canvas.addEventListener('pointerup', (e) => {
+    isDragging = false;
+    try { canvas.releasePointerCapture(e.pointerId); } catch {}
+  });
   window.addEventListener('pointerup', () => { isDragging=false; });
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
@@ -776,10 +841,10 @@
       zyMax = my + (view.ymax - my)*scale;
     }
     view = { xmin: zxMin, xmax: zxMax, ymin: zyMin, ymax: zyMax };
-    if (!e.shiftKey) autoscaleY();
+    if (!e.shiftKey) autoFit({ axis: 'y' });
     drawAll();
   }, { passive:false });
-  canvas.addEventListener('dblclick', () => { autoscaleY(); drawAll(); });
+  canvas.addEventListener('dblclick', () => { autoFit({ axis: 'both' }); drawAll(); });
 
   // Alt+klik om integraal A/B te zetten (klik dicht bij x-as)
   canvas.addEventListener('click', (e) => {
@@ -927,7 +992,7 @@
     if (act === 'color') item.color = t.value;
     if (act === 'width') item.width = clamp(+t.value,1,6);
     compileAll();
-    autoscaleY();
+    autoFit({ axis: 'both' });
     drawAll();
   });
   funcListEl.addEventListener('change', (e) => {
@@ -959,8 +1024,8 @@
   document.getElementById('addCartesian').addEventListener('click', () => addExpr({ mode: MODE.CART, exprY: 'sin(x)' }));
   document.getElementById('addParametric').addEventListener('click', () => addExpr({ mode: MODE.PARA, exprX: 'cos(t)', exprYp: 'sin(t)', tmin: 0, tmax: 2*Math.PI }));
   document.getElementById('addPolar').addEventListener('click', () => addExpr({ mode: MODE.POLAR, exprR: '1 + 0.5*cos(5*θ)', thmin: 0, thmax: 2*Math.PI }));
-  document.getElementById('autoscaleBtn').addEventListener('click', () => { autoscaleY(); drawAll(); });
-  document.getElementById('resetViewBtn').addEventListener('click', () => { view = { xmin:-10, xmax:10, ymin:-6, ymax:6 }; autoscaleY(); drawAll(); });
+  document.getElementById('autoscaleBtn').addEventListener('click', () => { autoFit({ axis: 'both' }); drawAll(); });
+  document.getElementById('resetViewBtn').addEventListener('click', () => { view = { xmin:-10, xmax:10, ymin:-6, ymax:6 }; autoFit({ axis: 'y' }); drawAll(); });
 
   // Examples chips
   document.getElementById('examples').addEventListener('click', (e) => {
@@ -979,7 +1044,7 @@
         addExpr({ mode: MODE.POLAR, exprR: m[1].trim(), thmin: tryEvalNum(m[2]), thmax: tryEvalNum(m[3]) });
       }
     }
-    compileAll(); autoscaleY(); drawAll();
+    compileAll(); autoFit({ axis: 'both' }); drawAll();
   });
 
   // Active func
@@ -1025,7 +1090,7 @@
       if (rg) rg.value = s.value;
     }
     compileAll();
-    autoscaleY();
+    autoFit({ axis: 'y' });
     drawAll();
   });
 
@@ -1051,7 +1116,7 @@
     document.getElementById('newSliderMax').value='';
     document.getElementById('newSliderStep').value='';
     document.getElementById('newSliderVal').value='';
-    rebuildSlidersUI(); compileAll(); autoscaleY(); drawAll();
+    rebuildSlidersUI(); compileAll(); autoFit({ axis: 'both' }); drawAll();
     showMsg(`Slider '${name}' toegevoegd.`, true);
   });
 
@@ -1253,7 +1318,7 @@
       sliders = data.sliders || sliders;
       activeFuncId = data.activeFuncId ?? activeFuncId;
       nextId = Math.max(1, ...exprs.map(e=>e.id+1), nextId);
-      rebuildUI(); rebuildSlidersUI(); compileAll(); autoscaleY(); drawAll();
+      rebuildUI(); rebuildSlidersUI(); compileAll(); autoFit({ axis: 'both' }); drawAll();
       showMsg('Sessiesettings geladen.', true);
     } catch {
       showMsg('Kon sessie niet laden.');
@@ -1298,10 +1363,7 @@
   addExpr({ mode: MODE.CART, exprY: 'sin(x) + a*x/4' });
   sliders = [{ name:'a', min:-2, max:2, step:0.1, value:0.0 }];
   rebuildSlidersUI();
-  compileAll(); autoscaleY(); drawAll();
-
-  // Toolbar extras
-  document.getElementById('autoscaleBtn').addEventListener('click', ()=>{ autoscaleY(); drawAll(); });
+  compileAll(); autoFit({ axis: 'both' }); drawAll();
 })();
 </script>
 </body>
