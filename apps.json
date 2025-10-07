@@ -2,7 +2,7 @@
   "apps": [
     {
       "id": "rabdom-password-generator",
-      "name": "Rabdom Password Generator",
+      "name": "Random Password Generator",
       "description": "Genereer sterke wachtwoorden met opties voor lengte en symbolen.",
       "path": "apps/codegen.html",
       "tags": [
