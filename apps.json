@@ -4,7 +4,7 @@
       "id": "rabdom-password-generator",
       "name": "Rabdom Password Generator",
       "description": "Genereer sterke wachtwoorden met opties voor lengte en symbolen.",
-      "path": "apps/rabdom-password-generator/index.html",
+      "path": "apps/codegen.html",
       "tags": [
         "utility",
         "security"
@@ -16,7 +16,7 @@
       "id": "mini-geogebra",
       "name": "Mini GeoGebra",
       "description": "Kleine interactieve geometrie/graphing app.",
-      "path": "apps/mini-geogebra/index.html",
+      "path": "apps/geogebra.html",
       "tags": [
         "math",
         "visual"
