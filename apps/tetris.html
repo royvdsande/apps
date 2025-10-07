@@ -1,0 +1,280 @@
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tetris</title>
+<style>
+  :root{
+    --bg: #f5f7fb;
+    --panel: #ffffff;
+    --border: #c9cdd3;
+    --text: #263238;
+    --muted: #607d8b;
+    --shadow: 0 1px 2px rgba(0,0,0,.08), 0 8px 30px rgba(0,0,0,.08);
+    --board-bg: #e9eef7;
+    --grid: #d3dae6;
+    --accent: #3f51b5;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(180deg, var(--bg), #eef1f7);
+    color: var(--text);
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px;
+  }
+.app{
+  width:min(1024px, 100%);
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  padding:20px; /* iets ruimer geheel */
+}
+
+  header{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  padding:6px 6px 0;
+  margin-bottom:16px; /* toegevoegd voor extra ruimte onder de header */
+}
+
+  .stats{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .stat{ background:#fff; border:1px solid var(--border); border-radius:12px; padding:8px 12px; min-width:120px; display:flex; gap:8px; align-items:center; box-shadow:var(--shadow); }
+  .stat b{ font-variant-numeric: tabular-nums; }
+  button{ border:1px solid var(--border); background:#fff; border-radius:12px; padding:8px 12px; cursor:pointer; box-shadow:var(--shadow); }
+  button:hover{ filter:brightness(0.98) }
+  button:active{ transform: translateY(1px) }
+  .controls{ display:flex; gap:8px; flex-wrap:wrap; }
+
+.layout{
+  display:grid;
+  grid-template-columns: 1fr 260px;
+  gap:16px; /* iets meer ruimte tussen bord en zijpanelen */
+}
+
+  .panel{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:10px; box-shadow:var(--shadow); }
+  .panel h3{ margin:0 0 8px; font-size:14px; color:#455a64; letter-spacing:.2px; }
+
+  .board-wrap{ position:relative; }
+  canvas.board{ display:block; margin:0 auto; background:var(--board-bg); border:1px solid var(--border); border-radius:12px; }
+  .overlay{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; text-align:center; padding:16px; border-radius:12px; border:1px dashed var(--border); background:rgba(255,255,255,.78); backdrop-filter: blur(2px); font-weight:700; font-size:20px; }
+  .overlay small{ display:block; color:#546e7a; font-weight:500; margin-top:6px; }
+
+  .side{ display:flex; flex-direction:column; gap:12px; }
+  .mini{ display:block; margin:0 auto; background:#f7f9ff; border:1px solid var(--border); border-radius:10px; }
+
+  .kbd{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background:#eef2f7; border:1px solid #cfd6e2; border-radius:6px; padding:1px 6px; }
+  .help{ color:#607d8b; font-size:12px; }
+
+  /* mobiele knoppen */
+  .mobile{ display:grid; grid-template-columns: repeat(5, 1fr); gap:8px; margin-top:8px; }
+  .mobile button{ padding:12px 8px; font-size:16px; }
+  @media (min-width: 880px){ .mobile{ display:none; } }
+</style>
+</head>
+<body>
+<div class="app" role="application" aria-label="Tetris">
+  <header>
+    <div class="stats">
+      <div class="stat" title="Niveau (snelheid)">⚡ Niveau: <b id="level">1</b></div>
+      <div class="stat" title="Score">🏆 Score: <b id="score">0</b></div>
+      <div class="stat" title="Lijnen gewist">📏 Lijnen: <b id="lines">0</b></div>
+      <div class="stat" title="High score (lokaal)">⭐ High score: <b id="hiscore">0</b></div>
+      <button id="face" title="Nieuw spel">🙂</button>
+    </div>
+    <div class="controls">
+      <button id="startPause">▶️ Start</button>
+      <button id="reset">🔄 Reset</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="panel board-wrap">
+      <canvas id="board" class="board" width="280" height="560" aria-label="Speelveld 10×20"></canvas>
+      <div id="overlay" class="overlay"></div>
+      <div class="mobile">
+        <button id="mk-left" title="Links">◀︎</button>
+        <button id="mk-rotL" title="Draai links">⟲</button>
+        <button id="mk-down" title="Zacht vallen">▼</button>
+        <button id="mk-rotR" title="Draai rechts">⟳</button>
+        <button id="mk-right" title="Rechts">▶︎</button>
+        <button id="mk-hard" style="grid-column:2 / span 3" title="Hard drop">⤓ Hard drop</button>
+      </div>
+    </div>
+    <div class="side">
+      <div class="panel">
+        <h3>Volgende</h3>
+        <canvas id="next" class="mini" width="220" height="180"></canvas>
+      </div>
+      <div class="panel">
+        <h3>Vasthouden <span class="help">(druk <span class="kbd">Shift</span> of <span class="kbd">C</span>)</span></h3>
+        <canvas id="hold" class="mini" width="140" height="140"></canvas>
+      </div>
+      <div class="panel help">
+        <h3>Besturing</h3>
+        <div>←/→ = links/rechts</div>
+        <div>↓ = zacht vallen</div>
+        <div>Z/X/↑ = draaien</div>
+        <div>Spatie = hard drop</div>
+        <div>C of Shift = vasthouden</div>
+        <div>P of Esc = pauze</div>
+        <div>R = reset</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Constantes
+  const W=10, H=20, CELL=28;
+  const COLORS={I:'#00BCD4',O:'#FFC107',T:'#9C27B0',S:'#4CAF50',Z:'#F44336',J:'#3F51B5',L:'#FF9800'};
+  const SHAPES={
+    I:[['....','XXXX','....','....']],
+    O:[['.XX.','.XX.','....','....']],
+    T:[['.X..','XXX.','....','....']],
+    S:[['.XX.','XX..','....','....']],
+    Z:[['XX..','.XX.','....','....']],
+    J:[['X...','XXX.','....','....']],
+    L:[['..X.','XXX.','....','....']]
+  };
+  const SCORE_LINES=[0,100,300,500,800];
+
+  // Canvas
+  const boardCv=document.getElementById('board');
+  const ctx=boardCv.getContext('2d');
+  const nextCv=document.getElementById('next');
+  const nextCtx=nextCv.getContext('2d');
+  const holdCv=document.getElementById('hold');
+  const holdCtx=holdCv.getContext('2d');
+
+  // UI
+  const elScore=document.getElementById('score');
+  const elLines=document.getElementById('lines');
+  const elLevel=document.getElementById('level');
+  const elHiscore=document.getElementById('hiscore');
+  const elOverlay=document.getElementById('overlay');
+  const elStartPause=document.getElementById('startPause');
+  const elReset=document.getElementById('reset');
+  const elFace=document.getElementById('face');
+
+  const mkL=document.getElementById('mk-left');
+  const mkR=document.getElementById('mk-right');
+  const mkRotL=document.getElementById('mk-rotL');
+  const mkRotR=document.getElementById('mk-rotR');
+  const mkDown=document.getElementById('mk-down');
+  const mkHard=document.getElementById('mk-hard');
+
+  // Status
+  let board, bag=[], queue=[], current=null, hold=null, canHold=true;
+  let score=0, lines=0, level=1, hiscore=0;
+  let running=false, paused=false, gameOver=false;
+  let dropInterval=1000, lastTime=0, acc=0;
+
+  function init(){
+    hiscore = Number(localStorage.getItem('tetris_hiscore')||'0')||0; elHiscore.textContent=String(hiscore);
+    reset();
+  }
+
+  function createBoard(){ return Array.from({length:H}, ()=> Array(W).fill(null)); }
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [a[i],a[j]]=[a[j],a[i]]; } }
+  function nextFromBag(){ if(queue.length===0){ let b=Object.keys(SHAPES); shuffle(b); queue.push(...b);} return queue.shift(); }
+
+  function newPiece(t){ const m=SHAPES[t][0].map(r=>r); const w=m[0].length; const x=Math.floor((W-w)/2); const y=-1; return {type:t,color:COLORS[t],matrix:m,x,y}; }
+  function matrixCells(m){ const out=[]; for(let r=0;r<m.length;r++) for(let c=0;c<m[r].length;c++) if(m[r][c]==='X') out.push([c,r]); return out; }
+  function collides(p, dx=0, dy=0, mat=null){ const m=mat||p.matrix; const cells=matrixCells(m); for(const [cx,cy] of cells){ const x=p.x+cx+dx; const y=p.y+cy+dy; if(x<0||x>=W||y>=H) return true; if(y>=0 && board[y][x]) return true; } return false; }
+
+  function rotateCW(m){ const N=m.length; const res=Array.from({length:N},()=>Array(N).fill('.')); for(let r=0;r<N;r++) for(let c=0;c<N;c++) res[c][N-1-r]=m[r][c]; return res.map(r=>r.join('')); }
+  function rotateCCW(m){ const N=m.length; const res=Array.from({length:N},()=>Array(N).fill('.')); for(let r=0;r<N;r++) for(let c=0;c<N;c++) res[N-1-c][r]=m[r][c]; return res.map(r=>r.join('')); }
+
+  function spawn(){ const t=nextFromBag(); current=newPiece(t); canHold=true; drawNext(); if(collides(current,0,0)){ setGameOver('Top bereikt — je kunt niet verder bouwen.'); } }
+
+  function mergePiece(){ const cells=matrixCells(current.matrix);
+    // Als een blok bij het vergrendelen boven het zichtbare veld uitsteekt -> top bereikt
+    for(const [cx,cy] of cells){ if(current.y+cy < 0){ setGameOver('Top bereikt — je kunt niet verder bouwen.'); return false; } }
+    for(const [cx,cy] of cells){ const x=current.x+cx, y=current.y+cy; if(y>=0) board[y][x]=current.color; }
+    return true;
+  }
+
+  function clearLines(){ let cleared=0; outer: for(let r=H-1;r>=0;r--){ for(let c=0;c<W;c++){ if(!board[r][c]) continue outer; } board.splice(r,1); board.unshift(Array(W).fill(null)); cleared++; r++; }
+    if(cleared>0){ lines+=cleared; score+=SCORE_LINES[cleared]; const lv=1+Math.floor(lines/10); if(lv!==level){ level=lv; adjustSpeed(); } updateStats(); }
+  }
+
+  function adjustSpeed(){ dropInterval = Math.max(90, 1000 - (level-1)*80); }
+  function updateStats(){ elScore.textContent=String(score); elLines.textContent=String(lines); elLevel.textContent=String(level); }
+
+  function drawGrid(){ ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--board-bg')||'#e9eef7'; ctx.fillRect(0,0,W*CELL,H*CELL);
+    ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--grid')||'#d3dae6'; ctx.lineWidth=1; for(let x=1;x<W;x++){ ctx.beginPath(); ctx.moveTo(x*CELL+0.5,0); ctx.lineTo(x*CELL+0.5,H*CELL); ctx.stroke(); } for(let y=1;y<H;y++){ ctx.beginPath(); ctx.moveTo(0,y*CELL+0.5); ctx.lineTo(W*CELL,y*CELL+0.5); ctx.stroke(); } }
+
+  function drawCell(c,r,color,context,size){ const x=c*size,y=r*size,s=size; context.fillStyle=color; context.fillRect(x,y,s,s); const g=context.createLinearGradient(x,y,x,y+s); g.addColorStop(0,'rgba(255,255,255,.35)'); g.addColorStop(1,'rgba(0,0,0,.12)'); context.fillStyle=g; context.fillRect(x,y,s,s); context.strokeStyle='rgba(0,0,0,.18)'; context.lineWidth=1; context.strokeRect(x+0.5,y+0.5,s-1,s-1); }
+
+  function draw(){ drawGrid(); // de stapel
+    for(let r=0;r<H;r++){ for(let c=0;c<W;c++){ const col=board[r][c]; if(col) drawCell(c,r,col,ctx,CELL); } }
+    // huidig stuk
+    if(current){ const cells=matrixCells(current.matrix); for(const [cx,cy] of cells){ const x=current.x+cx, y=current.y+cy; if(y>=0) drawCell(x,y,current.color,ctx,CELL); } }
+  }
+
+  function drawMini(ctx, type){ ctx.clearRect(0,0,ctx.canvas.width, ctx.canvas.height); if(!type) return; const m=SHAPES[type][0]; const cells=matrixCells(m); const size=24; const cols=4, rows=4; const w=cols*size, h=rows*size; const ox=Math.floor((ctx.canvas.width - w)/2/size); const oy=Math.floor((ctx.canvas.height - h)/2/size); for(const [cx,cy] of cells){ drawCell(ox+cx, oy+cy, COLORS[type], ctx, size); } }
+  function drawNext(){ // toon eerstvolgende 3
+    nextCtx.clearRect(0,0,nextCv.width,nextCv.height); const items=queue.slice(0,3); const size=22; const cols=4, rows=4; const w=cols*size, h=rows*size; items.forEach((t,i)=>{ const m=SHAPES[t][0]; const cells=matrixCells(m); const ox=Math.floor((nextCv.width - w)/2/size); const oy=Math.floor((8 + i*(h+8))/size); for(const [cx,cy] of cells){ drawCell(ox+cx, oy+cy, COLORS[t], nextCtx, size);} }); }
+  function drawHold(){ holdCtx.clearRect(0,0,holdCv.width,holdCv.height); if(hold) drawMini(holdCtx, hold); }
+
+  function tick(){ if(!current) return; if(!collides(current,0,1)){ current.y++; } else { if(mergePiece()){ clearLines(); spawn(); } }
+    draw(); }
+
+  function update(t){ if(!running||paused||gameOver) return; if(!lastTime) lastTime=t; const dt=t-lastTime; lastTime=t; acc+=dt; while(acc>=dropInterval){ acc-=dropInterval; tick(); } requestAnimationFrame(update); }
+
+  function softDrop(){ if(!current) return; if(!collides(current,0,1)){ current.y++; score+=1; updateStats(); draw(); } }
+  function hardDrop(){ if(!current) return; let d=0; while(!collides(current,0,d+1)) d++; current.y+=d; score+=d*2; updateStats(); if(mergePiece()){ clearLines(); spawn(); } draw(); }
+  function tryRotate(dir){ if(!current) return; const rotated = (dir>0)? rotateCW(current.matrix) : rotateCCW(current.matrix); const kicks=[[0,0],[1,0],[-1,0],[2,0],[-2,0],[0,-1]]; for(const [kx,ky] of kicks){ if(!collides(current,kx,ky,rotated)){ current.matrix=rotated; current.x+=kx; current.y+=ky; draw(); return; } } }
+  function holdPiece(){ if(!current||!canHold) return; canHold=false; if(!hold){ hold=current.type; current=null; drawHold(); spawn(); } else { const tmp=hold; hold=current.type; current=newPiece(tmp); drawHold(); if(collides(current,0,0)){ setGameOver('Top bereikt — je kunt niet verder bouwen.'); } draw(); } }
+
+  function setOverlay(text, show=true){ elOverlay.textContent=''; const div=document.createElement('div'); div.innerHTML=text; elOverlay.appendChild(div); elOverlay.style.display=show?'flex':'none'; }
+  function setGameOver(msg){ gameOver=true; running=false; paused=false; elStartPause.textContent='▶️ Opnieuw'; elFace.textContent='😵'; setOverlay(`<div>${msg||'Game Over'}</div><small>Druk op <span class="kbd">Enter</span> of <span class="kbd">Spatie</span> om opnieuw te starten</small>`); if(score>hiscore){ hiscore=score; localStorage.setItem('tetris_hiscore', String(hiscore)); elHiscore.textContent=String(hiscore);} }
+
+  function start(){ if(gameOver){ reset(); } running=true; paused=false; elStartPause.textContent='⏸️ Pauze'; elFace.textContent='🙂'; elOverlay.style.display='none'; lastTime=0; acc=0; requestAnimationFrame(update); }
+  function pause(){ if(!running||gameOver) return; paused=true; running=false; elStartPause.textContent='▶️ Hervat'; setOverlay('<div>Gepauzeerd</div><small>Druk op <span class="kbd">P</span> om door te gaan</small>'); }
+
+  function reset(){ board=createBoard(); bag=[]; queue=[]; for(let i=0;i<7;i++) queue.push(nextFromBag()); current=null; hold=null; canHold=true; score=0; lines=0; level=1; updateStats(); adjustSpeed(); gameOver=false; paused=false; running=false; elOverlay.style.display='none'; elFace.textContent='🙂'; drawHold(); drawNext(); spawn(); draw(); }
+
+  // Invoer
+  function onKey(e){ if(gameOver){ if(e.code==='Space'||e.key==='Enter'){ start(); } return; }
+    if(e.key==='p'||e.key==='P'||e.key==='Escape'){ if(running && !paused) pause(); else start(); return; }
+    if(e.key==='r'||e.key==='R'){ reset(); return; }
+    if(!running||paused) return;
+    switch(e.code){
+      case 'ArrowLeft': case 'KeyA': if(!collides(current,-1,0)){ current.x--; draw(); } break;
+      case 'ArrowRight': case 'KeyD': if(!collides(current,1,0)){ current.x++; draw(); } break;
+      case 'ArrowDown': case 'KeyS': softDrop(); break;
+      case 'ArrowUp': case 'KeyX': tryRotate(1); break;
+      case 'KeyZ': tryRotate(-1); break;
+      case 'Space': e.preventDefault(); hardDrop(); break;
+      case 'ShiftLeft': case 'ShiftRight': case 'KeyC': holdPiece(); break;
+    }
+  }
+  document.addEventListener('keydown', onKey);
+
+  // Mobiel
+  mkL.addEventListener('click', ()=>{ if(running&&!paused&&!collides(current,-1,0)){ current.x--; draw(); } });
+  mkR.addEventListener('click', ()=>{ if(running&&!paused&&!collides(current,1,0)){ current.x++; draw(); } });
+  mkRotL.addEventListener('click', ()=>{ if(running&&!paused){ tryRotate(-1); } });
+  mkRotR.addEventListener('click', ()=>{ if(running&&!paused){ tryRotate(1); } });
+  mkDown.addEventListener('click', ()=>{ if(running&&!paused){ softDrop(); } });
+  mkHard.addEventListener('click', ()=>{ if(running&&!paused){ hardDrop(); } });
+
+  // UI
+  elStartPause.addEventListener('click', ()=>{ if(!running||paused) start(); else pause(); });
+  elReset.addEventListener('click', ()=> reset());
+  elFace.addEventListener('click', ()=>{ reset(); start(); });
+
+  // Start
+  init();
+})();
+</script>
+</body>
+</html>
