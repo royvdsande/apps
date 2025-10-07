@@ -4,76 +4,124 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Mini‑Geo Pro — multi grafieken, sliders, analyse, integralen</title>
+
 <style>
-  :root {
-    color-scheme: light dark;
-    --bg: canvas;
-    --fg: canvastext;
-    --muted: color-mix(in oklab, var(--fg) 60%, transparent);
-    --grid: color-mix(in oklab, var(--fg) 15%, transparent);
-    --axis: color-mix(in oklab, var(--fg) 60%, transparent);
-    --accent: #2d7ef7;
+  :root{
+    --bg: #f5f7fb;
+    --panel: #ffffff;
+    --border: #c9cdd3;
+    --text: #263238;
+    --muted: #607d8b;
+    --shadow: 0 1px 2px rgba(0,0,0,.08), 0 8px 30px rgba(0,0,0,.08);
+    --card: #ffffff;
+    --grid: #d3dae6;
+    --axis: #bfc8d2;
+    --accent: #3f51b5;
     --accent2: #00b894;
     --danger: #c62828;
-    --warn: #ff9800;
-    --card: color-mix(in oklab, var(--bg) 85%, var(--fg));
+    --board-bg: #e9eef7;
   }
-  * { box-sizing: border-box }
-  body {
-    font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--fg);
-    margin: 16px;
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(180deg, var(--bg), #eef1f7);
+    color:var(--text);
+    padding:16px;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
   }
-  h1 { font-size: 18px; margin: 0 0 12px }
-  h2 { font-size: 16px; margin: 16px 0 8px }
-  .app { display: grid; grid-template-columns: minmax(320px, 520px) 1fr; gap: 12px; align-items: start; }
-  .panel {
-    background: var(--card);
-    border: 1px solid var(--grid);
-    border-radius: 12px;
-    padding: 12px;
+  h1{ font-size:18px; margin:0 0 12px; color:var(--text) }
+  h2{ font-size:16px; margin:16px 0 8px; color:#455a64 }
+.app{
+  width:100%;
+  max-width:none;
+  	margin:0;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    box-shadow:var(--shadow);
+    padding:18px;
+    display:grid;
+    grid-template-columns: minmax(320px,520px) 1fr;
+    gap:12px;
+    align-items:start;
   }
-  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .sp { justify-content: space-between; }
-  .btn, button {
-    padding: 8px 10px; border: 1px solid var(--grid);
-    border-radius: 8px; background: color-mix(in oklab, var(--bg) 80%, var(--fg));
-    color: var(--fg); cursor: pointer; font: inherit;
+  .panel{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:12px;
+    box-shadow:var(--shadow);
   }
-  button:hover, .btn:hover { border-color: var(--accent); }
-  input[type="text"], input[type="number"], select {
-    padding: 8px 10px; border: 1px solid var(--grid); border-radius: 8px; background: var(--bg); color: var(--fg); font: inherit;
+  .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .sp{ justify-content:space-between; }
+  button, .btn{
+    padding:8px 10px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:var(--panel);
+    color:var(--text);
+    cursor:pointer;
+    font:inherit;
+    box-shadow:var(--shadow);
   }
-  input[type="color"] { border: none; background: transparent; width: 32px; height: 32px; padding: 0; }
-  .chip {
-    border: 1px dashed var(--grid);
-    padding: 5px 8px; border-radius: 999px; cursor: pointer; user-select: none;
+  button:hover, .btn:hover{ filter:brightness(0.98); transform:none; }
+  button:active, .btn:active{ transform: translateY(1px); }
+  input[type="text"], input[type="number"], select{
+    padding:8px 10px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:transparent;
+    color:var(--text);
+    font:inherit;
   }
-  .chip:hover { border-color: var(--accent); color: var(--accent); }
-  .small { font-size: 12px; color: var(--muted); }
-  .msg { min-height: 1.4em; color: var(--danger); }
-  .list { display: grid; gap: 8px; }
-  .card {
-    border: 1px solid var(--grid); border-radius: 10px; padding: 8px; background: var(--bg);
+  input[type="color"]{ border:none; background:transparent; width:32px; height:32px; padding:0; }
+  .chip{
+    border:1px dashed var(--grid);
+    padding:6px 10px;
+    border-radius:999px;
+    cursor:pointer;
+    user-select:none;
+    background:#fbfdff;
   }
-  .tag { font-size: 12px; color: var(--muted); }
-  .k { color: var(--muted); }
-  #plot { width: 100%; height: auto; aspect-ratio: 16/9; border: 1px solid var(--grid); border-radius: 12px; background: var(--bg); touch-action: none; }
-  .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
-  .bad { color: var(--danger); }
-  .ok { color: var(--accent2); }
-  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
-  .pill { padding: 4px 8px; border: 1px solid var(--grid); border-radius: 999px; }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-  details summary { cursor: pointer; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  th, td { border-bottom: 1px solid var(--grid); padding: 4px 6px; text-align: right; }
-  th { color: var(--muted); font-weight: 600; }
-  .flex1 { flex: 1 1 auto; }
-  .nowrap { white-space: nowrap; }
+  .chip:hover{ border-color:var(--accent); color:var(--accent) }
+  .small{ font-size:12px; color:var(--muted) }
+  .msg{ min-height:1.4em; color:var(--danger) }
+  .list{ display:grid; gap:8px; }
+  .card{ border:1px solid var(--border); border-radius:10px; padding:8px; background:var(--panel); }
+  .tag{ font-size:12px; color:var(--muted) }
+  .k{ color:var(--muted) }
+  #plot{
+    width:100%;
+    height:auto;
+    aspect-ratio:16/9;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:var(--board-bg);
+    touch-action:none;
+    display:block;
+  }
+  .hint{ color:var(--muted); font-size:12px; margin-top:8px }
+  .bad{ color:var(--danger) }
+  .ok{ color:var(--accent2) }
+  .toolbar{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:8px; }
+  .pill{ padding:6px 10px; border:1px solid var(--border); border-radius:999px; background:#fbfdff }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:8px }
+  .grid3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px }
+  details summary{ cursor:pointer }
+  table{ width:100%; border-collapse:collapse; font-size:12px }
+  th, td{ border-bottom:1px solid var(--grid); padding:6px 8px; text-align:right }
+  th{ color:var(--muted); font-weight:600 }
+  .flex1{ flex:1 1 auto }
+  .nowrap{ white-space:nowrap }
+  /* Mobile tweaks */
+  @media (max-width:880px){
+    .app{ grid-template-columns: 1fr; padding:12px }
+  }
 </style>
+
 </head>
 <body>
   <h1>Mini‑Geo Pro <span class="tag">— multi plot, sliders, analyse, integralen</span></h1>
