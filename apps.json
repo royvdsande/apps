@@ -4,7 +4,7 @@
       "id": "rabdom-password-generator",
       "name": "Random Password Generator",
       "description": "Genereer sterke wachtwoorden met geschiedenis en gemakkelijk kopiëren.",
-      "path": "apps/codegen.html",
+      "path": "apps/codegen",
       "tags": [
         "utility",
         "security"
@@ -16,7 +16,7 @@
       "id": "mini-geogebra",
       "name": "Mini GeoGebra",
       "description": "Kleine interactieve geometrie/graphing app.",
-      "path": "apps/geogebra.html",
+      "path": "apps/geogebra",
       "tags": [
         "math",
         "visual"
@@ -28,7 +28,7 @@
       "id": "minesweeper",
       "name": "Minesweeper",
       "description": "Minesweeper is een puzzelspel waarin je mijnen moet vermijden.",
-      "path": "apps/minesweeper.html",
+      "path": "apps/minesweeper",
       "tags": [
         "game",
         "math"
@@ -40,7 +40,7 @@
       "id": "tetris",
       "name": "Tetris",
       "description": "Tetris is een puzzelspel waarin je vallende blokken passend moet stapelen.",
-      "path": "apps/tetris.html",
+      "path": "apps/tetris",
       "tags": [
         "game"
       ],
