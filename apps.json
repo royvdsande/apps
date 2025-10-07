@@ -12,18 +12,6 @@
       "badge": "Tool",
       "dateAdded": "2025-10-07"
     },
-    {
-      "id": "mini-geogebra",
-      "name": "Mini GeoGebra",
-      "description": "Kleine interactieve geometrie/graphing app.",
-      "path": "apps/geogebra",
-      "tags": [
-        "math",
-        "visual"
-      ],
-      "badge": "Math",
-      "dateAdded": "2025-10-07"
-    },
         {
       "id": "minesweeper",
       "name": "Minesweeper",
