@@ -15,9 +15,12 @@ body {
   --card-bd: rgba(255,255,255,0.08);
   --glass: rgba(255,255,255,0.06);
   --text-dim: #b7b7c7;
-  --primary: #8a2be2; /* electric purple */
-  --primary-2: #4f46e5; /* indigo */
-  --ring: #9f67ff66;
+
+  /* 🔵 Blauwe themakleuren */
+  --primary:  #4278f5;      /* hoofdblauw */
+  --primary-2:#2563eb;      /* tweede blauw voor gradients */
+  --ring: rgba(66, 120, 245, 0.3);
+
   --ok: #22c55e;
 }
 
@@ -59,11 +62,15 @@ body {
 .search input:focus{ outline: none; box-shadow: 0 0 0 4px var(--ring); }
 .tags { display:flex; gap: 8px; flex-wrap: wrap; }
 .tag { padding: 8px 12px; border-radius: 999px; background: var(--glass); border:1px solid var(--card-bd); color:#dfe0ff; cursor:pointer; user-select:none; }
-.tag.active { background: #1b1c35; border-color: #3f3f6f; }
+.tag.active { background: #0f1f3d; border-color: #2f55e0; }
 
 .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
 .card { display:flex; flex-direction: column; justify-content: space-between; gap: 12px; padding: 16px; border-radius: 16px; background: var(--card-bg); border:1px solid var(--card-bd); box-shadow: 0 6px 22px -18px #000; min-height: 220px; }
-.card .badge { align-self:flex-start; font-size: 12px; background: rgba(138,43,226,0.15); color: #c4a6ff; border:1px solid rgba(138,43,226,0.35); padding: 4px 8px; border-radius: 999px; }
+.card .badge {
+  background: rgba(66,120,245,0.15);
+  color: #d6e4ff;
+  border: 1px solid rgba(66,120,245,0.35);
+}
 .card .title { margin: 8px 0 6px; font-size: 20px; }
 .card .desc { margin: 0; color: var(--text-dim); }
 .card .meta { display:flex; align-items:center; justify-content: space-between; gap: 8px; color: var(--text-dim); font-size: 12px; }
