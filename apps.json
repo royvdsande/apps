@@ -33,6 +33,17 @@
       ],
       "badge": "Game",
       "dateAdded": "2025-10-07"
+    },
+            {
+      "id": "coming-soon",
+      "name": "Coming Soon",
+      "description": "",
+      "path": "index",
+      "tags": [
+        "game"
+      ],
+      "badge": "Game",
+      "dateAdded": "2025-10-07"
     }
   ]
 }
