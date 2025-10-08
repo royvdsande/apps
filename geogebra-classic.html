@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GeoCanvas Classic</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --toolbar-height: 56px;
+      --sidebar-width: min(320px, 32vw);
+      --accent: #3367d6;
+      --border: #d9d9d9;
+      --bg: #f8f8fb;
+      --panel-bg: #ffffff;
+      font-family: "Inter", "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      background: var(--bg);
+      color: #222;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      height: var(--toolbar-height);
+      background: var(--panel-bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      color: #3a3a3a;
+    }
+
+    .brand svg {
+      width: 28px;
+      height: 28px;
+      color: var(--accent);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .tool-button {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      padding: 6px 8px;
+      min-width: 44px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease, border 0.15s ease, color 0.15s ease;
+      color: #404040;
+      cursor: pointer;
+    }
+
+    .tool-button svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .tool-button.active {
+      background: rgba(51, 103, 214, 0.12);
+      border-color: rgba(51, 103, 214, 0.6);
+      color: var(--accent);
+    }
+
+    .tool-button:hover {
+      background: rgba(0,0,0,0.05);
+    }
+
+    .layout {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+    }
+
+    .sidebar {
+      width: var(--sidebar-width);
+      max-width: 400px;
+      background: var(--panel-bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease;
+      z-index: 2;
+    }
+
+    .sidebar.hidden {
+      transform: translateX(calc(-1 * var(--sidebar-width)));
+    }
+
+    .sidebar-header {
+      padding: 14px 16px 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #555;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .algebra-list {
+      flex: 1;
+      overflow: auto;
+      padding: 0 12px 12px;
+    }
+
+    .algebra-item {
+      background: rgba(0,0,0,0.03);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .algebra-item strong {
+      min-width: 24px;
+      font-weight: 600;
+      color: #222;
+    }
+
+    .graph-container {
+      flex: 1;
+      position: relative;
+      background: var(--panel-bg);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      flex: 1;
+      touch-action: none;
+      background: #fff;
+      display: block;
+    }
+
+    .axis-label {
+      position: absolute;
+      font-size: 0.75rem;
+      color: #666;
+      pointer-events: none;
+    }
+
+    .command-bar {
+      border-top: 1px solid var(--border);
+      background: var(--panel-bg);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .command-input {
+      flex: 1;
+      min-width: 220px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      background: #fff;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .command-input:focus {
+      outline: none;
+      border-color: rgba(51, 103, 214, 0.6);
+      box-shadow: 0 0 0 4px rgba(51, 103, 214, 0.15);
+    }
+
+    .badge {
+      background: rgba(51,103,214,0.1);
+      color: var(--accent);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .floating-controls {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 1;
+    }
+
+    .round-button {
+      width: 42px;
+      height: 42px;
+      border-radius: 21px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.94);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .round-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    }
+
+    .round-button svg {
+      width: 20px;
+      height: 20px;
+      stroke: #444;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    @media (max-width: 920px) {
+      :root {
+        --sidebar-width: min(280px, 70vw);
+      }
+
+      .sidebar {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.18);
+      }
+
+      .layout {
+        position: relative;
+      }
+
+      body.sidebar-open .sidebar {
+        transform: translateX(0);
+      }
+
+      body.sidebar-open::after {
+        content: "";
+        position: absolute;
+        inset: var(--toolbar-height) 0 0;
+        background: rgba(0,0,0,0.25);
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .graph-container {
+        flex: 1;
+      }
+    }
+
+    @media (max-width: 600px) {
+      header {
+        gap: 8px;
+        padding: 6px 10px;
+        height: auto;
+      }
+
+      .brand {
+        flex: 1;
+      }
+
+      .toolbar {
+        order: 3;
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .tool-button {
+        min-width: 40px;
+        min-height: 40px;
+        border-radius: 10px;
+      }
+
+      .command-bar {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button class="tool-button" id="toggle-sidebar" aria-label="Wissel algebra-paneel">
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 4h16" />
+        <path d="M4 12h10" />
+        <path d="M4 20h16" />
+      </svg>
+    </button>
+    <div class="brand">
+      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="16" cy="16" r="10" opacity="0.3" />
+        <path d="M16 6v4" />
+        <path d="M16 22v4" />
+        <path d="M6 16h4" />
+        <path d="M22 16h4" />
+        <circle cx="16" cy="16" r="4" />
+      </svg>
+      GeoCanvas Classic
+    </div>
+    <div class="toolbar" role="toolbar" aria-label="Tekengereedschap">
+      <button class="tool-button active" data-tool="move" aria-label="Verplaats gereedschap">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v18" />
+          <path d="M3 12h18" />
+          <path d="M8 7l4-4 4 4" />
+          <path d="M8 17l4 4 4-4" />
+          <path d="M7 8l-4 4 4 4" />
+          <path d="M17 8l4 4-4 4" />
+        </svg>
+      </button>
+      <button class="tool-button" data-tool="point" aria-label="Punt gereedschap">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4" />
+        </svg>
+      </button>
+      <button class="tool-button" data-tool="segment" aria-label="Lijnstuk gereedschap">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 18 18 6" />
+          <circle cx="6" cy="18" r="2.5" />
+          <circle cx="18" cy="6" r="2.5" />
+        </svg>
+      </button>
+      <button class="tool-button" data-tool="line" aria-label="Rechte lijn gereedschap">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 20 20 4" />
+        </svg>
+      </button>
+      <button class="tool-button" data-tool="circle" aria-label="Cirkel gereedschap">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="7" />
+          <circle cx="12" cy="12" r="2.2" />
+        </svg>
+      </button>
+      <button class="tool-button" data-tool="polygon" aria-label="Veelhoek gereedschap">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 4 3 9l3 5 6 6 6-3 3-5-3-5-6-3z" />
+        </svg>
+      </button>
+      <button class="tool-button" data-tool="text" aria-label="Tekst gereedschap">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 5h16" />
+          <path d="M9 5v14" />
+          <path d="M15 19V5" />
+        </svg>
+      </button>
+      <span class="badge">Beta</span>
+    </div>
+  </header>
+  <main class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        Algebra
+        <button class="tool-button" id="close-sidebar" aria-label="Sluit paneel">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m7 7 10 10" />
+            <path d="m17 7-10 10" />
+          </svg>
+        </button>
+      </div>
+      <div class="algebra-list" id="algebra-list" aria-live="polite"></div>
+    </aside>
+    <section class="graph-container">
+      <div class="floating-controls">
+        <div class="round-button" id="zoom-in" aria-label="Zoom in">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M11 8v6" />
+            <path d="M8 11h6" />
+            <path d="m20 20-3-3" />
+          </svg>
+        </div>
+        <div class="round-button" id="zoom-out" aria-label="Zoom uit">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M8 11h6" />
+            <path d="m20 20-3-3" />
+          </svg>
+        </div>
+        <div class="round-button" id="reset-view" aria-label="Reset weergave">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 3.1-6.9L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+        </div>
+      </div>
+      <canvas id="board" width="1600" height="1200" aria-label="Coördinaatvlak"></canvas>
+      <div class="command-bar">
+        <span>+</span>
+        <input type="text" id="command-input" class="command-input" placeholder="Voer een opdracht of functie in, bijv. y=x^2 of A=(2,1)" />
+      </div>
+    </section>
+  </main>
+  <script>
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+    const sidebar = document.getElementById('sidebar');
+    const toggleSidebarBtn = document.getElementById('toggle-sidebar');
+    const closeSidebarBtn = document.getElementById('close-sidebar');
+    const algebraList = document.getElementById('algebra-list');
+    const commandInput = document.getElementById('command-input');
+
+    const DPR = window.devicePixelRatio || 1;
+
+    const state = {
+      tool: 'move',
+      scale: 80,
+      origin: { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 },
+      points: [],
+      segments: [],
+      lines: [],
+      circles: [],
+      polygons: [],
+      texts: [],
+      functions: [],
+      draggingPoint: null,
+      dragOffset: { x: 0, y: 0 },
+      panning: false,
+      panStart: { x: 0, y: 0 },
+      tempPoints: [],
+    };
+
+    const COLORS = {
+      point: '#1f6feb',
+      line: '#2b4aa0',
+      segment: '#2b4aa0',
+      circle: '#c03fb5',
+      polygon: '#009688',
+      text: '#444',
+      function: '#e36209'
+    };
+
+    function resizeCanvas() {
+      const { clientWidth, clientHeight } = canvas;
+      canvas.width = clientWidth * DPR;
+      canvas.height = clientHeight * DPR;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      draw();
+    }
+
+    function worldToScreen({ x, y }) {
+      return {
+        x: state.origin.x + x * state.scale,
+        y: state.origin.y - y * state.scale
+      };
+    }
+
+    function screenToWorld(x, y) {
+      return {
+        x: (x - state.origin.x) / state.scale,
+        y: (state.origin.y - y) / state.scale
+      };
+    }
+
+    function drawGrid() {
+      const bounds = {
+        left: -state.origin.x / state.scale,
+        right: (canvas.clientWidth - state.origin.x) / state.scale,
+        bottom: -(canvas.clientHeight - state.origin.y) / state.scale,
+        top: state.origin.y / state.scale
+      };
+
+      ctx.save();
+      ctx.scale(DPR, DPR);
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      ctx.lineWidth = 1 / DPR;
+
+      const startX = Math.floor(bounds.left);
+      const endX = Math.ceil(bounds.right);
+      const startY = Math.floor(bounds.bottom);
+      const endY = Math.ceil(bounds.top);
+
+      ctx.strokeStyle = '#e4e8f0';
+      ctx.beginPath();
+      for (let i = startX; i <= endX; i++) {
+        const screenX = Math.round(state.origin.x + i * state.scale) + 0.5;
+        ctx.moveTo(screenX, 0);
+        ctx.lineTo(screenX, canvas.clientHeight);
+      }
+      for (let j = startY; j <= endY; j++) {
+        const screenY = Math.round(state.origin.y - j * state.scale) + 0.5;
+        ctx.moveTo(0, screenY);
+        ctx.lineTo(canvas.clientWidth, screenY);
+      }
+      ctx.stroke();
+
+      // axes
+      ctx.strokeStyle = '#9aa0a6';
+      ctx.lineWidth = 1.5 / DPR;
+      ctx.beginPath();
+      const xAxisY = Math.round(state.origin.y) + 0.5;
+      ctx.moveTo(0, xAxisY);
+      ctx.lineTo(canvas.clientWidth, xAxisY);
+      const yAxisX = Math.round(state.origin.x) + 0.5;
+      ctx.moveTo(yAxisX, 0);
+      ctx.lineTo(yAxisX, canvas.clientHeight);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawPoints() {
+      ctx.save();
+      ctx.scale(DPR, DPR);
+      ctx.fillStyle = COLORS.point;
+      for (const point of state.points) {
+        const { x, y } = worldToScreen(point.position);
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = COLORS.point;
+        ctx.font = '12px Inter, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText(point.name, x + 8, y + 6);
+      }
+      ctx.restore();
+    }
+
+    function drawLines() {
+      ctx.save();
+      ctx.scale(DPR, DPR);
+      ctx.lineWidth = 2 / DPR;
+
+      for (const line of state.lines) {
+        ctx.strokeStyle = COLORS.line;
+        const { p1, p2 } = line;
+        const a = state.points.find(p => p.id === p1);
+        const b = state.points.find(p => p.id === p2);
+        if (!a || !b) continue;
+        const A = worldToScreen(a.position);
+        const B = worldToScreen(b.position);
+        const dir = { x: B.x - A.x, y: B.y - A.y };
+        const len = Math.hypot(dir.x, dir.y) || 1;
+        const unit = { x: dir.x / len, y: dir.y / len };
+        const large = 4000;
+        ctx.beginPath();
+        ctx.moveTo(A.x - unit.x * large, A.y - unit.y * large);
+        ctx.lineTo(A.x + unit.x * large, A.y + unit.y * large);
+        ctx.stroke();
+      }
+
+      for (const segment of state.segments) {
+        ctx.strokeStyle = COLORS.segment;
+        const { p1, p2 } = segment;
+        const a = state.points.find(p => p.id === p1);
+        const b = state.points.find(p => p.id === p2);
+        if (!a || !b) continue;
+        const A = worldToScreen(a.position);
+        const B = worldToScreen(b.position);
+        ctx.beginPath();
+        ctx.moveTo(A.x, A.y);
+        ctx.lineTo(B.x, B.y);
+        ctx.stroke();
+      }
+
+      for (const polygon of state.polygons) {
+        if (polygon.points.length < 3) continue;
+        ctx.fillStyle = 'rgba(0,150,136,0.15)';
+        ctx.strokeStyle = COLORS.polygon;
+        ctx.beginPath();
+        const start = state.points.find(p => p.id === polygon.points[0]);
+        if (!start) continue;
+        const first = worldToScreen(start.position);
+        ctx.moveTo(first.x, first.y);
+        for (let i = 1; i < polygon.points.length; i++) {
+          const pt = state.points.find(p => p.id === polygon.points[i]);
+          if (!pt) continue;
+          const pos = worldToScreen(pt.position);
+          ctx.lineTo(pos.x, pos.y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      for (const circle of state.circles) {
+        const center = state.points.find(p => p.id === circle.center);
+        const edge = state.points.find(p => p.id === circle.edge);
+        if (!center || !edge) continue;
+        const C = worldToScreen(center.position);
+        const radius = distance(center.position, edge.position) * state.scale;
+        ctx.strokeStyle = COLORS.circle;
+        ctx.beginPath();
+        ctx.arc(C.x, C.y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function drawFunctions() {
+      if (!state.functions.length) return;
+      ctx.save();
+      ctx.scale(DPR, DPR);
+      ctx.lineWidth = 2 / DPR;
+      ctx.strokeStyle = COLORS.function;
+      for (const fn of state.functions) {
+        ctx.beginPath();
+        let started = false;
+        for (let sx = 0; sx <= canvas.clientWidth; sx += 1) {
+          const world = screenToWorld(sx, 0);
+          const x = world.x;
+          let y;
+          try {
+            y = fn.eval(x);
+            if (!Number.isFinite(y)) {
+              started = false;
+              continue;
+            }
+          } catch (err) {
+            started = false;
+            continue;
+          }
+          const sy = worldToScreen({ x, y }).y;
+          if (!started) {
+            ctx.moveTo(sx, sy);
+            started = true;
+          } else {
+            ctx.lineTo(sx, sy);
+          }
+        }
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawTexts() {
+      if (!state.texts.length) return;
+      ctx.save();
+      ctx.scale(DPR, DPR);
+      ctx.fillStyle = COLORS.text;
+      ctx.font = '14px Inter, sans-serif';
+      for (const label of state.texts) {
+        const { x, y } = worldToScreen(label.position);
+        ctx.fillText(label.content, x, y);
+      }
+      ctx.restore();
+    }
+
+    function drawPolygonPreview() {
+      if (!state.tempPolygon || state.tempPolygon.points.length === 0) return;
+      ctx.save();
+      ctx.scale(DPR, DPR);
+      ctx.setLineDash([6, 6]);
+      ctx.lineWidth = 2 / DPR;
+      ctx.strokeStyle = COLORS.polygon;
+
+      const vertices = state.tempPolygon.points
+        .map(id => state.points.find(p => p.id === id))
+        .filter(Boolean);
+      if (vertices.length === 0) {
+        ctx.restore();
+        return;
+      }
+
+      ctx.beginPath();
+      const first = worldToScreen(vertices[0].position);
+      ctx.moveTo(first.x, first.y);
+      for (let i = 1; i < vertices.length; i++) {
+        const pos = worldToScreen(vertices[i].position);
+        ctx.lineTo(pos.x, pos.y);
+      }
+      if (state.tempPolygon.preview) {
+        const preview = worldToScreen(state.tempPolygon.preview);
+        ctx.lineTo(preview.x, preview.y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function draw() {
+      drawGrid();
+      drawLines();
+      drawPolygonPreview();
+      drawFunctions();
+      drawPoints();
+      drawTexts();
+    }
+
+    function setTool(tool) {
+      state.tool = tool;
+      document.querySelectorAll('.tool-button[data-tool]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tool === tool);
+      });
+      state.tempPoints = [];
+    }
+
+    function distance(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function findPointNear(world, threshold = 0.25) {
+      let closest = null;
+      let min = Infinity;
+      for (const point of state.points) {
+        const dist = distance(point.position, world);
+        if (dist < threshold && dist < min) {
+          min = dist;
+          closest = point;
+        }
+      }
+      return closest;
+    }
+
+    let pointCounter = 0;
+    function nextPointName() {
+      const code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      let index = pointCounter++;
+      let name = '';
+      do {
+        name = code[index % code.length] + name;
+        index = Math.floor(index / code.length) - 1;
+      } while (index >= 0);
+      return name;
+    }
+
+    function createPoint(world, existingName) {
+      const name = existingName || nextPointName();
+      const point = {
+        id: crypto.randomUUID(),
+        name,
+        position: { x: world.x, y: world.y }
+      };
+      state.points.push(point);
+      registerAlgebraEntry(point.id, `${name} = (${formatNumber(world.x)}, ${formatNumber(world.y)})`, 'point');
+      draw();
+      return point;
+    }
+
+    function registerAlgebraEntry(id, text, type) {
+      const item = document.createElement('div');
+      item.className = 'algebra-item';
+      item.dataset.id = id;
+      const icon = document.createElement('div');
+      icon.style.width = '12px';
+      icon.style.height = '12px';
+      icon.style.borderRadius = '999px';
+      icon.style.background = COLORS[type] || '#888';
+      const label = document.createElement('div');
+      const [title, ...rest] = text.split('=');
+      const strong = document.createElement('strong');
+      strong.textContent = title.trim();
+      const span = document.createElement('span');
+      const detail = rest.join('=').trim();
+      span.textContent = detail ? ` = ${detail}` : '';
+      label.appendChild(strong);
+      label.appendChild(span);
+      item.appendChild(icon);
+      item.appendChild(label);
+      algebraList.appendChild(item);
+      algebraList.scrollTo({ top: algebraList.scrollHeight, behavior: 'smooth' });
+    }
+
+    function updatePointAlgebra(point) {
+      const item = algebraList.querySelector(`[data-id="${point.id}"]`);
+      if (item) {
+        item.querySelector('strong').textContent = point.name;
+        const span = item.querySelector('span');
+        span.textContent = ` = (${formatNumber(point.position.x)}, ${formatNumber(point.position.y)})`;
+      }
+    }
+
+    function formatNumber(value) {
+      return Math.round(value * 1000) / 1000;
+    }
+
+    function handlePointerDown(event) {
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const world = screenToWorld(x, y);
+
+      if (state.tool === 'move') {
+        const point = findPointNear(world, 0.3);
+        if (point) {
+          state.draggingPoint = point;
+          const screenPos = worldToScreen(point.position);
+          state.dragOffset = { x: screenPos.x - x, y: screenPos.y - y };
+        } else {
+          state.panning = true;
+          state.panStart = { x, y };
+        }
+      } else if (state.tool === 'point') {
+        createPoint(world);
+      } else if (state.tool === 'line' || state.tool === 'segment' || state.tool === 'circle') {
+        handleConstructionTool(world);
+      } else if (state.tool === 'polygon') {
+        handlePolygonTool(world);
+      } else if (state.tool === 'text') {
+        handleTextTool(world);
+      }
+
+      event.preventDefault();
+    }
+
+    function handlePointerMove(event) {
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const world = screenToWorld(x, y);
+
+      if (state.draggingPoint) {
+        const position = screenToWorld(x + state.dragOffset.x, y + state.dragOffset.y);
+        state.draggingPoint.position = position;
+        updatePointAlgebra(state.draggingPoint);
+        draw();
+      } else if (state.panning) {
+        const dx = x - state.panStart.x;
+        const dy = y - state.panStart.y;
+        state.origin.x += dx;
+        state.origin.y += dy;
+        state.panStart = { x, y };
+        draw();
+      }
+
+      if (state.tool === 'polygon' && state.tempPolygon) {
+        state.tempPolygon.preview = world;
+        draw();
+      }
+    }
+
+    function handlePointerUp() {
+      state.draggingPoint = null;
+      state.panning = false;
+      if (state.tempPolygon) {
+        state.tempPolygon.preview = null;
+      }
+    }
+
+    function handleConstructionTool(world) {
+      let point = findPointNear(world);
+      if (!point) {
+        point = createPoint(world);
+      }
+      state.tempPoints.push(point.id);
+
+      if (state.tool === 'line' && state.tempPoints.length === 2) {
+        const [p1, p2] = state.tempPoints;
+        state.lines.push({ id: crypto.randomUUID(), p1, p2 });
+        registerAlgebraEntry(state.lines[state.lines.length - 1].id, `l: lijn(${pointName(p1)}, ${pointName(p2)})`, 'line');
+        state.tempPoints = [];
+        draw();
+      }
+
+      if (state.tool === 'segment' && state.tempPoints.length === 2) {
+        const [p1, p2] = state.tempPoints;
+        state.segments.push({ id: crypto.randomUUID(), p1, p2 });
+        registerAlgebraEntry(state.segments[state.segments.length - 1].id, `s: segment(${pointName(p1)}, ${pointName(p2)})`, 'segment');
+        state.tempPoints = [];
+        draw();
+      }
+
+      if (state.tool === 'circle' && state.tempPoints.length === 2) {
+        const [center, edge] = state.tempPoints;
+        state.circles.push({ id: crypto.randomUUID(), center, edge });
+        registerAlgebraEntry(state.circles[state.circles.length - 1].id, `c: cirkel(${pointName(center)}, ${pointName(edge)})`, 'circle');
+        state.tempPoints = [];
+        draw();
+      }
+    }
+
+    function handlePolygonTool(world) {
+      if (!state.tempPolygon) {
+        state.tempPolygon = { points: [], preview: null };
+      } else {
+        state.tempPolygon.preview = null;
+      }
+      let point = findPointNear(world);
+      if (!point) point = createPoint(world);
+      state.tempPolygon.points.push(point.id);
+      if (state.tempPolygon.points.length > 2 && point.id === state.tempPolygon.points[0]) {
+        const uniquePoints = [...new Set(state.tempPolygon.points.slice(0, -1))];
+        if (uniquePoints.length >= 3) {
+          const polygon = { id: crypto.randomUUID(), points: uniquePoints };
+          state.polygons.push(polygon);
+          registerAlgebraEntry(polygon.id, `p: veelhoek(${uniquePoints.map(pointName).join(', ')})`, 'polygon');
+        }
+        state.tempPolygon = null;
+        draw();
+      }
+    }
+
+    function handleTextTool(world) {
+      const content = prompt('Tekstinhoud:');
+      if (!content) return;
+      const label = {
+        id: crypto.randomUUID(),
+        content,
+        position: world
+      };
+      state.texts.push(label);
+      registerAlgebraEntry(label.id, `tekst: "${content}"`, 'text');
+      draw();
+    }
+
+    function pointName(id) {
+      const point = state.points.find(p => p.id === id);
+      return point ? point.name : '?';
+    }
+
+    function handleWheel(event) {
+      const delta = -event.deltaY;
+      const factor = delta > 0 ? 1.1 : 0.9;
+      const mouse = screenToWorld(event.offsetX, event.offsetY);
+      state.scale = Math.min(240, Math.max(20, state.scale * factor));
+      const after = worldToScreen(mouse);
+      state.origin.x += event.offsetX - after.x;
+      state.origin.y += event.offsetY - after.y;
+      draw();
+    }
+
+    function zoom(factor) {
+      const center = {
+        x: canvas.clientWidth / 2,
+        y: canvas.clientHeight / 2
+      };
+      const worldCenter = screenToWorld(center.x, center.y);
+      state.scale = Math.min(240, Math.max(20, state.scale * factor));
+      const after = worldToScreen(worldCenter);
+      state.origin.x += center.x - after.x;
+      state.origin.y += center.y - after.y;
+      draw();
+    }
+
+    function resetView() {
+      state.scale = 80;
+      state.origin = { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 };
+      draw();
+    }
+
+    function parseCommand(command) {
+      const trimmed = command.trim();
+      if (!trimmed) return;
+
+      // Function: y=..., f(x)=..., g(x)=...
+      const funcMatch = trimmed.match(/^(?:([a-zA-Z])\(x\)\s*=|y\s*=)\s*(.+)$/);
+      if (funcMatch) {
+        const expr = funcMatch[2].replace(/\^/g, '**');
+        try {
+          const compiled = new Function('x', `with (Math) { return ${expr}; }`);
+          const fn = {
+            id: crypto.randomUUID(),
+            label: funcMatch[1] ? `${funcMatch[1]}(x)` : 'f(x)',
+            eval: compiled
+          };
+          state.functions.push(fn);
+          registerAlgebraEntry(fn.id, `${fn.label} = ${expr.replace(/\*\*/g, '^')}`, 'function');
+          draw();
+          return;
+        } catch (error) {
+          alert('Kon functie niet interpreteren. Controleer de invoer.');
+          return;
+        }
+      }
+
+      const pointMatch = trimmed.match(/^([A-Za-z]+)\s*=\s*\(([-+]?\d*\.?\d+),\s*([-+]?\d*\.?\d+)\)$/);
+      if (pointMatch) {
+        const [, name, x, y] = pointMatch;
+        const point = createPoint({ x: parseFloat(x), y: parseFloat(y) }, name);
+        updatePointAlgebra(point);
+        draw();
+        return;
+      }
+
+      alert('Deze opdracht wordt nog niet ondersteund.');
+    }
+
+    function initTools() {
+      document.querySelectorAll('.tool-button[data-tool]').forEach(btn => {
+        btn.addEventListener('click', () => setTool(btn.dataset.tool));
+      });
+    }
+
+    function initSidebar() {
+      toggleSidebarBtn.addEventListener('click', () => {
+        document.body.classList.toggle('sidebar-open');
+        sidebar.classList.toggle('hidden');
+      });
+      closeSidebarBtn.addEventListener('click', () => {
+        document.body.classList.remove('sidebar-open');
+        sidebar.classList.add('hidden');
+      });
+    }
+
+    canvas.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+
+    function handleResponsiveSidebar() {
+      if (window.innerWidth >= 920) {
+        sidebar.classList.remove('hidden');
+        document.body.classList.remove('sidebar-open');
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      handleResponsiveSidebar();
+    });
+
+    document.getElementById('zoom-in').addEventListener('click', () => zoom(1.2));
+    document.getElementById('zoom-out').addEventListener('click', () => zoom(0.8));
+    document.getElementById('reset-view').addEventListener('click', resetView);
+
+    commandInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        parseCommand(commandInput.value);
+        commandInput.value = '';
+      }
+    });
+
+    initTools();
+    initSidebar();
+    if (window.innerWidth < 920) {
+      sidebar.classList.add('hidden');
+    }
+    handleResponsiveSidebar();
+    resizeCanvas();
+  </script>
+</body>
+</html>
