@@ -889,6 +889,7 @@
     ];
 
     let keyboardVisible = false;
+    let skipNextKeyboardToggleClick = false;
     let activeKeyboardSet = KEYBOARD_SETS[0].id;
     let keyboardBuilt = false;
 
@@ -1358,6 +1359,25 @@
       return closest;
     }
 
+    function snapWorldToGrid(world) {
+      const position = { x: world.x, y: world.y };
+      if (!Number.isFinite(state.scale) || state.scale <= 0) {
+        return position;
+      }
+      const snapped = {
+        x: Math.round(position.x),
+        y: Math.round(position.y)
+      };
+      const originalScreen = worldToScreen(position);
+      const snappedScreen = worldToScreen(snapped);
+      const distancePx = Math.hypot(originalScreen.x - snappedScreen.x, originalScreen.y - snappedScreen.y);
+      const thresholdPx = Math.max(6, Math.min(18, state.scale * 0.25));
+      if (distancePx <= thresholdPx) {
+        return snapped;
+      }
+      return position;
+    }
+
     let pointCounter = 0;
     function nextPointName() {
       const code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -1370,15 +1390,17 @@
       return name;
     }
 
-    function createPoint(world, existingName) {
+    function createPoint(world, existingName, options = {}) {
       const name = existingName || nextPointName();
+      const shouldSnap = options.snap !== false;
+      const position = shouldSnap ? snapWorldToGrid(world) : { x: world.x, y: world.y };
       const point = {
         id: crypto.randomUUID(),
         name,
-        position: { x: world.x, y: world.y }
+        position
       };
       state.points.push(point);
-      registerAlgebraEntry(point.id, `${name} = (${formatNumber(world.x)}, ${formatNumber(world.y)})`, 'point');
+      registerAlgebraEntry(point.id, `${name} = (${formatNumber(point.position.x)}, ${formatNumber(point.position.y)})`, 'point');
       draw();
       return point;
     }
@@ -1904,7 +1926,7 @@
 
       if (state.draggingPoint) {
         const position = screenToWorld(x + state.dragOffset.x, y + state.dragOffset.y);
-        state.draggingPoint.position = position;
+        state.draggingPoint.position = snapWorldToGrid(position);
         updatePointAlgebra(state.draggingPoint);
         draw();
       } else if (state.panning) {
@@ -1917,7 +1939,7 @@
       }
 
       if (state.tool === 'polygon' && state.tempPolygon) {
-        state.tempPolygon.preview = world;
+        state.tempPolygon.preview = snapWorldToGrid(world);
         draw();
       }
     }
@@ -1939,9 +1961,10 @@
     }
 
     function handleConstructionTool(world) {
-      let point = findPointNear(world);
+      const snappedWorld = snapWorldToGrid(world);
+      let point = findPointNear(snappedWorld);
       if (!point) {
-        point = createPoint(world);
+        point = createPoint(snappedWorld);
       }
       state.tempPoints.push(point.id);
 
@@ -1976,8 +1999,9 @@
       } else {
         state.tempPolygon.preview = null;
       }
-      let point = findPointNear(world);
-      if (!point) point = createPoint(world);
+      const snappedWorld = snapWorldToGrid(world);
+      let point = findPointNear(snappedWorld);
+      if (!point) point = createPoint(snappedWorld);
       state.tempPolygon.points.push(point.id);
       if (state.tempPolygon.points.length > 2 && point.id === state.tempPolygon.points[0]) {
         const uniquePoints = [...new Set(state.tempPolygon.points.slice(0, -1))];
@@ -2010,6 +2034,7 @@
     }
 
     function handleWheel(event) {
+      event.preventDefault();
       const delta = -event.deltaY;
       const factor = delta > 0 ? 1.1 : 0.9;
       const mouse = screenToWorld(event.offsetX, event.offsetY);
@@ -2051,7 +2076,7 @@
       const pointMatch = trimmed.match(/^([A-Za-z]+)\s*=\s*\(([-+]?\d*\.?\d+),\s*([-+]?\d*\.?\d+)\)$/);
       if (pointMatch) {
         const [, name, x, y] = pointMatch;
-        const point = createPoint({ x: parseFloat(x), y: parseFloat(y) }, name);
+        const point = createPoint({ x: parseFloat(x), y: parseFloat(y) }, name, { snap: false });
         updatePointAlgebra(point);
         draw();
         return;
@@ -2179,8 +2204,28 @@
     document.getElementById('zoom-out').addEventListener('click', () => zoom(0.8));
     document.getElementById('reset-view').addEventListener('click', resetView);
 
-    keyboardToggle.addEventListener('click', () => {
+    keyboardToggle.addEventListener('pointerdown', event => {
+      event.preventDefault();
+      keyboardToggle.focus();
       setKeyboardVisibility(!keyboardVisible);
+      skipNextKeyboardToggleClick = true;
+    });
+
+    keyboardToggle.addEventListener('click', event => {
+      event.preventDefault();
+      if (skipNextKeyboardToggleClick) {
+        skipNextKeyboardToggleClick = false;
+        return;
+      }
+      setKeyboardVisibility(!keyboardVisible);
+    });
+
+    keyboardToggle.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        setKeyboardVisibility(!keyboardVisible);
+        skipNextKeyboardToggleClick = true;
+      }
     });
 
     commandInput.addEventListener('focus', () => {
