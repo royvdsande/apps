@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Klassieke Grafiekentool – GeoGebra-achtig</title>
+  <!-- Parser/rekenkernel -->
+  <script src="https://cdn.jsdelivr.net/npm/mathjs@11/dist/math.min.js"></script>
+  <style>
+    :root{
+      --bg:#fafafa;
+      --panel:#ffffff;
+      --ink:#222;
+      --ink-2:#555;
+      --muted:#9aa0a6;
+      --line:#e6e6e6;
+      --accent:#0b57d0;
+      --good:#15803d;
+      --bad:#b91c1c;
+      --shadow:0 6px 24px rgba(0,0,0,.08),0 2px 8px rgba(0,0,0,.06);
+      --radius:12px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+    header{
+      position:sticky; top:0; z-index:10; background:var(--panel);
+      border-bottom:1px solid var(--line); box-shadow:var(--shadow);
+    }
+    .wrap{max-width:1100px; margin:0 auto; padding:12px 16px}
+    h1{font-size:18px; margin:0}
+    main{max-width:1100px; margin:16px auto; padding:0 16px; display:grid; gap:16px}
+    .layout{display:grid; grid-template-columns:1fr; gap:16px}
+    @media (min-width: 980px){
+      .layout{grid-template-columns:380px 1fr}
+    }
+    .panel{
+      background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+    }
+    .panel h2{margin:0; font-size:16px; padding:12px 14px; border-bottom:1px solid var(--line)}
+    .panel .content{padding:12px 14px}
+    .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px}
+    .row label{font-size:13px; color:var(--ink-2)}
+    input[type="text"], input[type="number"], select{
+      width:100%; padding:9px 10px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--ink);
+      outline:none;
+    }
+    input[type="text"]:focus, input[type="number"]:focus, select:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(11,87,208,.15)}
+    button{
+      padding:9px 12px; border-radius:10px; border:1px solid var(--line); background:#fff; cursor:pointer;
+    }
+    button.primary{background:var(--accent); color:#fff; border-color:var(--accent)}
+    button.ghost{background:transparent}
+    .muted{color:var(--ink-2); font-size:13px}
+    .plots{display:flex; flex-direction:column; gap:10px}
+    .plot-item{
+      border:1px dashed var(--line); border-radius:10px; padding:10px; background:#fff;
+    }
+    .badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; background:#eef3fe; color:#0b57d0}
+    .line{height:1px; background:var(--line); margin:10px 0}
+    .toolbar{display:flex; gap:8px; flex-wrap:wrap}
+    canvas{width:100%; height:64vh; display:block; border-radius:12px; touch-action:none}
+    .legend{display:flex; flex-wrap:wrap; gap:12px; padding:8px 12px; border-top:1px solid var(--line); font-size:14px}
+    .chip{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:#fff}
+    .swatch{width:14px; height:14px; border-radius:50%; border:1px solid rgba(0,0,0,.12)}
+    details summary{cursor:pointer; list-style:none}
+    details summary::-webkit-details-marker{display:none}
+    code.kbd{
+      padding:.2rem .4rem; border:1px solid var(--line); border-radius:6px; background:#f3f4f6; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size:12px; color:#111827
+    }
+    .footer-note{font-size:12px; color:var(--muted)}
+    .danger{color:var(--bad)}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Grafiekentool – klassiek maar stevig 🇳🇱</h1>
+    <div class="muted">Teken cartesisch <em>y=f(x)</em>, polair <em>r(θ)</em>, parametrisch <em>(x(t), y(t))</em> en impliciet <em>F(x,y)=0</em>. Pannen (slepen), zoomen (wiel of knijp).</div>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="panel">
+    <h2>Grafieken</h2>
+    <div class="content">
+      <div class="row">
+        <label for="plotType">Type</label>
+        <select id="plotType" aria-label="Type plot">
+          <option value="cartesian">Cartesisch: y = f(x)</option>
+          <option value="polar">Polair: r = f(θ)</option>
+          <option value="parametric">Parametrisch: (x(t), y(t))</option>
+          <option value="implicit">Impliciet: F(x, y) = 0</option>
+        </select>
+      </div>
+
+      <div id="inputs">
+        <!-- dynamisch -->
+      </div>
+
+      <div class="toolbar">
+        <button id="addPlot" class="primary">+ Voeg grafiek toe</button>
+        <button id="exampleBtn">Voorbeelden laden</button>
+        <button id="clearBtn" class="ghost">Alles wissen</button>
+      </div>
+
+      <div class="line"></div>
+
+      <div class="plots" id="plots"></div>
+
+      <details style="margin-top:10px">
+        <summary><span class="badge">Assen & venster</span></summary>
+        <div class="row" style="margin-top:10px">
+          <div style="flex:1">
+            <label>X-min</label>
+            <input type="number" id="xmin" step="any" value="-10">
+          </div>
+          <div style="flex:1">
+            <label>X-max</label>
+            <input type="number" id="xmax" step="any" value="10">
+          </div>
+        </div>
+        <div class="row">
+          <div style="flex:1">
+            <label>Y-min</label>
+            <input type="number" id="ymin" step="any" value="-6">
+          </div>
+          <div style="flex:1">
+            <label>Y-max</label>
+            <input type="number" id="ymax" step="any" value="6">
+          </div>
+        </div>
+        <div class="toolbar">
+          <button id="applyWindow">Venster toepassen</button>
+          <button id="resetView" class="ghost">Reset</button>
+          <button id="fitAll" class="ghost">Auto-fit (alle grafieken)</button>
+        </div>
+        <div class="footer-note">Sneltoetsen: <code class="kbd">←→↑↓</code> pannen • <code class="kbd">=</code>/<code class="kbd">-</code> zoomen • <code class="kbd">0</code> reset • <code class="kbd">f</code> fit.</div>
+      </details>
+
+      <details style="margin-top:10px">
+        <summary><span class="badge">Export & opslaan</span></summary>
+        <div class="toolbar" style="margin-top:10px">
+          <button id="savePNG">Exporteer PNG</button>
+          <button id="saveState" class="ghost">Bewaar sessie</button>
+          <button id="loadState" class="ghost">Laad sessie</button>
+        </div>
+        <div class="footer-note">Sessie wordt lokaal in je browser bewaard.</div>
+      </details>
+
+      <p class="footer-note" style="margin-top:12px">
+        Variabelen: gebruik <code>x</code>, <code>y</code>, <code>t</code>, <code>θ</code> (of <code>theta</code>). Functies van <em>math.js</em> zoals <code>sin</code>, <code>cos</code>, <code>tan</code>, <code>abs</code>, <code>sqrt</code>, <code>log</code>, <code>exp</code>, enz.
+      </p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Tekenveld</h2>
+    <div class="content" style="padding:0">
+      <canvas id="canvas" aria-label="Grafiek"></canvas>
+      <div class="legend" id="legend"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  // ---------- HULP ----------
+  const $ = sel => document.querySelector(sel);
+  const el = (tag, props={}, ...kids) => {
+    const n = document.createElement(tag);
+    Object.assign(n, props);
+    kids.forEach(k => n.append(k));
+    return n;
+  };
+  const niceStep = (range, target=10) => {
+    const raw = range / target;
+    const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+    const steps = [1,2,5,10];
+    for (let s of steps) if (raw <= s*pow) return s*pow;
+    return 10*pow;
+  };
+  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+  const DPI = () => window.devicePixelRatio || 1;
+
+  // ---------- TOESTAND ----------
+  const state = {
+    world: { xmin:-10, xmax:10, ymin:-6, ymax:6 },
+    plots: [],
+    colors: ["#d0021b","#4a90e2","#7ed321","#f5a623","#9013fe","#50e3c2","#b8e986","#f8e71c","#bd10e0","#417505"],
+    colorIdx: 0,
+    needsDraw: true
+  };
+
+  const canvas = $("#canvas");
+  const ctx = canvas.getContext("2d");
+
+  function resizeCanvas(){
+    const rect = canvas.getBoundingClientRect();
+    const dpr = DPI();
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.scale(dpr,dpr);
+    state.needsDraw = true;
+  }
+  new ResizeObserver(resizeCanvas).observe(canvas);
+  // init grootte
+  setTimeout(resizeCanvas, 0);
+
+  // ---------- COORDINATEN ----------
+  const W = () => state.world;
+  const vx = (x) => (x - W().xmin) * (canvas.clientWidth) / (W().xmax - W().xmin);
+  const vy = (y) => (W().ymax - y) * (canvas.clientHeight) / (W().ymax - W().ymin);
+  const invx = (px) => W().xmin + px * (W().xmax - W().xmin) / canvas.clientWidth;
+  const invy = (py) => W().ymax - py * (W().ymax - W().ymin) / canvas.clientHeight;
+
+  // ---------- TEKENEN ----------
+  function drawGrid(){
+    const {xmin,xmax,ymin,ymax} = W();
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    ctx.clearRect(0,0,w,h);
+
+    // grid
+    const xstep = niceStep(xmax - xmin, 10);
+    const ystep = niceStep(ymax - ymin, 10);
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#eee";
+    ctx.fillStyle = "#666";
+    ctx.font = "12px system-ui";
+
+    // verticale lijnen
+    let x0 = Math.ceil(xmin / xstep)*xstep;
+    for(let x = x0; x <= xmax; x += xstep){
+      const px = Math.round(vx(x)) + .5;
+      ctx.beginPath(); ctx.moveTo(px,0); ctx.lineTo(px,h); ctx.stroke();
+      if (Math.abs(x) > 1e-12){
+        ctx.fillText(Number(x.toFixed(10)).toString(), px+3, vy(0)+12);
+      }
+    }
+    // horizontale lijnen
+    let y0 = Math.ceil(ymin / ystep)*ystep;
+    for(let y = y0; y <= ymax; y += ystep){
+      const py = Math.round(vy(y)) + .5;
+      ctx.beginPath(); ctx.moveTo(0,py); ctx.lineTo(w,py); ctx.stroke();
+      if (Math.abs(y) > 1e-12){
+        ctx.fillText(Number(y.toFixed(10)).toString(), vx(0)+6, py-4);
+      }
+    }
+    // assen
+    ctx.strokeStyle = "#999";
+    ctx.lineWidth = 1.2;
+    // y-as
+    if (xmin < 0 && xmax > 0){
+      const xz = Math.round(vx(0)) + .5;
+      ctx.beginPath(); ctx.moveTo(xz,0); ctx.lineTo(xz,h); ctx.stroke();
+    }
+    // x-as
+    if (ymin < 0 && ymax > 0){
+      const yz = Math.round(vy(0)) + .5;
+      ctx.beginPath(); ctx.moveTo(0,yz); ctx.lineTo(w,yz); ctx.stroke();
+    }
+  }
+
+  function safeEvalCompiled(compiled, scope){
+    try{
+      const v = compiled.evaluate(scope);
+      if (typeof v === "number" && isFinite(v)) return v;
+      if (math.typeOf(v) === 'Complex') return NaN; // geen complex tekenen
+      if (math.typeOf(v) === 'BigNumber') return Number(v);
+      if (Number.isFinite(Number(v))) return Number(v);
+    }catch(e){ /* negeren tijdens tekenen */ }
+    return NaN;
+  }
+
+  function drawCartesian(plot){
+    const {compiled,color} = plot;
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+    let pen=false, lasty=0;
+    for(let px=0; px<=w; px++){
+      const x = invx(px);
+      const y = safeEvalCompiled(compiled, {x, t:x, theta:x, θ:x});
+      if (!Number.isFinite(y)) { pen=false; continue; }
+      const py = vy(y);
+      if (pen){
+        // onderbreken bij grote sprongen (asymptoten)
+        if (Math.abs(py-lasty) > h*0.5){ pen=false; }
+        else { ctx.lineTo(px,py); }
+      }
+      if (!pen){ ctx.moveTo(px,py); pen=true; }
+      lasty=py;
+    }
+    ctx.stroke();
+  }
+
+  function drawPolar(plot){
+    const {compiled,color, thetaMin=-Math.PI*2, thetaMax=Math.PI*2, samples=1024} = plot;
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+    let pen=false;
+    for(let i=0;i<=samples;i++){
+      const th = thetaMin + (thetaMax-thetaMin)*i/samples;
+      const r = safeEvalCompiled(compiled, {theta:th, θ:th});
+      if (!Number.isFinite(r)){ pen=false; continue; }
+      const x = r*Math.cos(th), y = r*Math.sin(th);
+      const px = vx(x), py = vy(y);
+      if (pen){ ctx.lineTo(px,py); } else { ctx.moveTo(px,py); pen=true; }
+    }
+    ctx.stroke();
+  }
+
+  function drawParametric(plot){
+    const {compiledX, compiledY, color, tMin=-10, tMax=10, samples=1024} = plot;
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+    let pen=false;
+    for(let i=0;i<=samples;i++){
+      const t = tMin + (tMax - tMin)*i/samples;
+      const x = safeEvalCompiled(compiledX, {t, x:t, theta:t, θ:t});
+      const y = safeEvalCompiled(compiledY, {t, x:t, theta:t, θ:t});
+      if (!Number.isFinite(x) || !Number.isFinite(y)){ pen=false; continue; }
+      const px = vx(x), py = vy(y);
+      if (pen){ ctx.lineTo(px,py); } else { ctx.moveTo(px,py); pen=true; }
+    }
+    ctx.stroke();
+  }
+
+  // Marching Squares voor F(x,y)=0
+  function drawImplicit(plot){
+    const {compiled, color} = plot;
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    // resolutie past zich aan zoom aan
+    const nx = clamp(Math.floor(w/8), 60, 240);
+    const ny = clamp(Math.floor(h/8), 40, 160);
+    const dx = (W().xmax - W().xmin)/nx;
+    const dy = (W().ymax - W().ymin)/ny;
+
+    const vals = new Array((nx+1)*(ny+1));
+    const V = (i,j)=> vals[j*(nx+1)+i];
+
+    for(let j=0;j<=ny;j++){
+      const y = W().ymin + j*dy;
+      for(let i=0;i<=nx;i++){
+        const x = W().xmin + i*dx;
+        const v = safeEvalCompiled(compiled, {x,y});
+        vals[j*(nx+1)+i] = Number.isFinite(v) ? v : NaN;
+      }
+    }
+
+    function interp(p1,p2,v1,v2){
+      const t = v1/(v1 - v2);
+      return { x: p1.x + t*(p2.x - p1.x), y: p1.y + t*(p2.y - p1.y) };
+    }
+
+    ctx.strokeStyle = color; ctx.lineWidth = 2;
+    for(let j=0;j<ny;j++){
+      for(let i=0;i<nx;i++){
+        const p = [
+          {x: W().xmin + i*dx,   y: W().ymin + j*dy},     // 0: links-onder
+          {x: W().xmin + (i+1)*dx, y: W().ymin + j*dy},   // 1: rechts-onder
+          {x: W().xmin + (i+1)*dx, y: W().ymin + (j+1)*dy}, // 2: rechts-boven
+          {x: W().xmin + i*dx,   y: W().ymin + (j+1)*dy}  // 3: links-boven
+        ];
+        const f = [ V(i,j), V(i+1,j), V(i+1,j+1), V(i,j+1) ];
+        if (f.some(v=>Number.isNaN(v))) continue;
+        let idx = 0; if (f[0]>0) idx|=1; if (f[1]>0) idx|=2; if (f[2]>0) idx|=4; if (f[3]>0) idx|=8;
+        if (idx===0 || idx===15) continue;
+
+        const edges = [];
+        const addEdge = (a,b)=>edges.push(interp(p[a],p[b],f[a],f[b]));
+        switch(idx){
+          case 1: case 14: addEdge(0,1); addEdge(0,3); break;
+          case 2: case 13: addEdge(0,1); addEdge(1,2); break;
+          case 3: case 12: addEdge(0,3); addEdge(1,2); break;
+          case 4: case 11: addEdge(1,2); addEdge(2,3); break;
+          case 5:          addEdge(0,1); addEdge(1,2); addEdge(0,3); addEdge(2,3); break; // ambiguous; twee segmenten
+          case 6: case 9:  addEdge(0,1); addEdge(2,3); break;
+          case 7: case 8:  addEdge(0,3); addEdge(2,3); break;
+          case 10:         addEdge(0,3); addEdge(1,2); break;
+        }
+        for(let k=0;k<edges.length; k+=2){
+          const a = edges[k], b = edges[k+1];
+          if (!a || !b) continue;
+          ctx.beginPath();
+          ctx.moveTo(vx(a.x), vy(a.y));
+          ctx.lineTo(vx(b.x), vy(b.y));
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function drawAll(){
+    if (!state.needsDraw) return;
+    state.needsDraw = false;
+    drawGrid();
+    for (const p of state.plots){
+      if (!p.visible) continue;
+      try{
+        if (p.type === 'cartesian') drawCartesian(p);
+        else if (p.type === 'polar') drawPolar(p);
+        else if (p.type === 'parametric') drawParametric(p);
+        else if (p.type === 'implicit') drawImplicit(p);
+      }catch(e){
+        console.warn('Fout bij tekenen:', e);
+      }
+    }
+    renderLegend();
+  }
+  function requestDraw(){ state.needsDraw = true; }
+
+  // ---------- UI: INPUTVELDEN ----------
+  const inputsBox = $("#inputs");
+  function renderInputs(){
+    const t = $("#plotType").value;
+    inputsBox.innerHTML = "";
+    if (t === 'cartesian'){
+      inputsBox.append(
+        rowField("y =", "expr", "sin(x)"),
+        colorField(),
+      );
+    } else if (t === 'polar'){
+      inputsBox.append(
+        rowField("r =", "expr", "2*sin(3*θ)"),
+        range2("θ-min","thetaMin","-6.283185307179586","θ-max","thetaMax","6.283185307179586"),
+        colorField()
+      );
+    } else if (t === 'parametric'){
+      inputsBox.append(
+        rowField("x(t) =", "exprX", "cos(3*t)"),
+        rowField("y(t) =", "exprY", "sin(2*t)"),
+        range2("t-min","tMin","-6.283185307179586","t-max","tMax","6.283185307179586"),
+        colorField()
+      );
+    } else if (t === 'implicit'){
+      inputsBox.append(
+        rowField("F(x,y) =", "expr", "x^2 + y^2 - 9"),
+        colorField()
+      );
+    }
+    // herstel standaard "toevoegen"-gedrag
+    $("#addPlot").onclick = addPlotFromInputs;
+    $("#addPlot").textContent = "+ Voeg grafiek toe";
+  }
+  function rowField(labelTxt, name, placeholder=""){
+    const wrap = el('div',{className:'row'});
+    const label = el('label',{}, labelTxt);
+    const input = el('input',{type:'text', name, placeholder});
+    wrap.append(label,input);
+    return wrap;
+  }
+  function range2(l1,n1,v1,l2,n2,v2){
+    const wrap = el('div',{});
+    const r1 = el('div',{className:'row'}, el('label',{}, l1), el('input',{type:'number', step:'any', name:n1, value:v1}));
+    const r2 = el('div',{className:'row'}, el('label',{}, l2), el('input',{type:'number', step:'any', name:n2, value:v2}));
+    wrap.append(r1,r2);
+    return wrap;
+  }
+  function colorField(){
+    const wrap = el('div',{className:'row'});
+    const label = el('label',{}, 'Kleur');
+    const input = el('input',{type:'color', name:'color', value: nextColor()});
+    wrap.append(label,input);
+    return wrap;
+  }
+
+  function nextColor(){
+    const c = state.colors[state.colorIdx % state.colors.length];
+    state.colorIdx++;
+    return c;
+  }
+
+  $("#plotType").addEventListener('change', renderInputs);
+  renderInputs();
+
+  // ---------- PLOTS LIJST ----------
+  function renderPlotsList(){
+    const list = $("#plots");
+    list.innerHTML = "";
+    state.plots.forEach((p, idx)=>{
+      const card = el('div',{className:'plot-item'});
+      const head = el('div',{className:'row', style:'justify-content:space-between; align-items:center'},
+        el('div',{}, el('span',{className:'badge'}, labelForType(p.type))),
+        el('div',{},
+          el('input',{type:'checkbox', checked:p.visible, title:'Zichtbaar', oninput:(e)=>{p.visible=e.target.checked; requestDraw();}}),
+          el('span',{className:'muted', style:'margin-left:6px'}, 'zichtbaar')
+        )
+      );
+      const sw = el('span',{className:'swatch', style:`background:${p.color}; vertical-align:middle;`});
+      const desc = el('div',{className:'muted', style:'margin:6px 0'},
+        sw, " ",
+        el('span',{}, prettyDesc(p))
+      );
+      const tools = el('div',{className:'toolbar'},
+        el('button',{onclick:()=>editPlot(p, idx)}, 'Bewerk'),
+        el('button',{className:'ghost', onclick:()=>duplicatePlot(p)}, 'Dupliceer'),
+        el('button',{className:'ghost', onclick:()=>removePlot(idx), title:'Verwijder'}, 'Verwijder')
+      );
+      card.append(head,desc,tools);
+      list.append(card);
+    });
+  }
+  function labelForType(t){
+    return t==='cartesian'?'y=f(x)': t==='polar'?'r=f(θ)': t==='parametric'?'(x(t), y(t))':'F(x,y)=0';
+  }
+  function prettyDesc(p){
+    if (p.type==='cartesian') return `y = ${p.expr}`;
+    if (p.type==='polar') return `r = ${p.expr}, θ∈[${round6(p.thetaMin)}, ${round6(p.thetaMax)}]`;
+    if (p.type==='parametric') return `x = ${p.exprX}, y = ${p.exprY}, t∈[${round6(p.tMin)}, ${round6(p.tMax)}]`;
+    if (p.type==='implicit') return `F(x,y) = ${p.expr} = 0`;
+    return '';
+  }
+  const round6 = v => Number.parseFloat(v).toFixed(6).replace(/\.?0+$/,'');
+
+  function addPlotFromInputs(){
+    const t = $("#plotType").value;
+    const fd = new FormData(inputsBox);
+    try{
+      if (t==='cartesian'){
+        const expr = (fd.get('expr')||'').toString().trim();
+        const compiled = math.compile(expr);
+        state.plots.push({type:'cartesian', expr, compiled, color:fd.get('color'), visible:true});
+      }else if (t==='polar'){
+        const expr = (fd.get('expr')||'').toString().trim();
+        const compiled = math.compile(expr);
+        const thetaMin = parseFloat(fd.get('thetaMin')||(-2*Math.PI));
+        const thetaMax = parseFloat(fd.get('thetaMax')||(+2*Math.PI));
+        state.plots.push({type:'polar', expr, compiled, thetaMin, thetaMax, color:fd.get('color'), visible:true});
+      }else if (t==='parametric'){
+        const exprX = (fd.get('exprX')||'').toString().trim();
+        const exprY = (fd.get('exprY')||'').toString().trim();
+        const compiledX = math.compile(exprX);
+        const compiledY = math.compile(exprY);
+        const tMin = parseFloat(fd.get('tMin')||(-2*Math.PI));
+        const tMax = parseFloat(fd.get('tMax')||(+2*Math.PI));
+        state.plots.push({type:'parametric', exprX, exprY, compiledX, compiledY, tMin, tMax, color:fd.get('color'), visible:true});
+      }else if (t==='implicit'){
+        const expr = (fd.get('expr')||'').toString().trim();
+        const compiled = math.compile(expr);
+        state.plots.push({type:'implicit', expr, compiled, color:fd.get('color'), visible:true});
+      }
+      renderPlotsList();
+      requestDraw();
+    }catch(e){
+      alert("Kon de uitdrukking niet parsen/evalueren:\n" + e.message);
+    }
+  }
+  $("#addPlot").addEventListener('click', addPlotFromInputs);
+
+  function editPlot(p, idx){
+    const t = p.type;
+    $("#plotType").value = t; renderInputs();
+    if (t==='cartesian'){
+      inputsBox.querySelector('input[name=expr]').value = p.expr;
+      inputsBox.querySelector('input[name=color]').value = p.color;
+    }else if (t==='polar'){
+      inputsBox.querySelector('input[name=expr]').value = p.expr;
+      inputsBox.querySelector('input[name=thetaMin]').value = p.thetaMin;
+      inputsBox.querySelector('input[name=thetaMax]').value = p.thetaMax;
+      inputsBox.querySelector('input[name=color]').value = p.color;
+    }else if (t==='parametric'){
+      inputsBox.querySelector('input[name=exprX]').value = p.exprX;
+      inputsBox.querySelector('input[name=exprY]').value = p.exprY;
+      inputsBox.querySelector('input[name=tMin]').value = p.tMin;
+      inputsBox.querySelector('input[name=tMax]').value = p.tMax;
+      inputsBox.querySelector('input[name=color]').value = p.color;
+    }else if (t==='implicit'){
+      inputsBox.querySelector('input[name=expr]').value = p.expr;
+      inputsBox.querySelector('input[name=color]').value = p.color;
+    }
+
+    const addBtn = $("#addPlot");
+    const oldText = addBtn.textContent;
+    addBtn.textContent = "Wijziging opslaan";
+    addBtn.onclick = function(){
+      try{
+        const fd = new FormData(inputsBox);
+        if (t==='cartesian'){
+          p.expr = (fd.get('expr')||'').toString().trim();
+          p.compiled = math.compile(p.expr);
+          p.color = fd.get('color');
+        }else if (t==='polar'){
+          p.expr = (fd.get('expr')||'').toString().trim();
+          p.compiled = math.compile(p.expr);
+          p.thetaMin = parseFloat(fd.get('thetaMin')||(-2*Math.PI));
+          p.thetaMax = parseFloat(fd.get('thetaMax')||(+2*Math.PI));
+          p.color = fd.get('color');
+        }else if (t==='parametric'){
+          p.exprX = (fd.get('exprX')||'').toString().trim();
+          p.exprY = (fd.get('exprY')||'').toString().trim();
+          p.compiledX = math.compile(p.exprX);
+          p.compiledY = math.compile(p.exprY);
+          p.tMin = parseFloat(fd.get('tMin')||(-2*Math.PI));
+          p.tMax = parseFloat(fd.get('tMax')||(+2*Math.PI));
+          p.color = fd.get('color');
+        }else if (t==='implicit'){
+          p.expr = (fd.get('expr')||'').toString().trim();
+          p.compiled = math.compile(p.expr);
+          p.color = fd.get('color');
+        }
+        renderPlotsList();
+        requestDraw();
+        // herstel add-knop
+        addBtn.textContent = oldText;
+        addBtn.onclick = addPlotFromInputs;
+        // terug naar standaard inputs
+        renderInputs();
+      }catch(e){
+        alert("Kon de wijziging niet toepassen:\n" + e.message);
+      }
+    };
+  }
+
+  function duplicatePlot(p){
+    try{
+      const clone = JSON.parse(JSON.stringify({
+        ...p,
+        color: nextColor()
+      }));
+      // recompile
+      if (clone.type==='cartesian'){
+        clone.compiled = math.compile(clone.expr);
+      }else if (clone.type==='polar'){
+        clone.compiled = math.compile(clone.expr);
+      }else if (clone.type==='parametric'){
+        clone.compiledX = math.compile(clone.exprX);
+        clone.compiledY = math.compile(clone.exprY);
+      }else if (clone.type==='implicit'){
+        clone.compiled = math.compile(clone.expr);
+      }
+      clone.visible = true;
+      state.plots.push(clone);
+      renderPlotsList();
+      requestDraw();
+    }catch(e){
+      alert("Kon niet dupliceren: " + e.message);
+    }
+  }
+
+  function removePlot(idx){
+    state.plots.splice(idx,1);
+    renderPlotsList();
+    requestDraw();
+  }
+
+  function renderLegend(){
+    const box = $("#legend");
+    box.innerHTML = "";
+    for (const p of state.plots){
+      if (!p.visible) continue;
+      const chip = el('span',{className:'chip'},
+        el('span',{className:'swatch', style:`background:${p.color}`}),
+        el('span',{}, prettyDesc(p))
+      );
+      box.append(chip);
+    }
+  }
+
+  // ---------- VENSTERKNOPPEN ----------
+  $("#applyWindow").addEventListener('click', ()=>{
+    const xmin = parseFloat($("#xmin").value), xmax = parseFloat($("#xmax").value);
+    const ymin = parseFloat($("#ymin").value), ymax = parseFloat($("#ymax").value);
+    if (!(isFinite(xmin)&&isFinite(xmax)&&isFinite(ymin)&&isFinite(ymax)) || xmin>=xmax || ymin>=ymax){
+      alert("Ongeldig venster.");
+      return;
+    }
+    state.world = {xmin,xmax,ymin,ymax};
+    requestDraw();
+  });
+  $("#resetView").addEventListener('click', ()=>{
+    state.world = { xmin:-10, xmax:10, ymin:-6, ymax:6 };
+    $("#xmin").value = state.world.xmin; $("#xmax").value = state.world.xmax;
+    $("#ymin").value = state.world.ymin; $("#ymax").value = state.world.ymax;
+    requestDraw();
+  });
+
+  $("#fitAll").addEventListener('click', fitAll);
+
+  function expandBox(box, factor=0.1){
+    const dx = (box.xmax - box.xmin) || 1;
+    const dy = (box.ymax - box.ymin) || 1;
+    const ex = dx*factor, ey = dy*factor;
+    return { xmin: box.xmin - ex, xmax: box.xmax + ex, ymin: box.ymin - ey, ymax: box.ymax + ey };
+  }
+
+  function fitAll(){
+    let box = { xmin: Infinity, xmax: -Infinity, ymin: Infinity, ymax: -Infinity };
+    const w = canvas.clientWidth;
+    const sampleN = clamp(Math.floor(w), 400, 1600);
+
+    for (const p of state.plots){
+      if (!p.visible) continue;
+
+      if (p.type==='cartesian'){
+        let ymin=Infinity, ymax=-Infinity;
+        for (let i=0;i<=sampleN;i++){
+          const x = W().xmin + (W().xmax - W().xmin)*i/sampleN;
+          const y = safeEvalCompiled(p.compiled, {x, t:x, theta:x, θ:x});
+          if (!Number.isFinite(y)) continue;
+          ymin = Math.min(ymin,y); ymax = Math.max(ymax,y);
+        }
+        if (ymin<Infinity && ymax>-Infinity){
+          box.xmin = Math.min(box.xmin, W().xmin);
+          box.xmax = Math.max(box.xmax, W().xmax);
+          box.ymin = Math.min(box.ymin, ymin);
+          box.ymax = Math.max(box.ymax, ymax);
+        }
+      }
+      else if (p.type==='polar'){
+        for (let i=0;i<=sampleN;i++){
+          const th = p.thetaMin + (p.thetaMax - p.thetaMin)*i/sampleN;
+          const r = safeEvalCompiled(p.compiled,{theta:th, θ:th});
+          if (!Number.isFinite(r)) continue;
+          const x = r*Math.cos(th), y = r*Math.sin(th);
+          box.xmin = Math.min(box.xmin, x); box.xmax = Math.max(box.xmax, x);
+          box.ymin = Math.min(box.ymin, y); box.ymax = Math.max(box.ymax, y);
+        }
+      }
+      else if (p.type==='parametric'){
+        for (let i=0;i<=sampleN;i++){
+          const t = p.tMin + (p.tMax - p.tMin)*i/sampleN;
+          const x = safeEvalCompiled(p.compiledX,{t, x:t, theta:t, θ:t});
+          const y = safeEvalCompiled(p.compiledY,{t, x:t, theta:t, θ:t});
+          if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+          box.xmin = Math.min(box.xmin, x); box.xmax = Math.max(box.xmax, x);
+          box.ymin = Math.min(box.ymin, y); box.ymax = Math.max(box.ymax, y);
+        }
+      }
+      else if (p.type==='implicit'){
+        // ruwe benadering: zoek sign-wissels op een grove grid
+        const nx=80, ny=60;
+        for(let j=0;j<ny;j++){
+          for(let i=0;i<nx;i++){
+            const x1 = W().xmin + (W().xmax - W().xmin)*(i/nx);
+            const x2 = W().xmin + (W().xmax - W().xmin)*((i+1)/nx);
+            const y1 = W().ymin + (W().ymax - W().ymin)*(j/ny);
+            const y2 = W().ymin + (W().ymax - W().ymin)*((j+1)/ny);
+            const f11 = safeEvalCompiled(p.compiled,{x:x1,y:y1});
+            const f12 = safeEvalCompiled(p.compiled,{x:x1,y:y2});
+            const f21 = safeEvalCompiled(p.compiled,{x:x2,y:y1});
+            const f22 = safeEvalCompiled(p.compiled,{x:x2,y:y2});
+            const s = [f11,f12,f21,f22].map(v=>Math.sign(v));
+            const hasChange = s.some((v,idx)=> v!==0 && s[(idx+1)%4]!==0 && v!==s[(idx+1)%4]);
+            if (hasChange){
+              box.xmin=Math.min(box.xmin,x1); box.xmax=Math.max(box.xmax,x2);
+              box.ymin=Math.min(box.ymin,y1); box.ymax=Math.max(box.ymax,y2);
+            }
+          }
+        }
+      }
+    }
+
+    if (box.xmin===Infinity){
+      alert("Geen zichtbare punten om op te passen.");
+      return;
+    }
+    box = expandBox(box, 0.1);
+    state.world = box;
+    $("#xmin").value = box.xmin; $("#xmax").value = box.xmax;
+    $("#ymin").value = box.ymin; $("#ymax").value = box.ymax;
+    requestDraw();
+  }
+
+  // ---------- MUIS & TOUCH ----------
+  let isDragging=false, dragStart={x:0,y:0}, worldStart=null;
+
+  canvas.addEventListener('mousedown', (e)=>{
+    isDragging = true;
+    dragStart = {x:e.clientX, y:e.clientY};
+    worldStart = {...W()};
+    canvas.setPointerCapture?.(e.pointerId||0);
+  });
+  window.addEventListener('mouseup', ()=>{ isDragging=false; });
+  window.addEventListener('mousemove', (e)=>{
+    if (!isDragging) return;
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
+    const wx = (worldStart.xmax - worldStart.xmin) * dx / canvas.clientWidth;
+    const wy = (worldStart.ymax - worldStart.ymin) * dy / canvas.clientHeight;
+    state.world.xmin = worldStart.xmin - wx;
+    state.world.xmax = worldStart.xmax - wx;
+    state.world.ymin = worldStart.ymin + wy;
+    state.world.ymax = worldStart.ymax + wy;
+    updateWindowInputs();
+    requestDraw();
+  });
+
+  function zoomAt(px, py, factor){
+    const x = invx(px), y = invy(py);
+    const nxmin = x + (W().xmin - x) * factor;
+    const nxmax = x + (W().xmax - x) * factor;
+    const nymin = y + (W().ymin - y) * factor;
+    const nymax = y + (W().ymax - y) * factor;
+    state.world = { xmin:nxmin, xmax:nxmax, ymin:nymin, ymax:nymax };
+    updateWindowInputs();
+    requestDraw();
+  }
+
+  canvas.addEventListener('wheel', (e)=>{
+    e.preventDefault();
+    const delta = e.deltaY;
+    const scale = Math.pow(1.1, delta/100);
+    zoomAt(e.offsetX, e.offsetY, scale);
+  }, {passive:false});
+
+  // Touch (1 vinger pannen, 2 vingers pinch-zoom)
+  let touchState = null;
+  canvas.addEventListener('touchstart', (e)=>{
+    if (e.touches.length===1){
+      touchState = {mode:'pan', x:e.touches[0].clientX, y:e.touches[0].clientY, world:{...W()}};
+    } else if (e.touches.length===2){
+      const [a,b] = e.touches;
+      const dist = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+      const mid = { x:(a.clientX+b.clientX)/2, y:(a.clientY+b.clientY)/2 };
+      touchState = {mode:'pinch', dist, mid, world:{...W()}};
+    }
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', (e)=>{
+    if (!touchState) return;
+    if (touchState.mode==='pan' && e.touches.length===1){
+      const t=e.touches[0];
+      const dx = t.clientX - touchState.x;
+      const dy = t.clientY - touchState.y;
+      const wx = (touchState.world.xmax - touchState.world.xmin) * dx / canvas.clientWidth;
+      const wy = (touchState.world.ymax - touchState.world.ymin) * dy / canvas.clientHeight;
+      state.world.xmin = touchState.world.xmin - wx;
+      state.world.xmax = touchState.world.xmax - wx;
+      state.world.ymin = touchState.world.ymin + wy;
+      state.world.ymax = touchState.world.ymax + wy;
+      updateWindowInputs();
+      requestDraw();
+    } else if (touchState.mode==='pinch' && e.touches.length===2){
+      const [a,b] = e.touches;
+      const dist = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+      const mid = { x:(a.clientX+b.clientX)/2, y:(a.clientY+b.clientY)/2 };
+      const factor = touchState.dist ? touchState.dist/dist : 1;
+      // zoom rond midden (schermcoördinaten naar canvas)
+      const rect = canvas.getBoundingClientRect();
+      const px = mid.x - rect.left;
+      const py = mid.y - rect.top;
+      state.world = {...touchState.world}; // reset naar begin
+      zoomAt(px, py, factor);
+    }
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', ()=>{ touchState=null; }, {passive:true});
+  canvas.addEventListener('touchcancel', ()=>{ touchState=null; }, {passive:true});
+
+  // ---------- Sneltoetsen ----------
+  function updateWindowInputs(){
+    $("#xmin").value = W().xmin; $("#xmax").value = W().xmax;
+    $("#ymin").value = W().ymin; $("#ymax").value = W().ymax;
+  }
+
+  window.addEventListener('keydown', (e)=>{
+    const panFrac = 0.1;
+    if (e.key==='ArrowLeft'){
+      const dx = (W().xmax - W().xmin)*panFrac;
+      state.world.xmin -= dx; state.world.xmax -= dx;
+      updateWindowInputs(); requestDraw();
+    } else if (e.key==='ArrowRight'){
+      const dx = (W().xmax - W().xmin)*panFrac;
+      state.world.xmin += dx; state.world.xmax += dx;
+      updateWindowInputs(); requestDraw();
+    } else if (e.key==='ArrowUp'){
+      const dy = (W().ymax - W().ymin)*panFrac;
+      state.world.ymin += dy; state.world.ymax += dy;
+      updateWindowInputs(); requestDraw();
+    } else if (e.key==='ArrowDown'){
+      const dy = (W().ymax - W().ymin)*panFrac;
+      state.world.ymin -= dy; state.world.ymax -= dy;
+      updateWindowInputs(); requestDraw();
+    } else if (e.key==='=' || e.key==='+'){
+      zoomAt(canvas.clientWidth/2, canvas.clientHeight/2, 1/1.25);
+    } else if (e.key==='-'){
+      zoomAt(canvas.clientWidth/2, canvas.clientHeight/2, 1.25);
+    } else if (e.key==='0'){
+      $("#resetView").click();
+    } else if (e.key.toLowerCase()==='f'){
+      fitAll();
+    }
+  });
+
+  // ---------- Voorbeelden / Wissen ----------
+  $("#exampleBtn").addEventListener('click', ()=>{
+    state.plots = [];
+    state.colorIdx = 0;
+    const add = (p)=>state.plots.push(p);
+    // Cartesisch
+    add(makeCart("sin(x)", nextColor()));
+    add(makeCart("cos(x)", nextColor()));
+    // Polair: roos
+    add(makePolar("2*sin(3*θ)", -2*Math.PI, 2*Math.PI, nextColor()));
+    // Parametrisch: Lissajous
+    add(makeParam("cos(3*t)", "sin(2*t)", -2*Math.PI, 2*Math.PI, nextColor()));
+    // Impliciet: cirkel
+    add(makeImpl("x^2 + y^2 - 9", nextColor()));
+    renderPlotsList();
+    fitAll();
+  });
+
+  $("#clearBtn").addEventListener('click', ()=>{
+    state.plots = [];
+    renderPlotsList();
+    requestDraw();
+  });
+
+  function makeCart(expr,color){ return {type:'cartesian', expr, compiled: math.compile(expr), color, visible:true}; }
+  function makePolar(expr, thetaMin, thetaMax, color){ return {type:'polar', expr, compiled: math.compile(expr), thetaMin, thetaMax, color, visible:true}; }
+  function makeParam(exprX, exprY, tMin, tMax, color){ return {type:'parametric', exprX, exprY, compiledX: math.compile(exprX), compiledY: math.compile(exprY), tMin, tMax, color, visible:true}; }
+  function makeImpl(expr,color){ return {type:'implicit', expr, compiled: math.compile(expr), color, visible:true}; }
+
+  // ---------- Export & Sessies ----------
+  $("#savePNG").addEventListener('click', ()=>{
+    try{
+      canvas.toBlob((blob)=>{
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'grafiek.png';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
+    }catch(e){
+      alert("Export mislukte: " + e.message);
+    }
+  });
+
+  const STORAGE_KEY = "klassieke-grafiekentool-state-v1";
+
+  $("#saveState").addEventListener('click', ()=>{
+    try{
+      const serial = {
+        world: W(),
+        plots: state.plots.map(p=>{
+          const base = {type:p.type, color:p.color, visible:p.visible};
+          if (p.type==='cartesian') return {...base, expr:p.expr};
+          if (p.type==='polar') return {...base, expr:p.expr, thetaMin:p.thetaMin, thetaMax:p.thetaMax};
+          if (p.type==='parametric') return {...base, exprX:p.exprX, exprY:p.exprY, tMin:p.tMin, tMax:p.tMax};
+          if (p.type==='implicit') return {...base, expr:p.expr};
+        })
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(serial));
+      alert("Sessie bewaard.");
+    }catch(e){
+      alert("Kon sessie niet bewaren: " + e.message);
+    }
+  });
+
+  $("#loadState").addEventListener('click', ()=>{
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw){ alert("Geen sessie gevonden."); return; }
+      const data = JSON.parse(raw);
+      state.world = data.world || state.world;
+      state.plots = (data.plots||[]).map(p=>{
+        if (p.type==='cartesian') return makeCart(p.expr, p.color);
+        if (p.type==='polar') return makePolar(p.expr, p.thetaMin, p.thetaMax, p.color);
+        if (p.type==='parametric') return makeParam(p.exprX, p.exprY, p.tMin, p.tMax, p.color);
+        if (p.type==='implicit') return makeImpl(p.expr, p.color);
+        return null;
+      }).filter(Boolean);
+      renderPlotsList();
+      updateWindowInputs();
+      requestDraw();
+      alert("Sessie geladen.");
+    }catch(e){
+      alert("Kon sessie niet laden: " + e.message);
+    }
+  });
+
+  // ---------- Tekenlus ----------
+  function loop(){ drawAll(); requestAnimationFrame(loop); }
+  loop();
+})();
+</script>
+</body>
+</html>
