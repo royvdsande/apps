@@ -111,7 +111,7 @@
     }
 
     .sidebar {
-      flex: 0 0 var(--sidebar-width);
+      width: var(--sidebar-width);
       max-width: 400px;
       background: var(--panel-bg);
       border-right: 1px solid var(--border);
@@ -123,10 +123,6 @@
 
     .sidebar.hidden {
       transform: translateX(calc(-1 * var(--sidebar-width)));
-    }
-
-    .sidebar.collapsed-desktop {
-      display: none;
     }
 
     .sidebar-header {
@@ -152,58 +148,13 @@
       margin-bottom: 8px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
-    .algebra-color {
-      width: 12px;
-      height: 12px;
-      border-radius: 999px;
-      flex: 0 0 auto;
-    }
-
-    .algebra-label {
-      flex: 1;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      font-size: 0.92rem;
-    }
-
-    .algebra-label strong {
+    .algebra-item strong {
+      min-width: 24px;
       font-weight: 600;
       color: #222;
-    }
-
-    .algebra-detail {
-      color: #555;
-    }
-
-    .delete-button {
-      flex: 0 0 auto;
-      border: 1px solid transparent;
-      background: transparent;
-      border-radius: 10px;
-      width: 32px;
-      height: 32px;
-      display: grid;
-      place-items: center;
-      cursor: pointer;
-      color: #8a8a8a;
-      transition: background 0.2s ease, color 0.2s ease;
-    }
-
-    .delete-button svg {
-      width: 18px;
-      height: 18px;
-      stroke-width: 1.8;
-      stroke: currentColor;
-      fill: none;
-    }
-
-    .delete-button:hover {
-      background: rgba(0,0,0,0.08);
-      color: #444;
     }
 
     .graph-container {
@@ -241,11 +192,6 @@
       flex-wrap: wrap;
     }
 
-    .command-bar > span {
-      font-size: 1.25rem;
-      color: #777;
-    }
-
     .command-input {
       flex: 1;
       min-width: 220px;
@@ -263,34 +209,6 @@
       box-shadow: 0 0 0 4px rgba(51, 103, 214, 0.15);
     }
 
-    .command-button {
-      border: 1px solid var(--border);
-      background: #fff;
-      border-radius: 12px;
-      width: 44px;
-      height: 44px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: #444;
-      cursor: pointer;
-      transition: border 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
-    }
-
-    .command-button svg {
-      width: 22px;
-      height: 22px;
-      stroke-width: 1.8;
-      stroke: currentColor;
-      fill: none;
-    }
-
-    .command-button.active {
-      border-color: rgba(51, 103, 214, 0.6);
-      box-shadow: 0 0 0 3px rgba(51, 103, 214, 0.15);
-      color: var(--accent);
-    }
-
     .badge {
       background: rgba(51,103,214,0.1);
       color: var(--accent);
@@ -298,97 +216,6 @@
       border-radius: 999px;
       font-size: 0.8rem;
       font-weight: 600;
-    }
-
-    .math-keyboard {
-      background: #f4f4fb;
-      border-top: 1px solid var(--border);
-      padding: 12px;
-      display: none;
-      flex-direction: column;
-      gap: 12px;
-      box-shadow: 0 -12px 40px rgba(0,0,0,0.08);
-    }
-
-    .math-keyboard.active {
-      display: flex;
-    }
-
-    .quick-actions {
-      display: none;
-      margin-top: 8px;
-      gap: 8px;
-    }
-
-    .keyboard-tabs {
-      display: flex;
-      gap: 8px;
-    }
-
-    .keyboard-tab {
-      flex: 0 0 auto;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.92);
-      color: #555;
-      padding: 8px 14px;
-      border-radius: 999px;
-      font-weight: 600;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: background 0.2s ease, color 0.2s ease, border 0.2s ease;
-    }
-
-    .keyboard-tab.active {
-      color: var(--accent);
-      border-color: rgba(51,103,214,0.6);
-      background: rgba(51,103,214,0.08);
-    }
-
-    .keyboard-rows {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .keyboard-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: nowrap;
-    }
-
-    .keyboard-key {
-      flex: 1;
-      border: 1px solid rgba(67, 79, 110, 0.18);
-      background: rgba(255,255,255,0.96);
-      border-radius: 12px;
-      min-height: 44px;
-      font-size: 1rem;
-      font-weight: 600;
-      color: #2d2d2d;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 6px 10px;
-      cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-      user-select: none;
-    }
-
-    .keyboard-key.small {
-      flex: 0 0 54px;
-    }
-
-    .keyboard-key.wide {
-      flex: 0 0 96px;
-    }
-
-    .keyboard-key:hover {
-      background: rgba(51,103,214,0.08);
-    }
-
-    .keyboard-key:active {
-      transform: scale(0.97);
-      box-shadow: inset 0 0 0 2px rgba(51,103,214,0.2);
     }
 
     .floating-controls {
@@ -432,62 +259,33 @@
         --sidebar-width: min(280px, 70vw);
       }
 
-      body.sidebar-open::after {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.28);
-        pointer-events: none;
-        z-index: 4;
+      .sidebar {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.18);
       }
 
       .layout {
         position: relative;
       }
 
-      .sidebar {
-        position: fixed;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        box-shadow: 12px 0 40px rgba(0,0,0,0.22);
-        max-width: min(360px, 78vw);
-        transform: translateX(-105%);
-        z-index: 5;
-      }
-
       body.sidebar-open .sidebar {
         transform: translateX(0);
       }
 
+      body.sidebar-open::after {
+        content: "";
+        position: absolute;
+        inset: var(--toolbar-height) 0 0;
+        background: rgba(0,0,0,0.25);
+        pointer-events: none;
+        z-index: 1;
+      }
+
       .graph-container {
         flex: 1;
-      }
-
-      .sidebar.collapsed-desktop {
-        display: flex;
-      }
-
-      .math-keyboard {
-        box-shadow: 0 -8px 28px rgba(0,0,0,0.12);
-      }
-
-      .command-bar {
-        position: sticky;
-        bottom: 0;
-        background: rgba(255,255,255,0.96);
-        backdrop-filter: blur(12px);
-        box-shadow: 0 -12px 24px rgba(0,0,0,0.12);
-        z-index: 3;
-      }
-
-      .quick-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        padding: 10px 12px;
-        background: rgba(255,255,255,0.95);
-        border-top: 1px solid var(--border);
       }
     }
 
@@ -517,26 +315,6 @@
       .command-bar {
         padding: 10px;
       }
-    }
-
-    .quick-action {
-      border: 1px solid rgba(51,103,214,0.2);
-      background: rgba(51,103,214,0.08);
-      color: var(--accent);
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s ease, border 0.2s ease, transform 0.2s ease;
-    }
-
-    .quick-action:hover {
-      background: rgba(51,103,214,0.16);
-    }
-
-    .quick-action:active {
-      transform: scale(0.97);
     }
   </style>
 </head>
@@ -647,43 +425,20 @@
         </div>
       </div>
       <canvas id="board" width="1600" height="1200" aria-label="Coördinaatvlak"></canvas>
-      <div class="quick-actions" id="quick-actions" role="group" aria-label="Snelle functievoorbeelden"></div>
       <div class="command-bar">
-        <span aria-hidden="true">+</span>
-        <input type="text" id="command-input" class="command-input" placeholder="Voer een opdracht of functie in, bijv. y=x^2 of A=(2,1)" autocomplete="off" />
-        <button class="command-button" id="toggle-keyboard" type="button" aria-label="Toon toetsenbord" aria-pressed="false">
-          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="5" width="18" height="14" rx="2" ry="2" />
-            <path d="M7 9h0" />
-            <path d="M11 9h0" />
-            <path d="M15 9h0" />
-            <path d="M7 13h0" />
-            <path d="M11 13h0" />
-            <path d="M15 13h0" />
-          </svg>
-        </button>
-      </div>
-      <div class="math-keyboard" id="math-keyboard" aria-hidden="true">
-        <div class="keyboard-tabs" role="tablist" aria-label="Toetsenbord categorieën"></div>
-        <div class="keyboard-rows" role="group" aria-live="polite"></div>
+        <span>+</span>
+        <input type="text" id="command-input" class="command-input" placeholder="Voer een opdracht of functie in, bijv. y=x^2 of A=(2,1)" />
       </div>
     </section>
   </main>
   <script>
     const canvas = document.getElementById('board');
     const ctx = canvas.getContext('2d');
-    const graphContainer = document.querySelector('.graph-container');
-    const commandBar = document.querySelector('.command-bar');
     const sidebar = document.getElementById('sidebar');
     const toggleSidebarBtn = document.getElementById('toggle-sidebar');
     const closeSidebarBtn = document.getElementById('close-sidebar');
     const algebraList = document.getElementById('algebra-list');
     const commandInput = document.getElementById('command-input');
-    const keyboardToggle = document.getElementById('toggle-keyboard');
-    const keyboard = document.getElementById('math-keyboard');
-    const keyboardTabs = keyboard.querySelector('.keyboard-tabs');
-    const keyboardRows = keyboard.querySelector('.keyboard-rows');
-    const quickActions = document.getElementById('quick-actions');
 
     const DPR = window.devicePixelRatio || 1;
 
@@ -698,14 +453,11 @@
       polygons: [],
       texts: [],
       functions: [],
-      functionColorIndex: 0,
-      functionCounter: 0,
       draggingPoint: null,
       dragOffset: { x: 0, y: 0 },
       panning: false,
       panStart: { x: 0, y: 0 },
       tempPoints: [],
-      pinch: null,
     };
 
     const COLORS = {
@@ -717,180 +469,6 @@
       text: '#444',
       function: '#e36209'
     };
-
-    const FUNCTION_COLORS = ['#d83b01', '#1f6feb', '#2da44e', '#8b3dd9', '#e36209'];
-    const SUBSCRIPTS = ['₀','₁','₂','₃','₄','₅','₆','₇','₈','₉'];
-    const activeTouches = new Map();
-
-    function toSubscript(number) {
-      return String(number)
-        .split('')
-        .map(digit => SUBSCRIPTS[Number(digit)] || digit)
-        .join('');
-    }
-
-    function nextFunctionLabel() {
-      state.functionCounter += 1;
-      return `f${toSubscript(state.functionCounter)}(x)`;
-    }
-
-    const KEYBOARD_SETS = [
-      {
-        id: 'numeric',
-        label: '123',
-        rows: [
-          [
-            { text: '7' },
-            { text: '8' },
-            { text: '9' },
-            { text: '/' },
-            { text: '^' }
-          ],
-          [
-            { text: '4' },
-            { text: '5' },
-            { text: '6' },
-            { text: '*' },
-            { text: '-' }
-          ],
-          [
-            { text: '1' },
-            { text: '2' },
-            { text: '3' },
-            { text: '+' },
-            { text: ',' }
-          ],
-          [
-            { text: '0', classes: 'wide' },
-            { text: '.', classes: 'small' },
-            { text: '(', classes: 'small' },
-            { text: ')', classes: 'small' },
-            { text: 'x', classes: 'small' },
-            { text: 'y', classes: 'small' },
-            { text: 'π', insert: 'PI' },
-            { text: 'e', insert: 'E' },
-            { text: '⌫', action: 'backspace', classes: 'small' }
-          ]
-        ]
-      },
-      {
-        id: 'functions',
-        label: 'f(x)',
-        rows: [
-          [
-            { text: 'sin', insert: 'sin()', cursorOffset: -1 },
-            { text: 'cos', insert: 'cos()', cursorOffset: -1 },
-            { text: 'tan', insert: 'tan()', cursorOffset: -1 },
-            { text: '√', insert: 'sqrt()', cursorOffset: -1 },
-            { text: '^2', insert: '^2' }
-          ],
-          [
-            { text: 'asin', insert: 'asin()', cursorOffset: -1 },
-            { text: 'acos', insert: 'acos()', cursorOffset: -1 },
-            { text: 'atan', insert: 'atan()', cursorOffset: -1 },
-            { text: 'ln', insert: 'ln()', cursorOffset: -1 },
-            { text: 'log10', insert: 'log10()', cursorOffset: -1 }
-          ],
-          [
-            { text: 'sinh', insert: 'sinh()', cursorOffset: -1 },
-            { text: 'cosh', insert: 'cosh()', cursorOffset: -1 },
-            { text: 'tanh', insert: 'tanh()', cursorOffset: -1 },
-            { text: 'log2', insert: 'log2()', cursorOffset: -1 },
-            { text: 'abs', insert: 'abs()', cursorOffset: -1 }
-          ],
-          [
-            { text: '|x|', insert: 'abs()', cursorOffset: -1 },
-            { text: 'sgn', insert: 'sign()', cursorOffset: -1 },
-            { text: 'floor', insert: 'floor()', cursorOffset: -1 },
-            { text: 'ceil', insert: 'ceil()', cursorOffset: -1 },
-            { text: '↵', action: 'enter', classes: 'wide' }
-          ]
-        ]
-      },
-      {
-        id: 'letters',
-        label: 'ABC',
-        rows: [
-          [
-            { text: 'a' },
-            { text: 'b' },
-            { text: 'c' },
-            { text: 'd' },
-            { text: 'e' },
-            { text: 'f' },
-            { text: 'g' }
-          ],
-          [
-            { text: 'h' },
-            { text: 'i' },
-            { text: 'j' },
-            { text: 'k' },
-            { text: 'l' },
-            { text: 'm' },
-            { text: 'n' }
-          ],
-          [
-            { text: 'o' },
-            { text: 'p' },
-            { text: 'q' },
-            { text: 'r' },
-            { text: 's' },
-            { text: 't' },
-            { text: 'u' }
-          ],
-          [
-            { text: 'v' },
-            { text: 'w' },
-            { text: 'x' },
-            { text: 'y' },
-            { text: 'z' },
-            { text: '←', action: 'left', classes: 'small' },
-            { text: '→', action: 'right', classes: 'small' },
-            { text: '⌫', action: 'backspace', classes: 'small' }
-          ]
-        ]
-      },
-      {
-        id: 'symbols',
-        label: '#&',
-        rows: [
-          [
-            { text: '≤', insert: '<=' },
-            { text: '≥', insert: '>=' },
-            { text: '≠', insert: '!=' },
-            { text: '~' },
-            { text: '%' }
-          ],
-          [
-            { text: '∞', insert: 'Infinity' },
-            { text: '[', classes: 'small' },
-            { text: ']', classes: 'small' },
-            { text: '{', classes: 'small' },
-            { text: '}', classes: 'small' },
-            { text: '|', classes: 'small' }
-          ],
-          [
-            { text: ':', classes: 'small' },
-            { text: ';', classes: 'small' },
-            { text: '<', classes: 'small' },
-            { text: '>', classes: 'small' },
-            { text: '=', classes: 'small' },
-            { text: '↵', action: 'enter', classes: 'wide' }
-          ]
-        ]
-      }
-    ];
-
-    const QUICK_FUNCTION_ACTIONS = [
-      { label: 'y = x', value: 'y = x' },
-      { label: 'y = x²', value: 'y = x²' },
-      { label: 'y = sin(x)', value: 'y = sin(x)' },
-      { label: 'y = |x|', value: 'y = |x|' }
-    ];
-
-    let keyboardVisible = false;
-    let activeKeyboardSet = KEYBOARD_SETS[0].id;
-    let keyboardBuilt = false;
 
     function resizeCanvas() {
       const { clientWidth, clientHeight } = canvas;
@@ -912,52 +490,6 @@
         x: (x - state.origin.x) / state.scale,
         y: (state.origin.y - y) / state.scale
       };
-    }
-
-    function clampScale(value) {
-      return Math.min(240, Math.max(20, value));
-    }
-
-    function getTickStep() {
-      const pixelsPerUnit = state.scale;
-      if (!Number.isFinite(pixelsPerUnit) || pixelsPerUnit <= 0) {
-        return 1;
-      }
-      const targetPixels = 80;
-      const rawStep = targetPixels / pixelsPerUnit;
-      const power = Math.pow(10, Math.floor(Math.log10(rawStep)));
-      const candidates = [1, 2, 5, 10];
-      let step = power;
-      for (const candidate of candidates) {
-        if (rawStep <= candidate * power) {
-          step = candidate * power;
-          break;
-        }
-      }
-      if (!Number.isFinite(step) || step <= 0) {
-        step = 1;
-      }
-      return step;
-    }
-
-    function formatAxisValue(value, step) {
-      if (!Number.isFinite(value)) {
-        return '';
-      }
-      const absStep = Math.abs(step) || 1;
-      let decimals = 0;
-      if (absStep < 1) {
-        decimals = Math.ceil(-Math.log10(absStep)) + 2;
-      }
-      decimals = Math.min(6, Math.max(decimals, absStep < 0.25 ? 3 : 0));
-      const factor = Math.pow(10, decimals);
-      const normalized = Math.round(value * factor) / factor;
-      let text = normalized.toFixed(decimals);
-      text = text.replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1');
-      if (text === '-0') {
-        text = '0';
-      }
-      return text;
     }
 
     function drawGrid() {
@@ -992,77 +524,17 @@
       }
       ctx.stroke();
 
-      const xAxisY = Math.round(state.origin.y) + 0.5;
-      const yAxisX = Math.round(state.origin.x) + 0.5;
-
+      // axes
       ctx.strokeStyle = '#9aa0a6';
       ctx.lineWidth = 1.5 / DPR;
       ctx.beginPath();
+      const xAxisY = Math.round(state.origin.y) + 0.5;
       ctx.moveTo(0, xAxisY);
       ctx.lineTo(canvas.clientWidth, xAxisY);
+      const yAxisX = Math.round(state.origin.x) + 0.5;
       ctx.moveTo(yAxisX, 0);
       ctx.lineTo(yAxisX, canvas.clientHeight);
       ctx.stroke();
-
-      const tickStep = getTickStep();
-      ctx.lineWidth = 1 / DPR;
-      ctx.strokeStyle = '#9aa0a6';
-      ctx.fillStyle = '#5f6368';
-      ctx.font = '12px Inter, "Segoe UI", sans-serif';
-
-      const xAxisVisible = xAxisY >= 0 && xAxisY <= canvas.clientHeight;
-      if (xAxisVisible) {
-        const xStart = Math.ceil(bounds.left / tickStep) * tickStep;
-        ctx.beginPath();
-        for (let value = xStart; value <= bounds.right + tickStep * 0.5; value += tickStep) {
-          const screenX = Math.round(state.origin.x + value * state.scale) + 0.5;
-          ctx.moveTo(screenX, xAxisY - 4);
-          ctx.lineTo(screenX, xAxisY + 4);
-        }
-        ctx.stroke();
-
-        const baseline = xAxisY > canvas.clientHeight - 24 ? 'bottom' : 'top';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = baseline;
-        const offsetY = baseline === 'top' ? 6 : -6;
-        for (let value = xStart; value <= bounds.right + tickStep * 0.5; value += tickStep) {
-          if (Math.abs(value) < tickStep / 2) continue;
-          const screenX = state.origin.x + value * state.scale;
-          ctx.fillText(formatAxisValue(value, tickStep), screenX, xAxisY + offsetY);
-        }
-      }
-
-      const yAxisVisible = yAxisX >= 0 && yAxisX <= canvas.clientWidth;
-      if (yAxisVisible) {
-        const yStart = Math.ceil(bounds.bottom / tickStep) * tickStep;
-        ctx.beginPath();
-        for (let value = yStart; value <= bounds.top + tickStep * 0.5; value += tickStep) {
-          const screenY = Math.round(state.origin.y - value * state.scale) + 0.5;
-          ctx.moveTo(yAxisX - 4, screenY);
-          ctx.lineTo(yAxisX + 4, screenY);
-        }
-        ctx.stroke();
-
-        const align = yAxisX > canvas.clientWidth - 48 ? 'right' : 'left';
-        ctx.textAlign = align;
-        ctx.textBaseline = 'middle';
-        const offsetX = align === 'left' ? 6 : -6;
-        for (let value = yStart; value <= bounds.top + tickStep * 0.5; value += tickStep) {
-          if (Math.abs(value) < tickStep / 2) continue;
-          const screenY = state.origin.y - value * state.scale;
-          ctx.fillText(formatAxisValue(value, tickStep), yAxisX + offsetX, screenY);
-        }
-      }
-
-      if (xAxisVisible && yAxisVisible) {
-        const align = yAxisX > canvas.clientWidth - 48 ? 'right' : 'left';
-        const baseline = xAxisY > canvas.clientHeight - 24 ? 'bottom' : 'top';
-        ctx.textAlign = align;
-        ctx.textBaseline = baseline;
-        const offsetX = align === 'left' ? 6 : -6;
-        const offsetY = baseline === 'top' ? 6 : -6;
-        ctx.fillText('0', state.origin.x + offsetX, state.origin.y + offsetY);
-      }
 
       ctx.restore();
     }
@@ -1166,12 +638,10 @@
       ctx.save();
       ctx.scale(DPR, DPR);
       ctx.lineWidth = 2 / DPR;
+      ctx.strokeStyle = COLORS.function;
       for (const fn of state.functions) {
-        ctx.strokeStyle = fn.color || COLORS.function;
         ctx.beginPath();
         let started = false;
-        let labelPoint = null;
-        let fallbackPoint = null;
         for (let sx = 0; sx <= canvas.clientWidth; sx += 1) {
           const world = screenToWorld(sx, 0);
           const x = world.x;
@@ -1193,56 +663,9 @@
           } else {
             ctx.lineTo(sx, sy);
           }
-          if (!fallbackPoint) {
-            fallbackPoint = { x: sx, y: sy };
-          }
-          if (!labelPoint && sx >= canvas.clientWidth * 0.25) {
-            labelPoint = { x: sx, y: sy };
-          }
         }
         ctx.stroke();
-        const anchor = labelPoint || fallbackPoint;
-        if (anchor) {
-          drawFunctionLabel(fn, anchor);
-        }
       }
-      ctx.restore();
-    }
-
-    function drawFunctionLabel(fn, anchor) {
-      const text = fn.displayName || fn.algebraLabel || fn.label;
-      if (!text) return;
-      ctx.save();
-      ctx.font = '13px Inter, "Segoe UI", sans-serif';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      const paddingX = 8;
-      const boxHeight = 24;
-      const metrics = ctx.measureText(text);
-      const boxWidth = metrics.width + paddingX * 2;
-      let boxX = anchor.x + 12;
-      let boxY = anchor.y - boxHeight / 2;
-      if (boxX + boxWidth > canvas.clientWidth - 8) {
-        boxX = canvas.clientWidth - boxWidth - 8;
-      }
-      if (boxX < 8) {
-        boxX = 8;
-      }
-      if (boxY < 8) {
-        boxY = anchor.y + 12;
-      }
-      if (boxY + boxHeight > canvas.clientHeight - 8) {
-        boxY = canvas.clientHeight - boxHeight - 8;
-      }
-      ctx.fillStyle = 'rgba(255,255,255,0.92)';
-      ctx.strokeStyle = 'rgba(0,0,0,0.12)';
-      ctx.lineWidth = 1 / DPR;
-      ctx.beginPath();
-      ctx.rect(boxX, boxY, boxWidth, boxHeight);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = fn.color || COLORS.function;
-      ctx.fillText(text, boxX + paddingX, boxY + boxHeight / 2);
       ctx.restore();
     }
 
@@ -1349,329 +772,36 @@
       return point;
     }
 
-    function registerAlgebraEntry(id, text, type, color) {
+    function registerAlgebraEntry(id, text, type) {
+      const item = document.createElement('div');
+      item.className = 'algebra-item';
+      item.dataset.id = id;
+      const icon = document.createElement('div');
+      icon.style.width = '12px';
+      icon.style.height = '12px';
+      icon.style.borderRadius = '999px';
+      icon.style.background = COLORS[type] || '#888';
+      const label = document.createElement('div');
       const [title, ...rest] = text.split('=');
-      const strongText = title.trim();
-      const detailText = rest.join('=').trim();
-      let item = algebraList.querySelector(`[data-id="${id}"]`);
-      if (!item) {
-        item = document.createElement('div');
-        item.className = 'algebra-item';
-        item.dataset.id = id;
-        item.dataset.type = type;
-
-        const icon = document.createElement('span');
-        icon.className = 'algebra-color';
-        item.appendChild(icon);
-
-        const label = document.createElement('div');
-        label.className = 'algebra-label';
-        const strong = document.createElement('strong');
-        const span = document.createElement('span');
-        span.className = 'algebra-detail';
-        label.appendChild(strong);
-        label.appendChild(span);
-        item.appendChild(label);
-
-        const removeButton = document.createElement('button');
-        removeButton.type = 'button';
-        removeButton.className = 'delete-button';
-        removeButton.setAttribute('aria-label', 'Verwijder object');
-        removeButton.innerHTML = `
-          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 6 18 18" />
-            <path d="M6 18 18 6" />
-          </svg>
-        `;
-        item.appendChild(removeButton);
-
-        algebraList.appendChild(item);
-      }
-
-      item.dataset.type = type;
-      const iconEl = item.querySelector('.algebra-color');
-      if (iconEl) {
-        iconEl.style.background = color || COLORS[type] || '#888';
-      }
-      const strongEl = item.querySelector('.algebra-label strong');
-      if (strongEl) {
-        strongEl.textContent = strongText;
-      }
-      const detailEl = item.querySelector('.algebra-detail');
-      if (detailEl) {
-        detailEl.textContent = detailText ? `= ${detailText}` : '';
-      }
-
+      const strong = document.createElement('strong');
+      strong.textContent = title.trim();
+      const span = document.createElement('span');
+      const detail = rest.join('=').trim();
+      span.textContent = detail ? ` = ${detail}` : '';
+      label.appendChild(strong);
+      label.appendChild(span);
+      item.appendChild(icon);
+      item.appendChild(label);
+      algebraList.appendChild(item);
       algebraList.scrollTo({ top: algebraList.scrollHeight, behavior: 'smooth' });
-    }
-
-    function removeAlgebraEntry(id) {
-      const item = algebraList.querySelector(`[data-id="${id}"]`);
-      if (item) {
-        item.remove();
-      }
-    }
-
-    function buildQuickActions() {
-      if (!quickActions) return;
-      quickActions.innerHTML = '';
-      for (const action of QUICK_FUNCTION_ACTIONS) {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'quick-action';
-        button.textContent = action.label;
-        button.dataset.value = action.value;
-        quickActions.appendChild(button);
-      }
-    }
-
-    function applyQuickAction(value) {
-      if (!value) return;
-      commandInput.value = value;
-      const position = value.length;
-      commandInput.setSelectionRange(position, position);
-      commandInput.focus();
-      if (window.innerWidth < 920 && !keyboardVisible) {
-        setKeyboardVisibility(true);
-      }
-    }
-
-    function ensureKeyboardBuilt() {
-      if (keyboardBuilt) return;
-      keyboardBuilt = true;
-      keyboardTabs.innerHTML = '';
-      for (const set of KEYBOARD_SETS) {
-        const tab = document.createElement('button');
-        tab.type = 'button';
-        tab.className = 'keyboard-tab';
-        tab.dataset.set = set.id;
-        tab.textContent = set.label;
-        tab.addEventListener('click', () => setActiveKeyboardSet(set.id));
-        keyboardTabs.appendChild(tab);
-      }
-      setActiveKeyboardSet(activeKeyboardSet);
-    }
-
-    function setActiveKeyboardSet(id) {
-      activeKeyboardSet = id;
-      keyboardTabs.querySelectorAll('.keyboard-tab').forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.set === id);
-      });
-      renderKeyboardRows(id);
-    }
-
-    function renderKeyboardRows(id) {
-      const set = KEYBOARD_SETS.find(entry => entry.id === id);
-      if (!set) return;
-      keyboardRows.innerHTML = '';
-      for (const row of set.rows) {
-        const rowElement = document.createElement('div');
-        rowElement.className = 'keyboard-row';
-        for (const key of row) {
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.className = `keyboard-key${key.classes ? ` ${key.classes}` : ''}`;
-          button.textContent = key.text;
-          button.addEventListener('pointerdown', event => {
-            event.preventDefault();
-            handleKeyboardKey(key);
-          });
-          button.addEventListener('click', event => event.preventDefault());
-          rowElement.appendChild(button);
-        }
-        keyboardRows.appendChild(rowElement);
-      }
-    }
-
-    function handleKeyboardKey(key) {
-      commandInput.focus();
-      if (key.action === 'backspace') {
-        deleteAtCursor();
-        return;
-      }
-      if (key.action === 'enter') {
-        submitCommandFromKeyboard();
-        return;
-      }
-      if (key.action === 'left') {
-        moveCursor(-1);
-        return;
-      }
-      if (key.action === 'right') {
-        moveCursor(1);
-        return;
-      }
-      const insertion = key.insert ?? key.text;
-      const offset = key.cursorOffset ?? 0;
-      insertAtCursor(insertion, offset);
-    }
-
-    function insertAtCursor(text, cursorOffset = 0) {
-      const start = commandInput.selectionStart ?? commandInput.value.length;
-      const end = commandInput.selectionEnd ?? commandInput.value.length;
-      const before = commandInput.value.slice(0, start);
-      const after = commandInput.value.slice(end);
-      commandInput.value = before + text + after;
-      const position = start + text.length + cursorOffset;
-      commandInput.setSelectionRange(position, position);
-    }
-
-    function deleteAtCursor() {
-      const start = commandInput.selectionStart ?? commandInput.value.length;
-      const end = commandInput.selectionEnd ?? commandInput.value.length;
-      if (start !== end) {
-        const before = commandInput.value.slice(0, start);
-        const after = commandInput.value.slice(end);
-        commandInput.value = before + after;
-        commandInput.setSelectionRange(start, start);
-        return;
-      }
-      if (start === 0) return;
-      const before = commandInput.value.slice(0, start - 1);
-      const after = commandInput.value.slice(end);
-      commandInput.value = before + after;
-      commandInput.setSelectionRange(start - 1, start - 1);
-    }
-
-    function moveCursor(delta) {
-      const length = commandInput.value.length;
-      let position = (commandInput.selectionStart ?? length) + delta;
-      position = Math.max(0, Math.min(length, position));
-      commandInput.setSelectionRange(position, position);
-    }
-
-    function submitCommandFromKeyboard() {
-      if (!commandInput.value.trim()) return;
-      parseCommand(commandInput.value);
-      commandInput.value = '';
-    }
-
-    function setKeyboardVisibility(visible) {
-      if (visible) {
-        ensureKeyboardBuilt();
-      }
-      keyboardVisible = visible;
-      keyboard.classList.toggle('active', visible);
-      keyboard.setAttribute('aria-hidden', String(!visible));
-      keyboardToggle.classList.toggle('active', visible);
-      if (visible) {
-        commandInput.focus();
-      }
-      keyboardToggle.setAttribute('aria-label', visible ? 'Verberg toetsenbord' : 'Toon toetsenbord');
-      keyboardToggle.setAttribute('aria-pressed', String(visible));
-      requestAnimationFrame(resizeCanvas);
-    }
-
-    function prepareExpression(expression) {
-      if (!expression) return '';
-      const superscripts = {
-        '⁰': '^0',
-        '¹': '^1',
-        '²': '^2',
-        '³': '^3',
-        '⁴': '^4',
-        '⁵': '^5',
-        '⁶': '^6',
-        '⁷': '^7',
-        '⁸': '^8',
-        '⁹': '^9'
-      };
-      let normalized = expression.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, char => superscripts[char] || char);
-      normalized = normalized
-        .replace(/\s+/g, '')
-        .replace(/[,;]/g, '.')
-        .replace(/√/g, 'sqrt')
-        .replace(/π/gi, 'PI')
-        .replace(/τ/gi, '(2*PI)')
-        .replace(/[·×]/g, '*')
-        .replace(/[–—]/g, '-')
-        .replace(/÷/g, '/')
-        .replace(/\bsgn\b/gi, 'sign')
-        .replace(/\bctg\b/gi, 'cot')
-        .replace(/\|([^|]+)\|/g, 'abs($1)');
-      const lowerFunctions = ['sin','cos','tan','cot','sec','csc','asin','acos','atan','atan2','sinh','cosh','tanh','asinh','acosh','atanh','log','ln','abs','sqrt','floor','ceil','round','exp','sign','sgn','log10','log2','min','max','pow','hypot'];
-      for (const name of lowerFunctions) {
-        const regex = new RegExp(name, 'gi');
-        normalized = normalized.replace(regex, name);
-      }
-      normalized = normalized
-        .replace(/\^/g, '**')
-        .replace(/(sin|cos|tan|cot|sec|csc|asin|acos|atan|sinh|cosh|tanh|asinh|acosh|atanh|ln|log|exp)\*\*([0-9]+)\(([^()]+)\)/g, (_match, fn, power, inner) => `pow(${fn}(${inner}),${power})`)
-        .replace(/--/g, '+')
-        .replace(/\+\+/g, '+')
-        .replace(/\+-/g, '-')
-        .replace(/-\+/g, '-')
-        .replace(/\be\b/gi, 'E');
-      normalized = normalized
-        .replace(/([0-9])([xy])/gi, '$1*$2')
-        .replace(/([xy])([0-9])/gi, '$1*$2')
-        .replace(/([xy])([xy])/gi, '$1*$2')
-        .replace(/([xy])\(/gi, '$1*(')
-        .replace(/\)([xy])/gi, ')*$1')
-        .replace(/([0-9])\(/g, '$1*(')
-        .replace(/\)([0-9])/g, ')*$1')
-        .replace(/\)\(/g, ')*(');
-      if (normalized.includes('|')) {
-        throw new Error('Ongebalanceerde absolute waarde.');
-      }
-      return normalized;
-    }
-
-    function registerFunction({ algebraLabel, expression, source, graphLabel, evaluationExpression }) {
-      const color = FUNCTION_COLORS[state.functionColorIndex % FUNCTION_COLORS.length];
-      try {
-        const prepared = prepareExpression(evaluationExpression || expression);
-        const compiled = new Function(
-          'x',
-          `const ln = Math.log;
-           const log = Math.log10 ? Math.log10 : (v => Math.log(v) / Math.LN10);
-           const log10 = Math.log10 ? Math.log10 : (v => Math.log(v) / Math.LN10);
-           const log2 = Math.log2 ? Math.log2 : (v => Math.log(v) / Math.LN2);
-           const sign = Math.sign;
-           const sgn = Math.sign;
-           const abs = Math.abs;
-           const sec = x => 1 / Math.cos(x);
-           const csc = x => 1 / Math.sin(x);
-           const cot = x => 1 / Math.tan(x);
-           const sech = x => 1 / Math.cosh(x);
-           const csch = x => 1 / Math.sinh(x);
-           const coth = x => 1 / Math.tanh(x);
-           const tau = Math.PI * 2;
-           with (Math) { return ${prepared}; }`
-        );
-        const fn = {
-          id: crypto.randomUUID(),
-          label: graphLabel,
-          algebraLabel,
-          expression,
-          source,
-          eval: compiled,
-          color,
-          displayName: `${graphLabel} = ${expression}`
-        };
-        state.functions.push(fn);
-        state.functionColorIndex = (state.functionColorIndex + 1) % FUNCTION_COLORS.length;
-        registerAlgebraEntry(fn.id, `${algebraLabel} = ${expression}`, 'function', color);
-        draw();
-        return fn;
-      } catch (error) {
-        console.error(error);
-        alert('Kon functie niet interpreteren. Controleer de invoer.');
-        return null;
-      }
     }
 
     function updatePointAlgebra(point) {
       const item = algebraList.querySelector(`[data-id="${point.id}"]`);
       if (item) {
-        const strong = item.querySelector('.algebra-label strong');
-        if (strong) {
-          strong.textContent = point.name;
-        }
-        const span = item.querySelector('.algebra-detail');
-        if (span) {
-          span.textContent = `= (${formatNumber(point.position.x)}, ${formatNumber(point.position.y)})`;
-        }
+        item.querySelector('strong').textContent = point.name;
+        const span = item.querySelector('span');
+        span.textContent = ` = (${formatNumber(point.position.x)}, ${formatNumber(point.position.y)})`;
       }
     }
 
@@ -1679,138 +809,11 @@
       return Math.round(value * 1000) / 1000;
     }
 
-    function startPinch() {
-      if (activeTouches.size < 2) {
-        state.pinch = null;
-        return;
-      }
-      const touches = Array.from(activeTouches.values());
-      const [first, second] = touches;
-      const rect = canvas.getBoundingClientRect();
-      const center = {
-        x: (first.x + second.x) / 2 - rect.left,
-        y: (first.y + second.y) / 2 - rect.top
-      };
-      state.pinch = {
-        initialDistance: Math.hypot(first.x - second.x, first.y - second.y) || 1,
-        initialScale: state.scale,
-        center
-      };
-      state.draggingPoint = null;
-      state.panning = false;
-    }
-
-    function updatePinch() {
-      if (!state.pinch || activeTouches.size < 2) {
-        return;
-      }
-      const touches = Array.from(activeTouches.values());
-      const [first, second] = touches;
-      const rect = canvas.getBoundingClientRect();
-      const center = {
-        x: (first.x + second.x) / 2 - rect.left,
-        y: (first.y + second.y) / 2 - rect.top
-      };
-      const worldCenter = screenToWorld(center.x, center.y);
-      const distance = Math.hypot(first.x - second.x, first.y - second.y) || state.pinch.initialDistance;
-      const scaleFactor = distance / state.pinch.initialDistance;
-      const nextScale = clampScale(state.pinch.initialScale * scaleFactor);
-      state.scale = nextScale;
-      const after = worldToScreen(worldCenter);
-      state.origin.x += center.x - after.x;
-      state.origin.y += center.y - after.y;
-      state.pinch.initialDistance = distance;
-      state.pinch.initialScale = state.scale;
-      state.pinch.center = center;
-      draw();
-    }
-
-    function removeObject(id, type, options = {}) {
-      const { silent = false } = options;
-      if (!id || !type) return;
-
-      switch (type) {
-        case 'point': {
-          const index = state.points.findIndex(point => point.id === id);
-          if (index === -1) break;
-          state.points.splice(index, 1);
-          const relatedSegments = state.segments.filter(segment => segment.p1 === id || segment.p2 === id);
-          relatedSegments.forEach(segment => removeObject(segment.id, 'segment', { silent: true }));
-          const relatedLines = state.lines.filter(line => line.p1 === id || line.p2 === id);
-          relatedLines.forEach(line => removeObject(line.id, 'line', { silent: true }));
-          const relatedCircles = state.circles.filter(circle => circle.center === id || circle.edge === id);
-          relatedCircles.forEach(circle => removeObject(circle.id, 'circle', { silent: true }));
-          const relatedPolygons = state.polygons.filter(polygon => polygon.points.includes(id));
-          relatedPolygons.forEach(polygon => removeObject(polygon.id, 'polygon', { silent: true }));
-          if (state.draggingPoint && state.draggingPoint.id === id) {
-            state.draggingPoint = null;
-          }
-          state.tempPoints = state.tempPoints.filter(pointId => pointId !== id);
-          if (state.tempPolygon) {
-            state.tempPolygon.points = state.tempPolygon.points.filter(pointId => pointId !== id);
-            if (state.tempPolygon.points.length < 2) {
-              state.tempPolygon = null;
-            }
-          }
-          break;
-        }
-        case 'segment': {
-          state.segments = state.segments.filter(segment => segment.id !== id);
-          break;
-        }
-        case 'line': {
-          state.lines = state.lines.filter(line => line.id !== id);
-          break;
-        }
-        case 'circle': {
-          state.circles = state.circles.filter(circle => circle.id !== id);
-          break;
-        }
-        case 'polygon': {
-          state.polygons = state.polygons.filter(polygon => polygon.id !== id);
-          break;
-        }
-        case 'text': {
-          state.texts = state.texts.filter(text => text.id !== id);
-          break;
-        }
-        case 'function': {
-          state.functions = state.functions.filter(fn => fn.id !== id);
-          break;
-        }
-        default:
-          break;
-      }
-
-      removeAlgebraEntry(id);
-      if (!silent) {
-        draw();
-      }
-    }
-
     function handlePointerDown(event) {
-      if (event.pointerType === 'touch') {
-        activeTouches.set(event.pointerId, { x: event.clientX, y: event.clientY });
-        if (activeTouches.size === 2) {
-          startPinch();
-          event.preventDefault();
-          return;
-        }
-        if (!event.isPrimary) {
-          event.preventDefault();
-          return;
-        }
-      }
-
       const rect = canvas.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
       const world = screenToWorld(x, y);
-
-      if (state.pinch) {
-        event.preventDefault();
-        return;
-      }
 
       if (state.tool === 'move') {
         const point = findPointNear(world, 0.3);
@@ -1836,21 +839,6 @@
     }
 
     function handlePointerMove(event) {
-      if (event.pointerType === 'touch') {
-        if (activeTouches.has(event.pointerId)) {
-          activeTouches.set(event.pointerId, { x: event.clientX, y: event.clientY });
-        }
-        if (state.pinch && activeTouches.size >= 2) {
-          updatePinch();
-          event.preventDefault();
-          return;
-        }
-        if (!event.isPrimary) {
-          event.preventDefault();
-          return;
-        }
-      }
-
       const rect = canvas.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
@@ -1876,15 +864,7 @@
       }
     }
 
-    function handlePointerUp(event) {
-      if (event && event.pointerType === 'touch') {
-        activeTouches.delete(event.pointerId);
-        if (activeTouches.size >= 2) {
-          startPinch();
-        } else {
-          state.pinch = null;
-        }
-      }
+    function handlePointerUp() {
       state.draggingPoint = null;
       state.panning = false;
       if (state.tempPolygon) {
@@ -1967,7 +947,7 @@
       const delta = -event.deltaY;
       const factor = delta > 0 ? 1.1 : 0.9;
       const mouse = screenToWorld(event.offsetX, event.offsetY);
-      state.scale = clampScale(state.scale * factor);
+      state.scale = Math.min(240, Math.max(20, state.scale * factor));
       const after = worldToScreen(mouse);
       state.origin.x += event.offsetX - after.x;
       state.origin.y += event.offsetY - after.y;
@@ -1980,7 +960,7 @@
         y: canvas.clientHeight / 2
       };
       const worldCenter = screenToWorld(center.x, center.y);
-      state.scale = clampScale(state.scale * factor);
+      state.scale = Math.min(240, Math.max(20, state.scale * factor));
       const after = worldToScreen(worldCenter);
       state.origin.x += center.x - after.x;
       state.origin.y += center.y - after.y;
@@ -1997,9 +977,25 @@
       const trimmed = command.trim();
       if (!trimmed) return;
 
-      if (!trimmed.includes('=') && /x/i.test(trimmed)) {
-        parseCommand(`y = ${trimmed}`);
-        return;
+      // Function: y=..., f(x)=..., g(x)=...
+      const funcMatch = trimmed.match(/^(?:([a-zA-Z])\(x\)\s*=|y\s*=)\s*(.+)$/);
+      if (funcMatch) {
+        const expr = funcMatch[2].replace(/\^/g, '**');
+        try {
+          const compiled = new Function('x', `with (Math) { return ${expr}; }`);
+          const fn = {
+            id: crypto.randomUUID(),
+            label: funcMatch[1] ? `${funcMatch[1]}(x)` : 'f(x)',
+            eval: compiled
+          };
+          state.functions.push(fn);
+          registerAlgebraEntry(fn.id, `${fn.label} = ${expr.replace(/\*\*/g, '^')}`, 'function');
+          draw();
+          return;
+        } catch (error) {
+          alert('Kon functie niet interpreteren. Controleer de invoer.');
+          return;
+        }
       }
 
       const pointMatch = trimmed.match(/^([A-Za-z]+)\s*=\s*\(([-+]?\d*\.?\d+),\s*([-+]?\d*\.?\d+)\)$/);
@@ -2008,49 +1004,6 @@
         const point = createPoint({ x: parseFloat(x), y: parseFloat(y) }, name);
         updatePointAlgebra(point);
         draw();
-        return;
-      }
-
-      const equationMatch = trimmed.match(/^([^=]+)=\s*(.+)$/);
-      if (equationMatch) {
-        const leftRaw = equationMatch[1].trim();
-        const rightRaw = equationMatch[2].trim();
-        const sanitizedLeft = leftRaw.replace(/\s+/g, '');
-
-        const functionCallMatch = sanitizedLeft.match(/^([a-zA-Z][a-zA-Z0-9_]*)\(([a-zA-Z])\)$/);
-        const simpleNameMatch = sanitizedLeft.match(/^([a-zA-Z][a-zA-Z0-9_]*)$/);
-
-        let algebraLabel;
-        let graphLabel;
-        let evaluationExpression = rightRaw;
-
-        if (sanitizedLeft.toLowerCase() === 'y') {
-          const generated = nextFunctionLabel();
-          algebraLabel = generated;
-          graphLabel = generated;
-        } else if (functionCallMatch) {
-          const [, name, variable] = functionCallMatch;
-          const variablePattern = new RegExp(`\\b${variable}\\b`, 'gi');
-          evaluationExpression = rightRaw.replace(variablePattern, 'x');
-          algebraLabel = `${name}(${variable})`;
-          graphLabel = `${name}(x)`;
-        } else if (simpleNameMatch) {
-          const name = simpleNameMatch[1];
-          algebraLabel = `${name}(x)`;
-          graphLabel = `${name}(x)`;
-        } else {
-          const generated = nextFunctionLabel();
-          algebraLabel = generated;
-          graphLabel = generated;
-        }
-
-        registerFunction({
-          algebraLabel,
-          expression: rightRaw,
-          source: trimmed,
-          graphLabel,
-          evaluationExpression
-        });
         return;
       }
 
@@ -2065,43 +1018,12 @@
 
     function initSidebar() {
       toggleSidebarBtn.addEventListener('click', () => {
-        if (window.innerWidth < 920) {
-          const open = !document.body.classList.contains('sidebar-open');
-          document.body.classList.toggle('sidebar-open', open);
-          sidebar.classList.toggle('hidden', !open);
-        } else {
-          const collapsed = document.body.classList.toggle('sidebar-collapsed');
-          sidebar.classList.toggle('collapsed-desktop', collapsed);
-          sidebar.classList.remove('hidden');
-          requestAnimationFrame(resizeCanvas);
-        }
+        document.body.classList.toggle('sidebar-open');
+        sidebar.classList.toggle('hidden');
       });
       closeSidebarBtn.addEventListener('click', () => {
-        if (window.innerWidth < 920) {
-          document.body.classList.remove('sidebar-open');
-          sidebar.classList.add('hidden');
-        } else {
-          document.body.classList.add('sidebar-collapsed');
-          sidebar.classList.add('collapsed-desktop');
-          sidebar.classList.remove('hidden');
-          requestAnimationFrame(resizeCanvas);
-        }
-      });
-    }
-
-    algebraList.addEventListener('click', event => {
-      const button = event.target.closest('.delete-button');
-      if (!button) return;
-      const item = button.closest('.algebra-item');
-      if (!item) return;
-      removeObject(item.dataset.id, item.dataset.type);
-    });
-
-    if (quickActions) {
-      quickActions.addEventListener('click', event => {
-        const button = event.target.closest('.quick-action');
-        if (!button) return;
-        applyQuickAction(button.dataset.value || '');
+        document.body.classList.remove('sidebar-open');
+        sidebar.classList.add('hidden');
       });
     }
 
@@ -2112,65 +1034,27 @@
     canvas.addEventListener('wheel', handleWheel, { passive: false });
 
     function handleResponsiveSidebar() {
-      if (window.innerWidth < 920) {
-        const open = document.body.classList.contains('sidebar-open');
-        sidebar.classList.toggle('hidden', !open);
-        sidebar.classList.remove('collapsed-desktop');
-      } else {
-        document.body.classList.remove('sidebar-open');
-        const collapsed = document.body.classList.contains('sidebar-collapsed');
-        sidebar.classList.toggle('collapsed-desktop', collapsed);
+      if (window.innerWidth >= 920) {
         sidebar.classList.remove('hidden');
+        document.body.classList.remove('sidebar-open');
       }
     }
 
     window.addEventListener('resize', () => {
-      handleResponsiveSidebar();
       resizeCanvas();
+      handleResponsiveSidebar();
     });
 
     document.getElementById('zoom-in').addEventListener('click', () => zoom(1.2));
     document.getElementById('zoom-out').addEventListener('click', () => zoom(0.8));
     document.getElementById('reset-view').addEventListener('click', resetView);
 
-    keyboardToggle.addEventListener('click', () => {
-      setKeyboardVisibility(!keyboardVisible);
-    });
-
-    commandInput.addEventListener('focus', () => {
-      if (window.innerWidth < 920 && !keyboardVisible) {
-        setKeyboardVisibility(true);
-      }
-    });
-
-    document.addEventListener('pointerdown', event => {
-      if (!keyboardVisible) return;
-      const target = event.target;
-      if (keyboard.contains(target)) return;
-      if (keyboardToggle.contains(target)) return;
-      if (commandBar && commandBar.contains(target)) return;
-      setKeyboardVisibility(false);
-    });
-
-    window.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && keyboardVisible) {
-        setKeyboardVisibility(false);
-      }
-    });
-
     commandInput.addEventListener('keydown', event => {
       if (event.key === 'Enter') {
         parseCommand(commandInput.value);
         commandInput.value = '';
-      } else if (event.key === 'Escape') {
-        setKeyboardVisibility(false);
       }
     });
-
-    if ('ResizeObserver' in window) {
-      const resizeObserver = new ResizeObserver(() => resizeCanvas());
-      resizeObserver.observe(graphContainer);
-    }
 
     initTools();
     initSidebar();
@@ -2178,7 +1062,6 @@
       sidebar.classList.add('hidden');
     }
     handleResponsiveSidebar();
-    buildQuickActions();
     resizeCanvas();
   </script>
 </body>
