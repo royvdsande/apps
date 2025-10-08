@@ -38,7 +38,7 @@
       "id": "geo",
       "name": "GeoCanvas",
       "description": "Tetris is een puzzelspel waarin je vallende blokken passend moet stapelen.",
-      "path": "geogebra",
+      "path": "geogebra-classic",
       "tags": [
         "math",
         "utility"
