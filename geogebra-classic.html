@@ -1,0 +1,5557 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="white" />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <title>GeoCanvas Classic</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --toolbar-height: 56px;
+      --sidebar-width: min(320px, 32vw);
+      --accent: #3367d6;
+      --border: #d9d9d9;
+      --bg: #f8f8fb;
+      --panel-bg: #ffffff;
+      font-family: "Inter", "Segoe UI", sans-serif;
+      --keyboard-offset: 0px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      background: var(--bg);
+      color: #222;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      height: var(--toolbar-height);
+      background: var(--panel-bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      color: #3a3a3a;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+    }
+
+    .brand * {
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+    }
+
+    .brand svg {
+      width: 28px;
+      height: 28px;
+      color: var(--accent);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .tool-button {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      padding: 6px 8px;
+      min-width: 44px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease, border 0.15s ease, color 0.15s ease;
+      color: #404040;
+      cursor: pointer;
+    }
+
+    .tool-button svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .tool-button.active {
+      background: rgba(51, 103, 214, 0.12);
+      border-color: rgba(51, 103, 214, 0.6);
+      color: var(--accent);
+    }
+
+    .tool-button:hover {
+      background: rgba(0,0,0,0.05);
+    }
+
+    .layout {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+    }
+
+    .sidebar {
+      flex: 0 0 var(--sidebar-width);
+      max-width: 400px;
+      background: var(--panel-bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease;
+      z-index: 2;
+    }
+
+    .sidebar.hidden {
+      transform: translateX(calc(-1 * var(--sidebar-width)));
+    }
+
+    .sidebar.collapsed-desktop {
+      display: none;
+    }
+
+    .sidebar-header {
+      padding: 14px 16px 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #555;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+    }
+
+    .sidebar-header * {
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+    }
+
+    .algebra-list {
+      flex: 1;
+      overflow: auto;
+      padding: 0 12px 12px;
+    }
+
+    .properties-panel {
+      border-top: 1px solid rgba(0,0,0,0.06);
+      padding: 14px 16px;
+      background: var(--panel-bg);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .properties-panel.hidden {
+      display: none;
+    }
+
+    .properties-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: #475569;
+    }
+
+    .properties-close {
+      border: 1px solid transparent;
+      background: transparent;
+      border-radius: 10px;
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      color: #94a3b8;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .properties-close svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 1.8;
+      stroke: currentColor;
+      fill: none;
+    }
+
+    .properties-close:hover {
+      background: rgba(148,163,184,0.15);
+      color: #475569;
+    }
+
+    .properties-group {
+      display: grid;
+      gap: 10px;
+    }
+
+    .property-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.85rem;
+      color: #475569;
+    }
+
+    .property-field label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .property-field input[type="text"],
+    .property-field input[type="number"],
+    .property-field select {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+      background: #fff;
+    }
+
+    .property-field input[type="color"] {
+      width: 42px;
+      height: 32px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 0;
+    }
+
+    .property-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .property-row label {
+      font-weight: 500;
+      color: #475569;
+    }
+
+    .property-inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .property-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+      color: #334155;
+    }
+
+    .property-checkbox input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      border-radius: 6px;
+    }
+
+    .algebra-item {
+      background: rgba(0,0,0,0.03);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .algebra-item.slider {
+      align-items: stretch;
+    }
+
+    .slider-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .slider-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #1f2933;
+    }
+
+    .slider-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .slider-controls input[type="range"] {
+      flex: 1;
+    }
+
+    .slider-value {
+      min-width: 54px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: #374151;
+    }
+
+    .slider-helpers {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .slider-helpers button {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 999px;
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #3f4c63;
+      cursor: pointer;
+      transition: background 0.2s ease, border 0.2s ease;
+    }
+
+    .slider-helpers button svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 1.8;
+      stroke: currentColor;
+      fill: none;
+    }
+
+    .slider-helpers button:hover {
+      background: rgba(51,103,214,0.1);
+      border-color: rgba(51,103,214,0.3);
+    }
+
+    .slider-helpers select {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      color: #374151;
+    }
+
+    .algebra-item.selected {
+      background: rgba(51, 103, 214, 0.12);
+      box-shadow: inset 0 0 0 1px var(--highlight-outline, rgba(51, 103, 214, 0.3));
+    }
+
+    .algebra-color {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      flex: 0 0 auto;
+      border: none;
+      padding: 0;
+      background: transparent;
+      position: relative;
+    }
+
+    .algebra-color::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: currentColor;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+    }
+
+    button.algebra-color {
+      cursor: pointer;
+    }
+
+    button.algebra-color:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .algebra-item.selected .algebra-color::after {
+      box-shadow: 0 0 0 3px var(--highlight-glow, rgba(51, 103, 214, 0.2));
+    }
+
+    .algebra-color-input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      width: 0;
+      height: 0;
+    }
+
+    .algebra-label {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      font-size: 0.92rem;
+    }
+
+    .algebra-label strong {
+      font-weight: 600;
+      color: #222;
+    }
+
+    .algebra-detail {
+      color: #555;
+    }
+
+    .delete-button {
+      flex: 0 0 auto;
+      border: 1px solid transparent;
+      background: transparent;
+      border-radius: 10px;
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      color: #8a8a8a;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .delete-button svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 1.8;
+      stroke: currentColor;
+      fill: none;
+    }
+
+    .delete-button:hover {
+      background: rgba(0,0,0,0.08);
+      color: #444;
+    }
+
+    .graph-container {
+      flex: 1;
+      position: relative;
+      background: var(--panel-bg);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      flex: 1;
+      touch-action: none;
+      background: #fff;
+      display: block;
+    }
+
+    .axis-label {
+      position: absolute;
+      font-size: 0.75rem;
+      color: #666;
+      pointer-events: none;
+    }
+
+    .command-bar {
+      border-top: 1px solid var(--border);
+      background: var(--panel-bg);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .command-bar > span {
+      font-size: 1.25rem;
+      color: #777;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      pointer-events: none;
+    }
+
+    .command-input {
+      flex: 1;
+      min-width: 220px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      background: #fff;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .command-input:focus {
+      outline: none;
+      border-color: rgba(51, 103, 214, 0.6);
+      box-shadow: 0 0 0 4px rgba(51, 103, 214, 0.15);
+    }
+
+    .command-button {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 12px;
+      width: 44px;
+      height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #444;
+      cursor: pointer;
+      transition: border 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+    }
+
+    .command-button.hidden {
+      display: none;
+    }
+
+    .command-button svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 1.8;
+      stroke: currentColor;
+      fill: none;
+    }
+
+    .command-button.active {
+      border-color: rgba(51, 103, 214, 0.6);
+      box-shadow: 0 0 0 3px rgba(51, 103, 214, 0.15);
+      color: var(--accent);
+    }
+
+    .badge {
+      background: rgba(51,103,214,0.1);
+      color: var(--accent);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .math-keyboard {
+      background: rgba(244, 244, 251, 0.98);
+      border-top: 1px solid var(--border);
+      padding: 16px;
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 -12px 40px rgba(0,0,0,0.08);
+      border-radius: 20px 20px 0 0;
+      width: min(720px, 100%);
+      margin: 0 auto;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+    }
+
+    .math-keyboard.active {
+      display: flex;
+    }
+
+    .math-keyboard.desktop-floating {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      border-radius: 18px;
+      border: 1px solid rgba(120, 132, 170, 0.24);
+      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.18);
+      margin: 0;
+      width: min(420px, calc(100% - 32px));
+      max-height: calc(100vh - 32px);
+      overflow: auto;
+      z-index: 5;
+    }
+
+    .math-keyboard.desktop-floating.active {
+      display: flex;
+    }
+
+    .math-keyboard.dragging {
+      cursor: grabbing;
+    }
+
+    .math-keyboard.dragging .keyboard-handle {
+      cursor: grabbing;
+    }
+
+    body.keyboard-open {
+      overflow: hidden;
+    }
+
+    .quick-actions {
+      display: none;
+      margin-top: 8px;
+      gap: 8px;
+    }
+
+    .keyboard-header {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .keyboard-handle {
+      width: 72px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(80, 90, 120, 0.25);
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .keyboard-handle:active {
+      cursor: grabbing;
+    }
+
+    .keyboard-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .keyboard-tab {
+      flex: 0 0 auto;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.92);
+      color: #555;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, border 0.2s ease;
+    }
+
+    .keyboard-tab.active {
+      color: var(--accent);
+      border-color: rgba(51,103,214,0.6);
+      background: rgba(51,103,214,0.08);
+    }
+
+    .keyboard-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 292px;
+    }
+
+    .keyboard-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: nowrap;
+      min-height: 52px;
+    }
+
+    .keyboard-key {
+      flex: 1 1 0;
+      min-width: 0;
+      border: 1px solid rgba(67, 79, 110, 0.18);
+      background: rgba(255,255,255,0.96);
+      border-radius: 12px;
+      min-height: 48px;
+      min-width: 36px;
+      font-size: clamp(0.85rem, 2.6vw, 1rem);
+      font-weight: 600;
+      color: #2d2d2d;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 10px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      white-space: nowrap;
+    }
+
+    .keyboard-key.small {
+      flex: 0.7 1 0;
+    }
+
+    .keyboard-key.wide {
+      flex: 1.6 1 0;
+    }
+
+    .keyboard-key.command {
+      background: rgba(51, 103, 214, 0.08);
+      color: var(--accent);
+      border-color: rgba(51, 103, 214, 0.24);
+    }
+
+    .keyboard-key.command:hover {
+      background: rgba(51, 103, 214, 0.15);
+    }
+
+    .keyboard-key:hover {
+      background: rgba(51,103,214,0.08);
+    }
+
+    .keyboard-key:active {
+      transform: scale(0.97);
+      box-shadow: inset 0 0 0 2px rgba(51,103,214,0.2);
+    }
+
+    .floating-controls {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 1;
+      align-items: flex-end;
+    }
+
+    .control-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .round-button {
+      width: 42px;
+      height: 42px;
+      border-radius: 21px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.94);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .round-button[disabled] {
+      opacity: 0.45;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    .round-button:hover:not([disabled]) {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    }
+
+    .round-button svg {
+      width: 20px;
+      height: 20px;
+      stroke: #444;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    @media (max-width: 920px) {
+      :root {
+        --sidebar-width: min(280px, 70vw);
+      }
+
+      body.sidebar-open::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.28);
+        pointer-events: none;
+        z-index: 4;
+      }
+
+      .layout {
+        position: relative;
+      }
+
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        box-shadow: 12px 0 40px rgba(0,0,0,0.22);
+        max-width: min(360px, 78vw);
+        transform: translateX(-105%);
+        z-index: 5;
+      }
+
+      body.sidebar-open .sidebar {
+        transform: translateX(0);
+      }
+
+      .graph-container {
+        flex: 1;
+      }
+
+      .sidebar.collapsed-desktop {
+        display: flex;
+      }
+
+      .math-keyboard {
+        box-shadow: 0 -8px 28px rgba(0,0,0,0.12);
+        max-width: none;
+        margin: 0;
+      }
+
+      .math-keyboard.active {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 6;
+      }
+
+      .keyboard-header {
+        align-items: stretch;
+      }
+
+      .keyboard-handle {
+        display: none;
+      }
+
+      .command-bar {
+        position: sticky;
+        bottom: var(--keyboard-offset, 0px);
+        background: rgba(255,255,255,0.96);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 -12px 24px rgba(0,0,0,0.12);
+        z-index: 3;
+      }
+
+      .quick-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px 12px;
+        background: rgba(255,255,255,0.95);
+        border-top: 1px solid var(--border);
+      }
+    }
+
+    @media (max-width: 600px) {
+      header {
+        gap: 8px;
+        padding: 6px 10px;
+        height: auto;
+      }
+
+      .brand {
+        flex: 1;
+      }
+
+      .toolbar {
+        order: 3;
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .tool-button {
+        min-width: 40px;
+        min-height: 40px;
+        border-radius: 10px;
+      }
+
+      .command-bar {
+        padding: 10px;
+      }
+    }
+
+    @media (min-width: 921px) {
+      .math-keyboard {
+        position: relative;
+        border-radius: 24px;
+        box-shadow: 0 -16px 48px rgba(0,0,0,0.1);
+      }
+
+      .math-keyboard.active {
+        position: relative;
+      }
+    }
+
+    .quick-action {
+      border: 1px solid rgba(51,103,214,0.2);
+      background: rgba(51,103,214,0.08);
+      color: var(--accent);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease, border 0.2s ease, transform 0.2s ease;
+    }
+
+    .quick-action:hover {
+      background: rgba(51,103,214,0.16);
+    }
+
+    .quick-action:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button class="tool-button" id="toggle-sidebar" aria-label="Wissel algebra-paneel">
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 4h16" />
+        <path d="M4 12h10" />
+        <path d="M4 20h16" />
+      </svg>
+    </button>
+    <div class="brand">
+      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="16" cy="16" r="10" opacity="0.3" />
+        <path d="M16 6v4" />
+        <path d="M16 22v4" />
+        <path d="M6 16h4" />
+        <path d="M22 16h4" />
+        <circle cx="16" cy="16" r="4" />
+      </svg>
+      GeoCanvas Classic
+    </div>
+    <div class="toolbar" role="toolbar" aria-label="Tekengereedschap">
+      <button class="tool-button active" data-tool="move" aria-label="Verplaats gereedschap">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 4 18 16l-5 1.5 1.5 5L11 17.5 8.5 20l1.5-5z" />
+        </svg>
+      </button>
+      <button class="tool-button" data-tool="point" aria-label="Punt gereedschap">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4" />
+        </svg>
+      </button>
+      <button class="tool-button" data-tool="segment" aria-label="Lijnstuk gereedschap">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 18 18 6" />
+          <circle cx="6" cy="18" r="2.5" />
+          <circle cx="18" cy="6" r="2.5" />
+        </svg>
+      </button>
+      <button class="tool-button" data-tool="line" aria-label="Rechte lijn gereedschap">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 20 20 4" />
+        </svg>
+      </button>
+      <button class="tool-button" data-tool="circle" aria-label="Cirkel gereedschap">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="7" />
+          <circle cx="12" cy="12" r="2.2" />
+        </svg>
+      </button>
+      <button class="tool-button" data-tool="polygon" aria-label="Veelhoek gereedschap">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 4 3 9l3 5 6 6 6-3 3-5-3-5-6-3z" />
+        </svg>
+      </button>
+      <button class="tool-button" data-tool="text" aria-label="Tekst gereedschap">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 6h14" />
+          <path d="M12 6v12" />
+        </svg>
+      </button>
+      <span class="badge">Beta</span>
+    </div>
+    <button class="tool-button" id="export-board" aria-label="Exporteer afbeelding" title="Exporteer afbeelding">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v14" />
+        <path d="m7 12 5 5 5-5" />
+        <path d="M5 21h14" />
+      </svg>
+    </button>
+  </header>
+  <main class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        Algebra
+        <button class="tool-button" id="close-sidebar" aria-label="Sluit paneel">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m7 7 10 10" />
+            <path d="m17 7-10 10" />
+          </svg>
+        </button>
+      </div>
+      <div class="algebra-list" id="algebra-list" aria-live="polite"></div>
+      <div class="properties-panel hidden" id="properties-panel" aria-live="polite">
+        <div class="properties-header">
+          Eigenschappen
+          <button type="button" class="properties-close" id="close-properties" aria-label="Verberg eigenschappen">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m8 8 8 8" />
+              <path d="m16 8-8 8" />
+            </svg>
+          </button>
+        </div>
+        <div class="properties-group" id="properties-content"></div>
+      </div>
+    </aside>
+    <section class="graph-container">
+      <div class="floating-controls">
+        <div class="control-row">
+          <button type="button" class="round-button" id="undo" aria-label="Ongedaan maken" disabled>
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 10H3V6" />
+              <path d="M3 10c0 6 6 8 10 8 4.97 0 8-2.9 8-7a7 7 0 0 0-7-7c-2.7 0-5.2 1.1-6.8 3" />
+            </svg>
+          </button>
+          <button type="button" class="round-button" id="redo" aria-label="Opnieuw uitvoeren" disabled>
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 10h4V6" />
+              <path d="M21 10c0 6-6 8-10 8-4.97 0-8-2.9-8-7a7 7 0 0 1 7-7c2.7 0 5.2 1.1 6.8 3" />
+            </svg>
+          </button>
+        </div>
+        <button type="button" class="round-button" id="zoom-in" aria-label="Zoom in">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M11 8v6" />
+            <path d="M8 11h6" />
+            <path d="m20 20-3-3" />
+          </svg>
+        </button>
+        <button type="button" class="round-button" id="zoom-out" aria-label="Zoom uit">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M8 11h6" />
+            <path d="m20 20-3-3" />
+          </svg>
+        </button>
+        <button type="button" class="round-button" id="reset-view" aria-label="Reset weergave">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 3.1-6.9L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+        </button>
+      </div>
+      <canvas id="board" width="1600" height="1200" aria-label="Coördinaatvlak"></canvas>
+      <div class="quick-actions" id="quick-actions" role="group" aria-label="Snelle functievoorbeelden"></div>
+      <div class="command-bar">
+        <span aria-hidden="true">+</span>
+        <input type="text" id="command-input" class="command-input" placeholder="Voer een opdracht of functie in, bijv. y=x^2 of A=(2,1)" autocomplete="off" />
+        <button class="command-button" id="toggle-keyboard" type="button" aria-label="Toon toetsenbord" aria-pressed="false">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="5" width="18" height="14" rx="2" ry="2" />
+            <path d="M7 9h0" />
+            <path d="M11 9h0" />
+            <path d="M15 9h0" />
+            <path d="M7 13h0" />
+            <path d="M11 13h0" />
+            <path d="M15 13h0" />
+          </svg>
+        </button>
+      </div>
+      <div class="math-keyboard" id="math-keyboard" aria-hidden="true">
+        <div class="keyboard-header">
+          <div class="keyboard-handle" aria-hidden="true"></div>
+          <div class="keyboard-tabs" role="tablist" aria-label="Toetsenbord categorieën"></div>
+        </div>
+        <div class="keyboard-rows" role="group" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+  <script>
+
+    function refreshPropertiesPanel(preferred) {
+      if (!propertiesPanel || !propertiesContent) return;
+      let target = preferred;
+      if (!target || !target.id || !target.type) {
+        if (state.selectedPointId) {
+          target = { type: 'point', id: state.selectedPointId };
+        } else if (state.highlightedFunctionId) {
+          target = { type: 'function', id: state.highlightedFunctionId };
+        } else if (state.selectedSliderId) {
+          target = { type: 'slider', id: state.selectedSliderId };
+        } else if (state.selectedVariableId) {
+          target = { type: 'variable', id: state.selectedVariableId };
+        } else {
+          target = null;
+        }
+      }
+      propertiesState.type = target ? target.type : null;
+      propertiesState.id = target ? target.id : null;
+      if (!target) {
+        propertiesPanel.classList.add('hidden');
+        propertiesContent.innerHTML = '';
+        return;
+      }
+      renderPropertiesContent(target);
+    }
+
+    function renderPropertiesContent(target) {
+      if (!propertiesPanel || !propertiesContent) return;
+      propertiesContent.innerHTML = '';
+      let entity = null;
+      if (target.type === 'point') {
+        entity = state.points.find(entry => entry.id === target.id);
+        if (!entity) {
+          propertiesPanel.classList.add('hidden');
+          return;
+        }
+        renderPointProperties(entity);
+      } else if (target.type === 'function') {
+        entity = state.functions.find(entry => entry.id === target.id);
+        if (!entity) {
+          propertiesPanel.classList.add('hidden');
+          return;
+        }
+        renderFunctionProperties(entity);
+      } else if (target.type === 'slider') {
+        entity = findSliderById(target.id);
+        if (!entity) {
+          propertiesPanel.classList.add('hidden');
+          return;
+        }
+        renderSliderProperties(entity);
+      } else if (target.type === 'variable') {
+        entity = findNumberById(target.id);
+        if (!entity) {
+          propertiesPanel.classList.add('hidden');
+          return;
+        }
+        renderVariableProperties(entity);
+      }
+      propertiesPanel.classList.remove('hidden');
+    }
+
+    function renderPointProperties(point) {
+      const nameField = document.createElement('div');
+      nameField.className = 'property-field';
+      const nameLabel = document.createElement('label');
+      nameLabel.textContent = 'Naam';
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.value = point.name;
+      nameInput.addEventListener('change', () => updatePointName(point.id, nameInput.value));
+      nameField.appendChild(nameLabel);
+      nameField.appendChild(nameInput);
+      propertiesContent.appendChild(nameField);
+
+      const colorField = document.createElement('div');
+      colorField.className = 'property-field';
+      const colorLabel = document.createElement('label');
+      colorLabel.textContent = 'Kleur';
+      const colorInput = document.createElement('input');
+      colorInput.type = 'color';
+      colorInput.value = normalizeColor(point.color || COLORS.point, COLORS.point);
+      colorInput.addEventListener('input', () => updatePointColor(point.id, colorInput.value, { record: false }));
+      colorInput.addEventListener('change', () => updatePointColor(point.id, colorInput.value, { record: true }));
+      colorField.appendChild(colorLabel);
+      colorField.appendChild(colorInput);
+      propertiesContent.appendChild(colorField);
+
+      const labelToggle = document.createElement('label');
+      labelToggle.className = 'property-checkbox';
+      const labelInput = document.createElement('input');
+      labelInput.type = 'checkbox';
+      labelInput.checked = point.showLabel !== false;
+      labelInput.addEventListener('change', () => setPointLabelVisibility(point.id, labelInput.checked));
+      labelToggle.appendChild(labelInput);
+      labelToggle.appendChild(document.createTextNode('Toon label'));
+      propertiesContent.appendChild(labelToggle);
+
+      const traceToggle = document.createElement('label');
+      traceToggle.className = 'property-checkbox';
+      const traceInput = document.createElement('input');
+      traceInput.type = 'checkbox';
+      traceInput.checked = Boolean(point.traceEnabled);
+      traceInput.addEventListener('change', () => togglePointTrace(point.id, traceInput.checked));
+      traceToggle.appendChild(traceInput);
+      traceToggle.appendChild(document.createTextNode('Sporen aanzetten'));
+      propertiesContent.appendChild(traceToggle);
+    }
+
+    function renderFunctionProperties(fn) {
+      const nameField = document.createElement('div');
+      nameField.className = 'property-field';
+      const nameLabel = document.createElement('label');
+      nameLabel.textContent = 'Label';
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.value = fn.algebraLabel;
+      nameInput.addEventListener('change', () => updateFunctionLabel(fn.id, nameInput.value));
+      nameField.appendChild(nameLabel);
+      nameField.appendChild(nameInput);
+      propertiesContent.appendChild(nameField);
+
+      const colorField = document.createElement('div');
+      colorField.className = 'property-field';
+      const colorLabel = document.createElement('label');
+      colorLabel.textContent = 'Kleur';
+      const colorInput = document.createElement('input');
+      colorInput.type = 'color';
+      colorInput.value = normalizeColor(fn.color || COLORS.function, COLORS.function);
+      colorInput.addEventListener('input', () => updateFunctionColor(fn.id, colorInput.value, { skipHistory: true, preview: true }));
+      colorInput.addEventListener('change', () => updateFunctionColor(fn.id, colorInput.value));
+      colorField.appendChild(colorLabel);
+      colorField.appendChild(colorInput);
+      propertiesContent.appendChild(colorField);
+
+      const thicknessField = document.createElement('div');
+      thicknessField.className = 'property-field';
+      const thicknessLabel = document.createElement('label');
+      thicknessLabel.textContent = 'Lijndikte';
+      const thicknessInput = document.createElement('input');
+      thicknessInput.type = 'range';
+      thicknessInput.min = '1';
+      thicknessInput.max = '10';
+      thicknessInput.step = '0.5';
+      thicknessInput.value = fn.thickness || 2;
+      thicknessInput.addEventListener('input', () => updateFunctionThickness(fn.id, parseFloat(thicknessInput.value), { record: false }));
+      thicknessInput.addEventListener('change', () => updateFunctionThickness(fn.id, parseFloat(thicknessInput.value), { record: true }));
+      thicknessField.appendChild(thicknessLabel);
+      thicknessField.appendChild(thicknessInput);
+      propertiesContent.appendChild(thicknessField);
+
+      const labelToggle = document.createElement('label');
+      labelToggle.className = 'property-checkbox';
+      const labelInput = document.createElement('input');
+      labelInput.type = 'checkbox';
+      labelInput.checked = Boolean(fn.showLabel);
+      labelInput.addEventListener('change', () => setFunctionLabelVisibility(fn.id, labelInput.checked));
+      labelToggle.appendChild(labelInput);
+      labelToggle.appendChild(document.createTextNode('Label op grafiek'));
+      propertiesContent.appendChild(labelToggle);
+    }
+
+    function renderSliderProperties(slider) {
+      const nameField = document.createElement('div');
+      nameField.className = 'property-field';
+      const nameLabel = document.createElement('label');
+      nameLabel.textContent = 'Naam';
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.value = slider.name;
+      nameInput.addEventListener('change', () => renameSlider(slider.id, nameInput.value));
+      nameField.appendChild(nameLabel);
+      nameField.appendChild(nameInput);
+      propertiesContent.appendChild(nameField);
+
+      const valueField = document.createElement('div');
+      valueField.className = 'property-field';
+      const valueLabel = document.createElement('label');
+      valueLabel.textContent = 'Waarde';
+      const valueInput = document.createElement('input');
+      valueInput.type = 'number';
+      valueInput.step = slider.step || 0.1;
+      valueInput.value = slider.value;
+      valueInput.addEventListener('change', () => {
+        const numeric = parseFloat(valueInput.value);
+        if (Number.isFinite(numeric)) {
+          updateSliderValue(slider, numeric, { record: true });
+        } else {
+          valueInput.value = slider.value;
+        }
+      });
+      valueField.appendChild(valueLabel);
+      valueField.appendChild(valueInput);
+      propertiesContent.appendChild(valueField);
+
+      const boundsRow = document.createElement('div');
+      boundsRow.className = 'property-row';
+      const minInput = document.createElement('input');
+      minInput.type = 'number';
+      minInput.value = slider.min;
+      const maxInput = document.createElement('input');
+      maxInput.type = 'number';
+      maxInput.value = slider.max;
+      const stepInput = document.createElement('input');
+      stepInput.type = 'number';
+      stepInput.step = 'any';
+      stepInput.value = slider.step || 0.1;
+      minInput.addEventListener('change', () => {
+        const numeric = parseFloat(minInput.value);
+        if (Number.isFinite(numeric)) {
+          updateSliderBounds(slider.id, { min: numeric });
+        } else {
+          minInput.value = slider.min;
+        }
+      });
+      maxInput.addEventListener('change', () => {
+        const numeric = parseFloat(maxInput.value);
+        if (Number.isFinite(numeric)) {
+          updateSliderBounds(slider.id, { max: numeric });
+        } else {
+          maxInput.value = slider.max;
+        }
+      });
+      stepInput.addEventListener('change', () => {
+        const numeric = parseFloat(stepInput.value);
+        if (Number.isFinite(numeric) && numeric > 0) {
+          updateSliderBounds(slider.id, { step: numeric });
+        } else {
+          stepInput.value = slider.step;
+        }
+      });
+      const minLabel = document.createElement('label');
+      minLabel.textContent = 'Min';
+      minLabel.appendChild(minInput);
+      const maxLabel = document.createElement('label');
+      maxLabel.textContent = 'Max';
+      maxLabel.appendChild(maxInput);
+      const stepLabel = document.createElement('label');
+      stepLabel.textContent = 'Stap';
+      stepLabel.appendChild(stepInput);
+      boundsRow.appendChild(minLabel);
+      boundsRow.appendChild(maxLabel);
+      boundsRow.appendChild(stepLabel);
+      propertiesContent.appendChild(boundsRow);
+
+      const animationToggle = document.createElement('label');
+      animationToggle.className = 'property-checkbox';
+      const animationInput = document.createElement('input');
+      animationInput.type = 'checkbox';
+      animationInput.checked = Boolean(slider.animating);
+      animationInput.addEventListener('change', () => setSliderAnimating(slider, animationInput.checked));
+      animationToggle.appendChild(animationInput);
+      animationToggle.appendChild(document.createTextNode('Animatie'));
+      propertiesContent.appendChild(animationToggle);
+
+      const speedField = document.createElement('div');
+      speedField.className = 'property-field';
+      const speedLabel = document.createElement('label');
+      speedLabel.textContent = 'Snelheid';
+      const speedSelect = document.createElement('select');
+      for (const [key, label] of [['slow', 'Langzaam'], ['medium', 'Normaal'], ['fast', 'Snel']]) {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = label;
+        if (slider.speed === key) {
+          option.selected = true;
+        }
+        speedSelect.appendChild(option);
+      }
+      speedSelect.addEventListener('change', () => setSliderSpeed(slider, speedSelect.value));
+      speedField.appendChild(speedLabel);
+      speedField.appendChild(speedSelect);
+      propertiesContent.appendChild(speedField);
+    }
+
+    function renderVariableProperties(entry) {
+      const nameField = document.createElement('div');
+      nameField.className = 'property-field';
+      const nameLabel = document.createElement('label');
+      nameLabel.textContent = 'Naam';
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.value = entry.name;
+      nameInput.addEventListener('change', () => renameNumber(entry.id, nameInput.value));
+      nameField.appendChild(nameLabel);
+      nameField.appendChild(nameInput);
+      propertiesContent.appendChild(nameField);
+
+      const valueField = document.createElement('div');
+      valueField.className = 'property-field';
+      const valueLabel = document.createElement('label');
+      valueLabel.textContent = 'Waarde';
+      const valueInput = document.createElement('input');
+      valueInput.type = 'number';
+      valueInput.value = entry.value;
+      valueInput.addEventListener('change', () => {
+        const numeric = parseFloat(valueInput.value);
+        if (Number.isFinite(numeric)) {
+          updateNumberValue(entry, numeric, { record: true });
+        } else {
+          valueInput.value = entry.value;
+        }
+      });
+      valueField.appendChild(valueLabel);
+      valueField.appendChild(valueInput);
+      propertiesContent.appendChild(valueField);
+    }
+
+    function setActiveSlider(id, options = {}) {
+      const { scroll = true, force = false, preserveOthers = false } = options;
+      if (!id) {
+        const previous = state.selectedSliderId;
+        state.selectedSliderId = null;
+        if (!preserveOthers && previous) {
+          const item = algebraList.querySelector(`[data-id="${previous}"]`);
+          if (item) {
+            item.classList.remove('selected');
+          }
+          refreshPropertiesPanel();
+        }
+        if (!preserveOthers) {
+          if (state.highlightedFunctionId) {
+            state.lastSelectionType = 'function';
+          } else if (state.selectedPointId) {
+            state.lastSelectionType = 'point';
+          } else if (state.selectedVariableId) {
+            state.lastSelectionType = 'variable';
+          } else {
+            state.lastSelectionType = 'none';
+          }
+        }
+        return;
+      }
+      if (state.selectedSliderId === id && !force) {
+        if (scroll) {
+          const current = algebraList.querySelector(`[data-id="${id}"]`);
+          if (current) {
+            current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+        }
+        refreshPropertiesPanel({ type: 'slider', id });
+        return;
+      }
+      if (!preserveOthers) {
+        clearHighlightedAlgebra();
+      }
+      state.selectedSliderId = id;
+      const item = algebraList.querySelector(`[data-id="${id}"]`);
+      if (item) {
+        item.classList.add('selected');
+        if (scroll) {
+          item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }
+      state.lastSelectionType = 'slider';
+      refreshPropertiesPanel({ type: 'slider', id });
+    }
+
+    function setActiveVariable(id, options = {}) {
+      const { scroll = true, force = false, preserveOthers = false } = options;
+      if (!id) {
+        const previous = state.selectedVariableId;
+        state.selectedVariableId = null;
+        if (!preserveOthers && previous) {
+          const item = algebraList.querySelector(`[data-id="${previous}"]`);
+          if (item) {
+            item.classList.remove('selected');
+          }
+          refreshPropertiesPanel();
+        }
+        if (!preserveOthers) {
+          if (state.highlightedFunctionId) {
+            state.lastSelectionType = 'function';
+          } else if (state.selectedPointId) {
+            state.lastSelectionType = 'point';
+          } else if (state.selectedSliderId) {
+            state.lastSelectionType = 'slider';
+          } else {
+            state.lastSelectionType = 'none';
+          }
+        }
+        return;
+      }
+      if (state.selectedVariableId === id && !force) {
+        if (scroll) {
+          const current = algebraList.querySelector(`[data-id="${id}"]`);
+          if (current) {
+            current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+        }
+        refreshPropertiesPanel({ type: 'variable', id });
+        return;
+      }
+      if (!preserveOthers) {
+        clearHighlightedAlgebra();
+      }
+      state.selectedVariableId = id;
+      const item = algebraList.querySelector(`[data-id="${id}"]`);
+      if (item) {
+        item.classList.add('selected');
+        if (scroll) {
+          item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }
+      state.lastSelectionType = 'variable';
+      refreshPropertiesPanel({ type: 'variable', id });
+    }
+
+
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+    const graphContainer = document.querySelector('.graph-container');
+    const commandBar = document.querySelector('.command-bar');
+    const sidebar = document.getElementById('sidebar');
+    const toggleSidebarBtn = document.getElementById('toggle-sidebar');
+    const closeSidebarBtn = document.getElementById('close-sidebar');
+    const algebraList = document.getElementById('algebra-list');
+    const commandInput = document.getElementById('command-input');
+    const keyboardToggle = document.getElementById('toggle-keyboard');
+    const keyboard = document.getElementById('math-keyboard');
+    const keyboardTabs = keyboard.querySelector('.keyboard-tabs');
+    const keyboardRows = keyboard.querySelector('.keyboard-rows');
+    const keyboardHandle = keyboard.querySelector('.keyboard-handle');
+    const quickActions = document.getElementById('quick-actions');
+    const undoButton = document.getElementById('undo');
+    const redoButton = document.getElementById('redo');
+    const exportButton = document.getElementById('export-board');
+    const propertiesPanel = document.getElementById('properties-panel');
+    const propertiesContent = document.getElementById('properties-content');
+    const closePropertiesBtn = document.getElementById('close-properties');
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    const defaultViewportContent = viewportMeta ? viewportMeta.getAttribute('content') : '';
+
+    const DPR = window.devicePixelRatio || 1;
+    const coarsePointerMedia = typeof window.matchMedia === 'function'
+      ? window.matchMedia('(pointer: coarse)')
+      : null;
+
+    function computeCoarsePointerPreference() {
+      const coarseMatch = coarsePointerMedia ? coarsePointerMedia.matches : false;
+      const touchPoints = typeof navigator.maxTouchPoints === 'number'
+        ? navigator.maxTouchPoints
+        : typeof navigator.msMaxTouchPoints === 'number'
+          ? navigator.msMaxTouchPoints
+          : 0;
+      const userAgent = typeof navigator.userAgent === 'string' ? navigator.userAgent : '';
+      const mobileHint = /(Android|iPhone|iPad|iPod|Mobile|Silk|Kindle|BlackBerry|Opera Mini|IEMobile)/i.test(userAgent);
+      return coarseMatch || touchPoints > 1 || mobileHint;
+    }
+
+    let isCoarsePointer = computeCoarsePointerPreference();
+
+    const state = {
+      tool: 'move',
+      scale: 80,
+      origin: { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 },
+      points: [],
+      segments: [],
+      lines: [],
+      circles: [],
+      polygons: [],
+      texts: [],
+      functions: [],
+      sliders: [],
+      numbers: [],
+      variables: {},
+      functionColorIndex: 0,
+      functionCounter: 0,
+      draggingPoint: null,
+      dragOffset: { x: 0, y: 0 },
+      panning: false,
+      panStart: { x: 0, y: 0 },
+      panCandidate: null,
+      tempPoints: [],
+      pinch: null,
+      dragHistoryArmed: false,
+      highlightedFunctionId: null,
+      pendingFunctionHighlight: null,
+      editingFunctionId: null,
+      selectedPointId: null,
+      editingPointId: null,
+      selectedSliderId: null,
+      selectedVariableId: null,
+      lastSelectionType: 'none'
+    };
+
+    const COLORS = {
+      point: '#1f6feb',
+      line: '#2b4aa0',
+      segment: '#2b4aa0',
+      circle: '#c03fb5',
+      polygon: '#009688',
+      text: '#444',
+      function: '#e36209',
+      slider: '#10b981',
+      variable: '#f59e0b'
+    };
+
+    const FUNCTION_COLORS = ['#d83b01', '#1f6feb', '#2da44e', '#8b3dd9', '#e36209'];
+    const SLIDER_SPEEDS = {
+      slow: 0.4,
+      medium: 1,
+      fast: 1.8
+    };
+    const ICONS = {
+      minus: `<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h12" /></svg>`,
+      plus: `<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14" /><path d="M5 12h14" /></svg>`,
+      play: `<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5v14l11-7z" /></svg>`,
+      pause: `<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5h4v14H7z" /><path d="M13 5h4v14h-4z" /></svg>`
+    };
+
+    function withAlpha(color, alpha) {
+      if (!color) {
+        return `rgba(51, 103, 214, ${alpha})`;
+      }
+      if (color.startsWith('#')) {
+        let hex = color.slice(1);
+        if (hex.length === 3) {
+          hex = hex.split('').map(char => char + char).join('');
+        }
+        if (hex.length === 6) {
+          const r = parseInt(hex.slice(0, 2), 16);
+          const g = parseInt(hex.slice(2, 4), 16);
+          const b = parseInt(hex.slice(4, 6), 16);
+          return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+      }
+      if (color.startsWith('rgb')) {
+        const values = color
+          .replace(/rgba?\(([^)]+)\)/, '$1')
+          .split(',')
+          .map(part => part.trim());
+        const [r = '51', g = '103', b = '214'] = values;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+      return `rgba(51, 103, 214, ${alpha})`;
+    }
+    const SUBSCRIPTS = ['₀','₁','₂','₃','₄','₅','₆','₇','₈','₉'];
+    const activeTouches = new Map();
+    const history = { past: [], future: [] };
+    const HISTORY_LIMIT = 100;
+    let suspendHistory = false;
+    let restoringState = false;
+    let sliderAnimationFrame = null;
+    const propertiesState = { type: null, id: null };
+
+    function toSubscript(number) {
+      return String(number)
+        .split('')
+        .map(digit => SUBSCRIPTS[Number(digit)] || digit)
+        .join('');
+    }
+
+    function nextFunctionLabel() {
+      state.functionCounter += 1;
+      return `f${toSubscript(state.functionCounter)}(x)`;
+    }
+
+    function serializeState() {
+      return {
+        origin: { x: state.origin.x, y: state.origin.y },
+        scale: state.scale,
+        functionColorIndex: state.functionColorIndex,
+        functionCounter: state.functionCounter,
+        pointCounter,
+        selectedPointId: state.selectedPointId,
+        selectedSliderId: state.selectedSliderId,
+        selectedVariableId: state.selectedVariableId,
+        lastSelectionType: state.lastSelectionType,
+        points: state.points.map(point => ({
+          id: point.id,
+          name: point.name,
+          position: { x: point.position.x, y: point.position.y },
+          color: point.color,
+          showLabel: point.showLabel !== false,
+          traceEnabled: Boolean(point.traceEnabled),
+          trace: Array.isArray(point.trace) ? point.trace.map(pos => ({ x: pos.x, y: pos.y })) : []
+        })),
+        segments: state.segments.map(segment => ({ ...segment })),
+        lines: state.lines.map(line => ({ ...line })),
+        circles: state.circles.map(circle => ({ ...circle })),
+        polygons: state.polygons.map(polygon => ({ id: polygon.id, points: [...polygon.points] })),
+        texts: state.texts.map(label => ({
+          id: label.id,
+          content: label.content,
+          position: { x: label.position.x, y: label.position.y }
+        })),
+        functions: state.functions.map(fn => ({
+          id: fn.id,
+          label: fn.label,
+          algebraLabel: fn.algebraLabel,
+          expression: fn.expression,
+          source: fn.source,
+          color: fn.color,
+          displayName: fn.displayName,
+          evaluationExpression: fn.evaluationExpression,
+          thickness: fn.thickness || 2,
+          showLabel: Boolean(fn.showLabel)
+        })),
+        sliders: state.sliders.map(slider => ({
+          id: slider.id,
+          name: slider.name,
+          min: slider.min,
+          max: slider.max,
+          step: slider.step,
+          value: slider.value,
+          speed: slider.speed,
+          animating: Boolean(slider.animating),
+          direction: slider.direction || 1
+        })),
+        numbers: state.numbers.map(entry => ({ id: entry.id, name: entry.name, value: entry.value })),
+        variables: { ...state.variables }
+      };
+    }
+
+    function recordHistory() {
+      if (suspendHistory) return;
+      const snapshot = serializeState();
+      history.past.push(snapshot);
+      if (history.past.length > HISTORY_LIMIT) {
+        history.past.shift();
+      }
+      history.future.length = 0;
+      updateUndoRedoButtons();
+    }
+
+    function rebuildAlgebraList() {
+      if (!algebraList) return;
+      const previousPoint = state.selectedPointId;
+      const previousFunction = state.highlightedFunctionId;
+      const previousSlider = state.selectedSliderId;
+      const previousVariable = state.selectedVariableId;
+      algebraList.innerHTML = '';
+      for (const point of state.points) {
+        registerAlgebraEntry(point.id, `${point.name} = (${formatNumber(point.position.x)}, ${formatNumber(point.position.y)})`, 'point', point.color || COLORS.point);
+      }
+      for (const line of state.lines) {
+        registerAlgebraEntry(line.id, `l: lijn(${pointName(line.p1)}, ${pointName(line.p2)})`, 'line');
+      }
+      for (const segment of state.segments) {
+        registerAlgebraEntry(segment.id, `s: segment(${pointName(segment.p1)}, ${pointName(segment.p2)})`, 'segment');
+      }
+      for (const circle of state.circles) {
+        registerAlgebraEntry(circle.id, `c: cirkel(${pointName(circle.center)}, ${pointName(circle.edge)})`, 'circle');
+      }
+      for (const polygon of state.polygons) {
+        registerAlgebraEntry(polygon.id, `p: veelhoek(${polygon.points.map(pointName).join(', ')})`, 'polygon');
+      }
+      for (const text of state.texts) {
+        registerAlgebraEntry(text.id, `tekst: "${text.content}"`, 'text');
+      }
+      for (const fn of state.functions) {
+        registerAlgebraEntry(fn.id, `${fn.algebraLabel} = ${fn.expression}`, 'function', fn.color);
+      }
+      for (const entry of state.numbers) {
+        registerAlgebraEntry(entry.id, `${entry.name} = ${formatNumber(entry.value)}`, 'variable', COLORS.variable);
+      }
+      for (const slider of state.sliders) {
+        registerAlgebraEntry(slider.id, slider.name, 'slider');
+      }
+      const lastSelection = state.lastSelectionType;
+      if (lastSelection === 'function' && previousFunction) {
+        setHighlightedFunction(previousFunction, { scroll: false, force: true });
+      } else if (lastSelection === 'point' && previousPoint) {
+        setSelectedPoint(previousPoint, { scroll: false, force: true });
+      } else if (lastSelection === 'slider' && previousSlider) {
+        setActiveSlider(previousSlider, { scroll: false, force: true, preserveOthers: true });
+      } else if (lastSelection === 'variable' && previousVariable) {
+        setActiveVariable(previousVariable, { scroll: false, force: true, preserveOthers: true });
+      } else {
+        if (previousFunction) {
+          setHighlightedFunction(previousFunction, { scroll: false, force: true });
+        } else if (previousPoint) {
+          setSelectedPoint(previousPoint, { scroll: false, force: true });
+        } else if (previousSlider) {
+          setActiveSlider(previousSlider, { scroll: false, force: true, preserveOthers: true });
+        } else if (previousVariable) {
+          setActiveVariable(previousVariable, { scroll: false, force: true, preserveOthers: true });
+        }
+      }
+    }
+
+    function restoreState(snapshot) {
+      if (!snapshot) return;
+      suspendHistory = true;
+      restoringState = true;
+      state.points = snapshot.points.map(point => ({
+        id: point.id,
+        name: point.name,
+        position: { x: point.position.x, y: point.position.y },
+        color: point.color || COLORS.point,
+        showLabel: point.showLabel !== false,
+        traceEnabled: Boolean(point.traceEnabled),
+        trace: Array.isArray(point.trace) ? point.trace.map(pos => ({ x: pos.x, y: pos.y })) : []
+      }));
+      state.segments = snapshot.segments.map(segment => ({ ...segment }));
+      state.lines = snapshot.lines.map(line => ({ ...line }));
+      state.circles = snapshot.circles.map(circle => ({ ...circle }));
+      state.polygons = snapshot.polygons.map(polygon => ({ id: polygon.id, points: [...polygon.points] }));
+      state.texts = snapshot.texts.map(text => ({
+        id: text.id,
+        content: text.content,
+        position: { x: text.position.x, y: text.position.y }
+      }));
+      state.origin = { x: snapshot.origin.x, y: snapshot.origin.y };
+      state.scale = snapshot.scale;
+      state.functionCounter = snapshot.functionCounter;
+      pointCounter = snapshot.pointCounter ?? pointCounter;
+      state.functionColorIndex = 0;
+      state.tempPoints = [];
+      state.tempPolygon = null;
+      state.draggingPoint = null;
+      state.dragOffset = { x: 0, y: 0 };
+      state.panStart = { x: 0, y: 0 };
+      state.panning = false;
+      state.panCandidate = null;
+      state.pinch = null;
+      state.dragHistoryArmed = false;
+      state.highlightedFunctionId = null;
+      state.pendingFunctionHighlight = null;
+      state.editingFunctionId = null;
+      state.selectedPointId = snapshot.selectedPointId || null;
+      state.editingPointId = null;
+      state.lastSelectionType = snapshot.lastSelectionType || 'none';
+      state.sliders = (snapshot.sliders || []).map(slider => ({
+        id: slider.id,
+        name: slider.name,
+        min: slider.min,
+        max: slider.max,
+        step: slider.step,
+        value: slider.value,
+        speed: slider.speed || 'medium',
+        animating: Boolean(slider.animating),
+        direction: slider.direction || 1,
+        lastTimestamp: null
+      }));
+      state.numbers = (snapshot.numbers || []).map(entry => ({
+        id: entry.id,
+        name: entry.name,
+        value: entry.value
+      }));
+      state.variables = { ...(snapshot.variables || {}) };
+      state.selectedSliderId = snapshot.selectedSliderId || null;
+      state.selectedVariableId = snapshot.selectedVariableId || null;
+      algebraList.innerHTML = '';
+      state.functions = [];
+      const savedFunctions = snapshot.functions || [];
+      for (const fn of savedFunctions) {
+        registerFunction({
+          algebraLabel: fn.algebraLabel,
+          expression: fn.expression,
+          source: fn.source,
+          graphLabel: fn.label,
+          evaluationExpression: fn.evaluationExpression
+        }, {
+          id: fn.id,
+          color: fn.color,
+          displayName: fn.displayName,
+          skipHistory: true,
+          skipDraw: true,
+          skipColorAdvance: true,
+          skipAlgebra: true,
+          thickness: fn.thickness,
+          showLabel: fn.showLabel
+        });
+      }
+      for (const slider of state.sliders) {
+        state.variables[slider.name] = slider.value;
+      }
+      for (const entry of state.numbers) {
+        state.variables[entry.name] = entry.value;
+      }
+      if (sliderAnimationFrame) {
+        cancelAnimationFrame(sliderAnimationFrame);
+        sliderAnimationFrame = null;
+      }
+      if (state.sliders.some(entry => entry.animating)) {
+        ensureSliderAnimationLoop();
+      }
+      rebuildAlgebraList();
+      state.functionColorIndex = snapshot.functionColorIndex;
+      restoringState = false;
+      suspendHistory = false;
+      refreshPropertiesPanel();
+      draw();
+    }
+
+    function undo() {
+      if (!history.past.length) return;
+      const snapshot = history.past.pop();
+      history.future.push(serializeState());
+      restoreState(snapshot);
+      updateUndoRedoButtons();
+    }
+
+    function redo() {
+      if (!history.future.length) return;
+      const snapshot = history.future.pop();
+      history.past.push(serializeState());
+      restoreState(snapshot);
+      updateUndoRedoButtons();
+    }
+
+    function updateUndoRedoButtons() {
+      if (undoButton) {
+        undoButton.disabled = history.past.length === 0;
+      }
+      if (redoButton) {
+        redoButton.disabled = history.future.length === 0;
+      }
+    }
+
+    function focusCommandInput() {
+      if (!commandInput) return;
+      try {
+        commandInput.focus({ preventScroll: true });
+      } catch (error) {
+        commandInput.focus();
+      }
+    }
+
+    function updateInputMode() {
+      if (!commandInput) return;
+      if (isCoarsePointer) {
+        commandInput.setAttribute('inputmode', 'none');
+      } else {
+        commandInput.setAttribute('inputmode', 'text');
+      }
+      updateKeyboardPresentation();
+      updateKeyboardToggleVisibility();
+    }
+
+    function refreshPointerMode(forceUpdate = false) {
+      const next = computeCoarsePointerPreference();
+      if (next !== isCoarsePointer) {
+        isCoarsePointer = next;
+        updateInputMode();
+      } else if (forceUpdate) {
+        updateInputMode();
+      }
+    }
+
+    function handlePointerPreferenceChange() {
+      refreshPointerMode(true);
+      if (!isCoarsePointer) {
+        document.body.classList.remove('keyboard-open');
+        document.body.style.setProperty('--keyboard-offset', '0px');
+      } else if (keyboardVisible) {
+        setKeyboardVisibility(true);
+      }
+    }
+
+    function updateKeyboardPresentation() {
+      if (!keyboard) return;
+      keyboard.classList.remove('desktop-floating');
+      if (!isCoarsePointer) {
+        resetFloatingKeyboardStyles();
+        if (keyboardVisible) {
+          setKeyboardVisibility(false);
+        }
+      }
+    }
+
+    function updateKeyboardToggleVisibility() {
+      if (!keyboardToggle) return;
+      const showKeyboard = isCoarsePointer;
+      keyboardToggle.classList.toggle('hidden', !showKeyboard);
+      keyboardToggle.setAttribute('aria-hidden', String(!showKeyboard));
+      if (showKeyboard) {
+        keyboardToggle.removeAttribute('tabindex');
+      } else {
+        keyboardToggle.setAttribute('tabindex', '-1');
+        if (keyboardVisible) {
+          setKeyboardVisibility(false);
+        }
+      }
+    }
+
+    function enforceStandaloneViewport() {
+      if (!viewportMeta) return;
+      viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    }
+
+    function restoreViewport() {
+      if (!viewportMeta) return;
+      if (!defaultViewportContent) return;
+      viewportMeta.setAttribute('content', defaultViewportContent);
+    }
+
+    const KEYBOARD_SETS = [
+      {
+        id: 'numeric',
+        label: '123',
+        rows: [
+          [
+            { text: '7' },
+            { text: '8' },
+            { text: '9' },
+            { text: '/' },
+            { text: '^' }
+          ],
+          [
+            { text: '4' },
+            { text: '5' },
+            { text: '6' },
+            { text: '*' },
+            { text: '-' }
+          ],
+          [
+            { text: '1' },
+            { text: '2' },
+            { text: '3' },
+            { text: '+' },
+            { text: ',' }
+          ],
+          [
+            { text: '0', classes: 'wide' },
+            { text: '.', classes: 'small' },
+            { text: '(', classes: 'small' },
+            { text: ')', classes: 'small' },
+            { text: 'x', classes: 'small' },
+            { text: 'y', classes: 'small' },
+            { text: 'π', insert: 'PI' },
+            { text: 'e', insert: 'E' }
+          ]
+        ]
+      },
+      {
+        id: 'functions',
+        label: 'f(x)',
+        rows: [
+          [
+            { text: 'sin', insert: 'sin()', cursorOffset: -1 },
+            { text: 'cos', insert: 'cos()', cursorOffset: -1 },
+            { text: 'tan', insert: 'tan()', cursorOffset: -1 },
+            { text: '√', insert: 'sqrt()', cursorOffset: -1 },
+            { text: '^2', insert: '^2' }
+          ],
+          [
+            { text: 'asin', insert: 'asin()', cursorOffset: -1 },
+            { text: 'acos', insert: 'acos()', cursorOffset: -1 },
+            { text: 'atan', insert: 'atan()', cursorOffset: -1 },
+            { text: 'ln', insert: 'ln()', cursorOffset: -1 },
+            { text: 'log10', insert: 'log10()', cursorOffset: -1 }
+          ],
+          [
+            { text: 'sinh', insert: 'sinh()', cursorOffset: -1 },
+            { text: 'cosh', insert: 'cosh()', cursorOffset: -1 },
+            { text: 'tanh', insert: 'tanh()', cursorOffset: -1 },
+            { text: 'log2', insert: 'log2()', cursorOffset: -1 },
+            { text: 'abs', insert: 'abs()', cursorOffset: -1 }
+          ],
+          [
+            { text: 'sec', insert: 'sec()', cursorOffset: -1 },
+            { text: 'csc', insert: 'csc()', cursorOffset: -1 },
+            { text: 'cot', insert: 'cot()', cursorOffset: -1 },
+            { text: '|x|', insert: 'abs()', cursorOffset: -1 },
+            { text: 'sgn', insert: 'sign()', cursorOffset: -1 }
+          ]
+        ]
+      },
+      {
+        id: 'letters',
+        label: 'ABC',
+        rows: [
+          [
+            { text: 'a' },
+            { text: 'b' },
+            { text: 'c' },
+            { text: 'd' },
+            { text: 'e' },
+            { text: 'f' },
+            { text: 'g' }
+          ],
+          [
+            { text: 'h' },
+            { text: 'i' },
+            { text: 'j' },
+            { text: 'k' },
+            { text: 'l' },
+            { text: 'm' },
+            { text: 'n' }
+          ],
+          [
+            { text: 'o' },
+            { text: 'p' },
+            { text: 'q' },
+            { text: 'r' },
+            { text: 's' },
+            { text: 't' },
+            { text: 'u' }
+          ],
+          [
+            { text: 'v' },
+            { text: 'w' },
+            { text: 'x' },
+            { text: 'y' },
+            { text: 'z' }
+          ]
+        ]
+      },
+      {
+        id: 'symbols',
+        label: '#&',
+        rows: [
+          [
+            { text: '≤', insert: '<=' },
+            { text: '≥', insert: '>=' },
+            { text: '≠', insert: '!=' },
+            { text: '~' },
+            { text: '%' }
+          ],
+          [
+            { text: '∞', insert: 'Infinity' },
+            { text: '[', classes: 'small' },
+            { text: ']', classes: 'small' },
+            { text: '{', classes: 'small' },
+            { text: '}', classes: 'small' }
+          ],
+          [
+            { text: '|', classes: 'small' },
+            { text: ':', classes: 'small' },
+            { text: ';', classes: 'small' },
+            { text: '<', classes: 'small' },
+            { text: '>', classes: 'small' }
+          ],
+          [
+            { text: '=', classes: 'small' },
+            { text: '≈', classes: 'small' },
+            { text: '±', insert: '+-', classes: 'small' },
+            { text: '«', classes: 'small' },
+            { text: '»', classes: 'small' }
+          ]
+        ]
+      }
+    ];
+
+    const COMMON_BOTTOM_ROW = [
+      { text: '←', action: 'left', classes: 'command small' },
+      { text: '→', action: 'right', classes: 'command small' },
+      { text: '⌫', action: 'backspace', classes: 'command wide' },
+      { text: '↵', action: 'enter', classes: 'command wide' }
+    ];
+
+    const QUICK_FUNCTION_ACTIONS = [
+      { label: 'y = x', value: 'y = x' },
+      { label: 'y = x²', value: 'y = x²' },
+      { label: 'y = sin(x)', value: 'y = sin(x)' },
+      { label: 'y = |x|', value: 'y = |x|' },
+      { label: 'Slider…', action: 'create-slider' },
+      { label: 'Constante…', action: 'define-number' }
+    ];
+
+    let keyboardVisible = false;
+    let skipNextKeyboardToggleClick = false;
+    let activeKeyboardSet = KEYBOARD_SETS[0].id;
+    let keyboardBuilt = false;
+    const keyboardPosition = { x: null, y: null };
+    const keyboardDragState = { active: false, pointerId: null, offsetX: 0, offsetY: 0 };
+
+    function resizeCanvas() {
+      const { clientWidth, clientHeight } = canvas;
+      canvas.width = clientWidth * DPR;
+      canvas.height = clientHeight * DPR;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      draw();
+    }
+
+    function worldToScreen({ x, y }) {
+      return {
+        x: state.origin.x + x * state.scale,
+        y: state.origin.y - y * state.scale
+      };
+    }
+
+    function screenToWorld(x, y) {
+      return {
+        x: (x - state.origin.x) / state.scale,
+        y: (state.origin.y - y) / state.scale
+      };
+    }
+
+    function clampScale(value) {
+      return Math.min(240, Math.max(6, value));
+    }
+
+    function getTickStep() {
+      const pixelsPerUnit = state.scale;
+      if (!Number.isFinite(pixelsPerUnit) || pixelsPerUnit <= 0) {
+        return 1;
+      }
+      const targetPixels = 80;
+      const rawStep = targetPixels / pixelsPerUnit;
+      const power = Math.pow(10, Math.floor(Math.log10(rawStep)));
+      const candidates = [1, 2, 5, 10];
+      let step = power;
+      for (const candidate of candidates) {
+        if (rawStep <= candidate * power) {
+          step = candidate * power;
+          break;
+        }
+      }
+      if (!Number.isFinite(step) || step <= 0) {
+        step = 1;
+      }
+      return step;
+    }
+
+    function getGridSubdivisions(step) {
+      if (!Number.isFinite(step) || step <= 0) {
+        return 1;
+      }
+      const magnitude = Math.pow(10, Math.floor(Math.log10(step)));
+      const normalized = step / magnitude;
+      if (Math.abs(normalized - 1) < 1e-6) return 5;
+      if (Math.abs(normalized - 2) < 1e-6) return 4;
+      if (Math.abs(normalized - 5) < 1e-6) return 5;
+      if (Math.abs(normalized - 10) < 1e-6) return 5;
+      return 5;
+    }
+
+    function getPlotSampleStep() {
+      const scale = state.scale;
+      if (!Number.isFinite(scale) || scale <= 0) {
+        return 1;
+      }
+      const target = 80 / scale;
+      return Math.max(0.25, Math.min(4, target));
+    }
+
+    function formatAxisValue(value, step) {
+      if (!Number.isFinite(value)) {
+        return '';
+      }
+      const absStep = Math.abs(step) || 1;
+      let decimals = 0;
+      if (absStep < 1) {
+        decimals = Math.ceil(-Math.log10(absStep)) + 2;
+      }
+      decimals = Math.min(6, Math.max(decimals, absStep < 0.25 ? 3 : 0));
+      const factor = Math.pow(10, decimals);
+      const normalized = Math.round(value * factor) / factor;
+      let text = normalized.toFixed(decimals);
+      text = text.replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1');
+      if (text === '-0') {
+        text = '0';
+      }
+      return text;
+    }
+
+    function drawGrid() {
+      const bounds = {
+        left: -state.origin.x / state.scale,
+        right: (canvas.clientWidth - state.origin.x) / state.scale,
+        bottom: -(canvas.clientHeight - state.origin.y) / state.scale,
+        top: state.origin.y / state.scale
+      };
+
+      ctx.save();
+      ctx.scale(DPR, DPR);
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      ctx.clearRect(0, 0, width, height);
+
+      const tickStep = getTickStep();
+      const subdivisions = getGridSubdivisions(tickStep);
+      const minorStep = subdivisions > 0 ? tickStep / subdivisions : 0;
+      const epsilon = tickStep * 1e-6;
+
+      if (minorStep > 0 && Number.isFinite(minorStep)) {
+        ctx.lineWidth = 1 / DPR;
+        ctx.strokeStyle = '#eef1fa';
+        ctx.beginPath();
+        const startMinorX = Math.floor(bounds.left / minorStep) * minorStep;
+        const endMinorX = Math.ceil(bounds.right / minorStep) * minorStep;
+        for (let value = startMinorX; value <= endMinorX + minorStep * 0.5; value += minorStep) {
+          const multiple = value / tickStep;
+          if (Math.abs(value) <= epsilon) continue;
+          if (Math.abs(multiple - Math.round(multiple)) < epsilon) continue;
+          const screenX = Math.round(state.origin.x + value * state.scale) + 0.5;
+          ctx.moveTo(screenX, 0);
+          ctx.lineTo(screenX, height);
+        }
+        const startMinorY = Math.floor(bounds.bottom / minorStep) * minorStep;
+        const endMinorY = Math.ceil(bounds.top / minorStep) * minorStep;
+        for (let value = startMinorY; value <= endMinorY + minorStep * 0.5; value += minorStep) {
+          const multiple = value / tickStep;
+          if (Math.abs(value) <= epsilon) continue;
+          if (Math.abs(multiple - Math.round(multiple)) < epsilon) continue;
+          const screenY = Math.round(state.origin.y - value * state.scale) + 0.5;
+          ctx.moveTo(0, screenY);
+          ctx.lineTo(width, screenY);
+        }
+        ctx.stroke();
+      }
+
+      const majorWidth = Math.max(1.4, Math.min(2.6, state.scale / 60 + 1));
+      ctx.lineWidth = majorWidth / DPR;
+      ctx.strokeStyle = '#d5dae5';
+      ctx.beginPath();
+      const startMajorX = Math.ceil(bounds.left / tickStep) * tickStep;
+      for (let value = startMajorX; value <= bounds.right + tickStep * 0.5; value += tickStep) {
+        const screenX = Math.round(state.origin.x + value * state.scale) + 0.5;
+        ctx.moveTo(screenX, 0);
+        ctx.lineTo(screenX, height);
+      }
+      const startMajorY = Math.ceil(bounds.bottom / tickStep) * tickStep;
+      for (let value = startMajorY; value <= bounds.top + tickStep * 0.5; value += tickStep) {
+        const screenY = Math.round(state.origin.y - value * state.scale) + 0.5;
+        ctx.moveTo(0, screenY);
+        ctx.lineTo(width, screenY);
+      }
+      ctx.stroke();
+
+      const xAxisY = Math.round(state.origin.y) + 0.5;
+      const yAxisX = Math.round(state.origin.x) + 0.5;
+
+      ctx.strokeStyle = '#9aa0a6';
+      ctx.lineWidth = Math.max((majorWidth + 0.6) / DPR, 1.6 / DPR);
+      ctx.beginPath();
+      ctx.moveTo(0, xAxisY);
+      ctx.lineTo(width, xAxisY);
+      ctx.moveTo(yAxisX, 0);
+      ctx.lineTo(yAxisX, height);
+      ctx.stroke();
+
+      ctx.lineWidth = 1 / DPR;
+      ctx.strokeStyle = '#9aa0a6';
+      ctx.fillStyle = '#5f6368';
+      ctx.font = '12px Inter, "Segoe UI", sans-serif';
+
+      const xAxisVisible = xAxisY >= 0 && xAxisY <= height;
+      if (xAxisVisible) {
+        const xStart = Math.ceil(bounds.left / tickStep) * tickStep;
+        ctx.beginPath();
+        for (let value = xStart; value <= bounds.right + tickStep * 0.5; value += tickStep) {
+          const screenX = Math.round(state.origin.x + value * state.scale) + 0.5;
+          ctx.moveTo(screenX, xAxisY - 4);
+          ctx.lineTo(screenX, xAxisY + 4);
+        }
+        ctx.stroke();
+
+        const baseline = xAxisY > height - 24 ? 'bottom' : 'top';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = baseline;
+        const offsetY = baseline === 'top' ? 6 : -6;
+        for (let value = xStart; value <= bounds.right + tickStep * 0.5; value += tickStep) {
+          if (Math.abs(value) < tickStep / 2) continue;
+          const screenX = state.origin.x + value * state.scale;
+          ctx.fillText(formatAxisValue(value, tickStep), screenX, xAxisY + offsetY);
+        }
+      }
+
+      const yAxisVisible = yAxisX >= 0 && yAxisX <= width;
+      if (yAxisVisible) {
+        const yStart = Math.ceil(bounds.bottom / tickStep) * tickStep;
+        ctx.beginPath();
+        for (let value = yStart; value <= bounds.top + tickStep * 0.5; value += tickStep) {
+          const screenY = Math.round(state.origin.y - value * state.scale) + 0.5;
+          ctx.moveTo(yAxisX - 4, screenY);
+          ctx.lineTo(yAxisX + 4, screenY);
+        }
+        ctx.stroke();
+
+        const align = yAxisX > width - 48 ? 'right' : 'left';
+        ctx.textAlign = align;
+        ctx.textBaseline = 'middle';
+        const offsetX = align === 'left' ? 6 : -6;
+        for (let value = yStart; value <= bounds.top + tickStep * 0.5; value += tickStep) {
+          if (Math.abs(value) < tickStep / 2) continue;
+          const screenY = state.origin.y - value * state.scale;
+          ctx.fillText(formatAxisValue(value, tickStep), yAxisX + offsetX, screenY);
+        }
+      }
+
+      if (xAxisVisible && yAxisVisible) {
+        const align = yAxisX > width - 48 ? 'right' : 'left';
+        const baseline = xAxisY > height - 24 ? 'bottom' : 'top';
+        ctx.textAlign = align;
+        ctx.textBaseline = baseline;
+        const offsetX = align === 'left' ? 6 : -6;
+        const offsetY = baseline === 'top' ? 6 : -6;
+        ctx.fillText('0', state.origin.x + offsetX, state.origin.y + offsetY);
+      }
+
+      ctx.restore();
+    }
+
+    function drawPoints() {
+      ctx.save();
+      ctx.scale(DPR, DPR);
+      ctx.font = '12px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      for (const point of state.points) {
+        const { x, y } = worldToScreen(point.position);
+        const isSelected = state.selectedPointId === point.id;
+        const color = point.color || COLORS.point;
+        if (point.traceEnabled && Array.isArray(point.trace) && point.trace.length > 1) {
+          ctx.save();
+          ctx.strokeStyle = withAlpha(color, 0.35);
+          ctx.lineWidth = 1.5 / DPR;
+          ctx.beginPath();
+          point.trace.forEach((tracePoint, index) => {
+            const screen = worldToScreen(tracePoint);
+            if (index === 0) {
+              ctx.moveTo(screen.x, screen.y);
+            } else {
+              ctx.lineTo(screen.x, screen.y);
+            }
+          });
+          ctx.stroke();
+          ctx.restore();
+        }
+        if (isSelected) {
+          ctx.fillStyle = withAlpha(color, 0.18);
+          ctx.beginPath();
+          ctx.arc(x, y, 11, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.lineWidth = 2 / DPR;
+          ctx.strokeStyle = color;
+          ctx.beginPath();
+          ctx.arc(x, y, 9, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+        if (point.showLabel !== false) {
+          ctx.fillStyle = color;
+          ctx.fillText(point.name, x + 8, y + 6);
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawLines() {
+      ctx.save();
+      ctx.scale(DPR, DPR);
+      ctx.lineWidth = 2 / DPR;
+
+      for (const line of state.lines) {
+        ctx.strokeStyle = COLORS.line;
+        const { p1, p2 } = line;
+        const a = state.points.find(p => p.id === p1);
+        const b = state.points.find(p => p.id === p2);
+        if (!a || !b) continue;
+        const A = worldToScreen(a.position);
+        const B = worldToScreen(b.position);
+        const dir = { x: B.x - A.x, y: B.y - A.y };
+        const len = Math.hypot(dir.x, dir.y) || 1;
+        const unit = { x: dir.x / len, y: dir.y / len };
+        const large = 4000;
+        ctx.beginPath();
+        ctx.moveTo(A.x - unit.x * large, A.y - unit.y * large);
+        ctx.lineTo(A.x + unit.x * large, A.y + unit.y * large);
+        ctx.stroke();
+      }
+
+      for (const segment of state.segments) {
+        ctx.strokeStyle = COLORS.segment;
+        const { p1, p2 } = segment;
+        const a = state.points.find(p => p.id === p1);
+        const b = state.points.find(p => p.id === p2);
+        if (!a || !b) continue;
+        const A = worldToScreen(a.position);
+        const B = worldToScreen(b.position);
+        ctx.beginPath();
+        ctx.moveTo(A.x, A.y);
+        ctx.lineTo(B.x, B.y);
+        ctx.stroke();
+      }
+
+      for (const polygon of state.polygons) {
+        if (polygon.points.length < 3) continue;
+        ctx.fillStyle = 'rgba(0,150,136,0.15)';
+        ctx.strokeStyle = COLORS.polygon;
+        ctx.beginPath();
+        const start = state.points.find(p => p.id === polygon.points[0]);
+        if (!start) continue;
+        const first = worldToScreen(start.position);
+        ctx.moveTo(first.x, first.y);
+        for (let i = 1; i < polygon.points.length; i++) {
+          const pt = state.points.find(p => p.id === polygon.points[i]);
+          if (!pt) continue;
+          const pos = worldToScreen(pt.position);
+          ctx.lineTo(pos.x, pos.y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      for (const circle of state.circles) {
+        const center = state.points.find(p => p.id === circle.center);
+        const edge = state.points.find(p => p.id === circle.edge);
+        if (!center || !edge) continue;
+        const C = worldToScreen(center.position);
+        const radius = distance(center.position, edge.position) * state.scale;
+        ctx.strokeStyle = COLORS.circle;
+        ctx.beginPath();
+        ctx.arc(C.x, C.y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function drawFunctions() {
+      if (!state.functions.length) return;
+      ctx.save();
+      ctx.scale(DPR, DPR);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      const sampleStep = getPlotSampleStep();
+      const steps = sampleStep > 0 ? Math.ceil(width / sampleStep) : width;
+      const verticalThreshold = height * 4;
+      const scale = state.scale;
+      if (!Number.isFinite(scale) || scale <= 0) {
+        ctx.restore();
+        return;
+      }
+      const originX = state.origin.x;
+      const originY = state.origin.y;
+      const inverseScale = 1 / scale;
+      for (const fn of state.functions) {
+        const path = [];
+        let pathStarted = false;
+        let previousPoint = null;
+        for (let index = 0; index <= steps; index++) {
+          const sx = index === steps ? width : Math.min(index * sampleStep, width);
+          const worldX = (sx - originX) * inverseScale;
+          let value;
+          try {
+            value = fn.eval(worldX);
+          } catch (err) {
+            pathStarted = false;
+            previousPoint = null;
+            continue;
+          }
+          if (!Number.isFinite(value) || Math.abs(value) > 1e6) {
+            pathStarted = false;
+            previousPoint = null;
+            continue;
+          }
+          const sy = originY - value * scale;
+          if (!Number.isFinite(sy)) {
+            pathStarted = false;
+            previousPoint = null;
+            continue;
+          }
+          const largeJump = previousPoint && Math.abs(sy - previousPoint.sy) > verticalThreshold;
+          if (!pathStarted || largeJump) {
+            path.push({ move: true, x: sx, y: sy });
+            pathStarted = true;
+          } else {
+            path.push({ move: false, x: sx, y: sy });
+          }
+          previousPoint = { sx, sy };
+        }
+
+        if (!path.length) {
+          continue;
+        }
+
+        if (state.highlightedFunctionId === fn.id) {
+          ctx.save();
+          ctx.lineWidth = Math.max((fn.thickness || 2) + 3, 5) / DPR;
+          ctx.strokeStyle = withAlpha(fn.color || COLORS.function, 0.35);
+          ctx.beginPath();
+          for (const point of path) {
+            if (point.move) {
+              ctx.moveTo(point.x, point.y);
+            } else {
+              ctx.lineTo(point.x, point.y);
+            }
+          }
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        ctx.lineWidth = Math.max(1, fn.thickness || 2) / DPR;
+        ctx.strokeStyle = fn.color || COLORS.function;
+        ctx.beginPath();
+        for (const point of path) {
+          if (point.move) {
+            ctx.moveTo(point.x, point.y);
+          } else {
+            ctx.lineTo(point.x, point.y);
+          }
+        }
+        ctx.stroke();
+
+        if (fn.showLabel) {
+          const anchor = [...path].reverse().find(segment => !segment.move) || path[path.length - 1];
+          if (anchor) {
+            ctx.save();
+            ctx.fillStyle = withAlpha(fn.color || COLORS.function, 0.9);
+            ctx.font = '12px Inter, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(fn.algebraLabel, anchor.x + 8, anchor.y - 6);
+            ctx.restore();
+          }
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawTexts() {
+      if (!state.texts.length) return;
+      ctx.save();
+      ctx.scale(DPR, DPR);
+      ctx.fillStyle = COLORS.text;
+      ctx.font = '14px Inter, sans-serif';
+      for (const label of state.texts) {
+        const { x, y } = worldToScreen(label.position);
+        ctx.fillText(label.content, x, y);
+      }
+      ctx.restore();
+    }
+
+    function drawPolygonPreview() {
+      if (!state.tempPolygon || state.tempPolygon.points.length === 0) return;
+      ctx.save();
+      ctx.scale(DPR, DPR);
+      ctx.setLineDash([6, 6]);
+      ctx.lineWidth = 2 / DPR;
+      ctx.strokeStyle = COLORS.polygon;
+
+      const vertices = state.tempPolygon.points
+        .map(id => state.points.find(p => p.id === id))
+        .filter(Boolean);
+      if (vertices.length === 0) {
+        ctx.restore();
+        return;
+      }
+
+      ctx.beginPath();
+      const first = worldToScreen(vertices[0].position);
+      ctx.moveTo(first.x, first.y);
+      for (let i = 1; i < vertices.length; i++) {
+        const pos = worldToScreen(vertices[i].position);
+        ctx.lineTo(pos.x, pos.y);
+      }
+      if (state.tempPolygon.preview) {
+        const preview = worldToScreen(state.tempPolygon.preview);
+        ctx.lineTo(preview.x, preview.y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function draw() {
+      drawGrid();
+      drawLines();
+      drawPolygonPreview();
+      drawFunctions();
+      drawPoints();
+      drawTexts();
+    }
+
+    function clearHighlightedAlgebra(options = {}) {
+      if (!algebraList) return;
+      const { keepFunction = false, keepPoint = false, keepSlider = false, keepVariable = false } = options;
+      algebraList.querySelectorAll('.algebra-item.selected').forEach(item => {
+        const type = item.dataset.type;
+        if (keepFunction && type === 'function' && item.dataset.id === state.highlightedFunctionId) {
+          return;
+        }
+        if (keepPoint && type === 'point' && item.dataset.id === state.selectedPointId) {
+          return;
+        }
+        if (keepSlider && type === 'slider' && item.dataset.id === state.selectedSliderId) {
+          return;
+        }
+        if (keepVariable && type === 'variable' && item.dataset.id === state.selectedVariableId) {
+          return;
+        }
+        item.classList.remove('selected');
+        if (type === 'function') {
+          item.style.removeProperty('--highlight-outline');
+          item.style.removeProperty('--highlight-glow');
+        }
+      });
+      if (!keepFunction) {
+        state.highlightedFunctionId = null;
+      }
+      if (!keepPoint) {
+        state.selectedPointId = null;
+      }
+      if (!keepSlider) {
+        state.selectedSliderId = null;
+      }
+      if (!keepVariable) {
+        state.selectedVariableId = null;
+      }
+      if (state.highlightedFunctionId) {
+        state.lastSelectionType = 'function';
+      } else if (state.selectedPointId) {
+        state.lastSelectionType = 'point';
+      } else if (state.selectedSliderId) {
+        state.lastSelectionType = 'slider';
+      } else if (state.selectedVariableId) {
+        state.lastSelectionType = 'variable';
+      } else {
+        state.lastSelectionType = 'none';
+      }
+    }
+
+    function setSelectedPoint(id, options = {}) {
+      const { scroll = true, force = false } = options;
+      if (!id) {
+        clearHighlightedAlgebra();
+        refreshPropertiesPanel();
+        draw();
+        return;
+      }
+      if (state.selectedPointId === id && !force) {
+        if (scroll && algebraList) {
+          const current = algebraList.querySelector(`[data-id="${id}"]`);
+          if (current) {
+            current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+        }
+        refreshPropertiesPanel({ type: 'point', id });
+        return;
+      }
+      clearHighlightedAlgebra();
+      state.selectedPointId = id;
+      if (algebraList) {
+        const item = algebraList.querySelector(`[data-id="${id}"]`);
+        if (item) {
+          item.classList.add('selected');
+          if (scroll) {
+            item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+        }
+      }
+      state.lastSelectionType = 'point';
+      refreshPropertiesPanel({ type: 'point', id });
+      draw();
+    }
+
+    function setHighlightedFunction(id, options = {}) {
+      const { scroll = true, force = false, preservePoint = false } = options;
+      if (!id) {
+        clearHighlightedAlgebra({ keepPoint: preservePoint && Boolean(state.selectedPointId) });
+        refreshPropertiesPanel();
+        draw();
+        return;
+      }
+      if (state.highlightedFunctionId === id && !force) {
+        if (scroll && algebraList) {
+          const current = algebraList.querySelector(`[data-id="${id}"]`);
+          if (current) {
+            current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+        }
+        refreshPropertiesPanel({ type: 'function', id });
+        return;
+      }
+      clearHighlightedAlgebra({ keepPoint: preservePoint && Boolean(state.selectedPointId) });
+      state.highlightedFunctionId = id;
+      if (algebraList) {
+        const item = algebraList.querySelector(`[data-id="${id}"]`);
+        const fn = state.functions.find(entry => entry.id === id);
+        if (item && fn) {
+          item.style.setProperty('--highlight-outline', withAlpha(fn.color || COLORS.function, 0.5));
+          item.style.setProperty('--highlight-glow', withAlpha(fn.color || COLORS.function, 0.35));
+          item.classList.add('selected');
+          if (scroll) {
+            item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+        }
+      }
+      state.lastSelectionType = 'function';
+      refreshPropertiesPanel({ type: 'function', id });
+      draw();
+    }
+
+    function setTool(tool) {
+      if (state.tool === 'polygon' && tool !== 'polygon') {
+        cancelTempPolygon();
+      }
+      state.tool = tool;
+      document.querySelectorAll('.tool-button[data-tool]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tool === tool);
+      });
+      state.tempPoints = [];
+      if (tool !== 'polygon') {
+        state.tempPolygon = null;
+      }
+      draw();
+    }
+
+    function ensureMoveTool() {
+      if (state.tool !== 'move') {
+        setTool('move');
+      }
+    }
+
+    function cancelTempPolygon() {
+      if (!state.tempPolygon) return;
+      const created = state.tempPolygon.createdPoints || [];
+      for (const pointId of created) {
+        removeObject(pointId, 'point', { silent: true, skipHistory: true });
+      }
+      state.tempPolygon = null;
+    }
+
+    function distance(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function findPointNear(world, threshold = 0.2) {
+      let closest = null;
+      let min = Infinity;
+      for (const point of state.points) {
+        const dist = distance(point.position, world);
+        if (dist < threshold && dist < min) {
+          min = dist;
+          closest = point;
+        }
+      }
+      return closest;
+    }
+
+    function findFunctionNearScreen(x, y) {
+      if (!state.functions.length) {
+        return null;
+      }
+      if (!Number.isFinite(state.scale) || state.scale <= 0) {
+        return null;
+      }
+      const tolerance = Math.max(10, Math.min(22, state.scale * 0.35));
+      const worldX = (x - state.origin.x) / state.scale;
+      const stepWorld = tolerance / state.scale;
+      const offsets = [0, stepWorld, -stepWorld, 2 * stepWorld, -2 * stepWorld];
+      let closest = null;
+      let closestDistance = tolerance;
+      for (const fn of state.functions) {
+        for (const offset of offsets) {
+          let value;
+          try {
+            value = fn.eval(worldX + offset);
+          } catch (error) {
+            continue;
+          }
+          if (!Number.isFinite(value) || Math.abs(value) > 1e6) {
+            continue;
+          }
+          const screenX = state.origin.x + (worldX + offset) * state.scale;
+          const screenY = state.origin.y - value * state.scale;
+          const distancePx = Math.hypot(screenX - x, screenY - y);
+          if (distancePx < closestDistance) {
+            closestDistance = distancePx;
+            closest = fn;
+          }
+        }
+      }
+      return closestDistance <= tolerance ? closest : null;
+    }
+
+    function snapWorldToGrid(world) {
+      const position = { x: world.x, y: world.y };
+      if (!Number.isFinite(state.scale) || state.scale <= 0) {
+        return position;
+      }
+      let step = getTickStep();
+      const subdivisions = getGridSubdivisions(step);
+      if (!Number.isFinite(step) || step <= 0) {
+        step = 1;
+      }
+      if (Number.isFinite(subdivisions) && subdivisions > 0) {
+        const minor = step / subdivisions;
+        if (Number.isFinite(minor) && minor > 0) {
+          step = minor;
+        }
+      }
+      if (!Number.isFinite(step) || step <= 0) {
+        step = 1;
+      }
+      const snapped = {
+        x: Math.round(position.x / step) * step,
+        y: Math.round(position.y / step) * step
+      };
+      if (Number.isFinite(step) && step > 0) {
+        const precision = Math.min(6, Math.max(0, Math.ceil(-Math.log10(step)) + 2));
+        const factor = Math.pow(10, precision);
+        snapped.x = Math.round(snapped.x * factor) / factor;
+        snapped.y = Math.round(snapped.y * factor) / factor;
+      }
+      const originalScreen = worldToScreen(position);
+      const snappedScreen = worldToScreen(snapped);
+      const distancePx = Math.hypot(originalScreen.x - snappedScreen.x, originalScreen.y - snappedScreen.y);
+      const thresholdPx = Math.max(5, Math.min(16, state.scale * 0.2));
+      if (distancePx <= thresholdPx) {
+        return snapped;
+      }
+      return position;
+    }
+
+    let pointCounter = 0;
+    function nextPointName() {
+      const code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      let index = pointCounter++;
+      let name = '';
+      do {
+        name = code[index % code.length] + name;
+        index = Math.floor(index / code.length) - 1;
+      } while (index >= 0);
+      return name;
+    }
+
+    function isVariableNameInUse(name, excludeId) {
+      if (!name) return false;
+      return state.sliders.some(slider => slider.name === name && slider.id !== excludeId)
+        || state.numbers.some(entry => entry.name === name && entry.id !== excludeId);
+    }
+
+    function ensureUniqueVariableName(base, excludeId) {
+      if (!base) return base;
+      let name = base;
+      let attempt = 2;
+      while (isVariableNameInUse(name, excludeId)) {
+        name = `${base}${attempt}`;
+        attempt += 1;
+      }
+      return name;
+    }
+
+    function createPoint(world, existingName, options = {}) {
+      const { snap = true, skipHistory = false, select = true } = options;
+      if (!skipHistory) {
+        recordHistory();
+      }
+      const name = existingName || nextPointName();
+      const shouldSnap = snap;
+      const position = shouldSnap ? snapWorldToGrid(world) : { x: world.x, y: world.y };
+      const point = {
+        id: crypto.randomUUID(),
+        name,
+        position,
+        color: options.color || COLORS.point,
+        showLabel: options.showLabel !== undefined ? Boolean(options.showLabel) : true,
+        traceEnabled: Boolean(options.traceEnabled),
+        trace: []
+      };
+      state.points.push(point);
+      registerAlgebraEntry(point.id, `${name} = (${formatNumber(point.position.x)}, ${formatNumber(point.position.y)})`, 'point', point.color);
+      if (select) {
+        setSelectedPoint(point.id);
+      }
+      draw();
+      return point;
+    }
+
+    function normalizeColor(color, fallback = '#000000') {
+      if (!color) return fallback;
+      if (color.startsWith('#')) {
+        if (color.length === 4) {
+          return `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`;
+        }
+        return color;
+      }
+      const rgbMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+      if (rgbMatch) {
+        return `#${Number(rgbMatch[1]).toString(16).padStart(2, '0')}${Number(rgbMatch[2]).toString(16).padStart(2, '0')}${Number(rgbMatch[3]).toString(16).padStart(2, '0')}`;
+      }
+      return fallback;
+    }
+
+    function parseLocaleNumber(value) {
+      if (typeof value === 'number') {
+        return value;
+      }
+      if (typeof value !== 'string') {
+        return NaN;
+      }
+      const normalized = value.trim().replace(',', '.');
+      return Number(normalized);
+    }
+
+    function registerAlgebraEntry(id, text, type, color) {
+      if (type === 'slider') {
+        renderSliderEntry(id);
+        return;
+      }
+      const [title, ...rest] = text.split('=');
+      const strongText = title.trim();
+      const detailText = rest.join('=').trim();
+      let item = algebraList.querySelector(`[data-id="${id}"]`);
+      if (!item) {
+        item = document.createElement('div');
+        item.className = 'algebra-item';
+        item.dataset.id = id;
+        item.dataset.type = type;
+
+        let icon;
+        if (type === 'function') {
+          icon = document.createElement('button');
+          icon.type = 'button';
+          icon.className = 'algebra-color';
+          icon.dataset.action = 'color';
+          icon.setAttribute('aria-label', 'Pas grafiekkleur aan');
+          icon.setAttribute('title', 'Pas grafiekkleur aan');
+          const input = document.createElement('input');
+          input.type = 'color';
+          input.className = 'algebra-color-input';
+          item.appendChild(input);
+        } else {
+          icon = document.createElement('span');
+          icon.className = 'algebra-color';
+        }
+        item.appendChild(icon);
+
+        const label = document.createElement('div');
+        label.className = 'algebra-label';
+        const strong = document.createElement('strong');
+        const span = document.createElement('span');
+        span.className = 'algebra-detail';
+        label.appendChild(strong);
+        label.appendChild(span);
+        item.appendChild(label);
+
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'delete-button';
+        removeButton.setAttribute('aria-label', 'Verwijder object');
+        removeButton.innerHTML = `
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 6 18 18" />
+            <path d="M6 18 18 6" />
+          </svg>
+        `;
+        item.appendChild(removeButton);
+
+        algebraList.appendChild(item);
+      }
+
+      item.dataset.type = type;
+      const iconEl = item.querySelector('.algebra-color');
+      if (iconEl) {
+        const value = color || COLORS[type] || '#888';
+        iconEl.style.color = value;
+        iconEl.style.background = 'transparent';
+        const picker = item.querySelector('.algebra-color-input');
+        if (picker) {
+          picker.value = normalizeColor(value, '#e36209');
+        }
+      }
+      const strongEl = item.querySelector('.algebra-label strong');
+      if (strongEl) {
+        strongEl.textContent = strongText;
+      }
+      const detailEl = item.querySelector('.algebra-detail');
+      if (detailEl) {
+        detailEl.textContent = detailText ? `= ${detailText}` : '';
+      }
+
+      const behavior = restoringState ? 'auto' : 'smooth';
+      algebraList.scrollTo({ top: algebraList.scrollHeight, behavior });
+    }
+
+    function renderSliderEntry(id) {
+      if (!algebraList) return;
+      const slider = state.sliders.find(entry => entry.id === id);
+      if (!slider) return;
+      let item = algebraList.querySelector(`[data-id="${id}"]`);
+      const isNew = !item;
+      if (!item) {
+        item = document.createElement('div');
+        item.className = 'algebra-item slider';
+        item.dataset.id = id;
+        item.dataset.type = 'slider';
+
+        const icon = document.createElement('span');
+        icon.className = 'algebra-color';
+        icon.style.color = COLORS.slider;
+        item.appendChild(icon);
+
+        const body = document.createElement('div');
+        body.className = 'slider-body';
+        const header = document.createElement('div');
+        header.className = 'slider-header';
+        const title = document.createElement('span');
+        title.dataset.role = 'slider-title';
+        const valueEl = document.createElement('span');
+        valueEl.dataset.role = 'slider-value';
+        valueEl.className = 'slider-value';
+        header.appendChild(title);
+        header.appendChild(valueEl);
+        body.appendChild(header);
+
+        const controls = document.createElement('div');
+        controls.className = 'slider-controls';
+        const range = document.createElement('input');
+        range.type = 'range';
+        range.className = 'slider-range';
+        range.setAttribute('aria-label', 'Schuifbalkwaarde');
+        controls.appendChild(range);
+
+        const helpers = document.createElement('div');
+        helpers.className = 'slider-helpers';
+
+        const minusBtn = document.createElement('button');
+        minusBtn.type = 'button';
+        minusBtn.dataset.sliderAction = 'step-back';
+        minusBtn.setAttribute('aria-label', 'Stap omlaag');
+        minusBtn.innerHTML = ICONS.minus;
+        helpers.appendChild(minusBtn);
+
+        const playBtn = document.createElement('button');
+        playBtn.type = 'button';
+        playBtn.dataset.sliderAction = 'toggle-animate';
+        playBtn.setAttribute('aria-label', 'Speel animatie');
+        helpers.appendChild(playBtn);
+
+        const plusBtn = document.createElement('button');
+        plusBtn.type = 'button';
+        plusBtn.dataset.sliderAction = 'step-forward';
+        plusBtn.setAttribute('aria-label', 'Stap omhoog');
+        plusBtn.innerHTML = ICONS.plus;
+        helpers.appendChild(plusBtn);
+
+        const speedSelect = document.createElement('select');
+        speedSelect.className = 'slider-speed';
+        speedSelect.setAttribute('aria-label', 'Animatiesnelheid');
+        const speeds = [
+          { value: 'slow', label: 'Langzaam' },
+          { value: 'medium', label: 'Normaal' },
+          { value: 'fast', label: 'Snel' }
+        ];
+        for (const option of speeds) {
+          const opt = document.createElement('option');
+          opt.value = option.value;
+          opt.textContent = option.label;
+          speedSelect.appendChild(opt);
+        }
+        helpers.appendChild(speedSelect);
+
+        controls.appendChild(helpers);
+        body.appendChild(controls);
+        item.appendChild(body);
+
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'delete-button';
+        removeButton.setAttribute('aria-label', 'Verwijder object');
+        removeButton.innerHTML = `
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 6 18 18" />
+            <path d="M6 18 18 6" />
+          </svg>
+        `;
+        item.appendChild(removeButton);
+
+        algebraList.appendChild(item);
+      }
+
+      item.dataset.type = 'slider';
+      const titleEl = item.querySelector('[data-role="slider-title"]');
+      if (titleEl) {
+        titleEl.textContent = slider.name;
+      }
+      const valueEl = item.querySelector('[data-role="slider-value"]');
+      if (valueEl) {
+        valueEl.textContent = formatNumber(slider.value);
+      }
+      const rangeEl = item.querySelector('.slider-range');
+      if (rangeEl) {
+        rangeEl.min = slider.min;
+        rangeEl.max = slider.max;
+        const step = slider.step || ((slider.max - slider.min) / 100) || 0.1;
+        rangeEl.step = step;
+        rangeEl.value = slider.value;
+      }
+      const playEl = item.querySelector('[data-slider-action="toggle-animate"]');
+      if (playEl) {
+        playEl.innerHTML = slider.animating ? ICONS.pause : ICONS.play;
+        playEl.dataset.state = slider.animating ? 'pause' : 'play';
+        playEl.setAttribute('aria-pressed', String(Boolean(slider.animating)));
+      }
+      const speedEl = item.querySelector('.slider-speed');
+      if (speedEl) {
+        speedEl.value = slider.speed || 'medium';
+      }
+      const iconEl = item.querySelector('.algebra-color');
+      if (iconEl) {
+        iconEl.style.color = COLORS.slider;
+      }
+
+      if (isNew) {
+        const behavior = restoringState ? 'auto' : 'smooth';
+        algebraList.scrollTo({ top: algebraList.scrollHeight, behavior });
+      }
+    }
+
+    function findSliderById(id) {
+      return state.sliders.find(entry => entry.id === id);
+    }
+
+    function findSliderByName(name) {
+      return state.sliders.find(entry => entry.name === name);
+    }
+
+    function clampSliderValue(slider, value) {
+      if (!slider) return value;
+      const min = Math.min(slider.min, slider.max);
+      const max = Math.max(slider.min, slider.max);
+      if (!Number.isFinite(min) || !Number.isFinite(max)) {
+        return value;
+      }
+      let result = Math.min(Math.max(value, min), max);
+      const step = slider.step || ((max - min) / 100) || 0.1;
+      if (Number.isFinite(step) && step > 0) {
+        const offset = slider.min;
+        const steps = Math.round((result - offset) / step);
+        result = offset + steps * step;
+        const precision = Math.max(0, Math.ceil(-Math.log10(step)) + 2);
+        const factor = Math.pow(10, precision);
+        result = Math.round(result * factor) / factor;
+      }
+      return result;
+    }
+
+    function ensureSliderVariables(slider) {
+      if (!slider) return;
+      state.variables[slider.name] = slider.value;
+    }
+
+    function updateSliderValue(slider, nextValue, options = {}) {
+      if (!slider) return;
+      const { record = true, fromAnimation = false } = options;
+      const clamped = clampSliderValue(slider, nextValue);
+      if (!Number.isFinite(clamped)) return;
+      if (slider.value === clamped) {
+        if (fromAnimation) {
+          renderSliderEntry(slider.id);
+        }
+        return;
+      }
+      if (record && !fromAnimation) {
+        recordHistory();
+      }
+      slider.value = clamped;
+      ensureSliderVariables(slider);
+      renderSliderEntry(slider.id);
+      if (propertiesState.type === 'slider' && propertiesState.id === slider.id) {
+        refreshPropertiesPanel({ type: 'slider', id: slider.id });
+      }
+      draw();
+    }
+
+    function stepSlider(slider, direction = 1) {
+      if (!slider) return;
+      const step = slider.step || ((slider.max - slider.min) / 100) || 0.1;
+      const delta = Number.isFinite(step) ? step * direction : direction;
+      updateSliderValue(slider, slider.value + delta, { record: true });
+    }
+
+    function setSliderSpeed(slider, speed) {
+      if (!slider) return;
+      const next = SLIDER_SPEEDS[speed] ? speed : 'medium';
+      if (slider.speed === next) {
+        renderSliderEntry(slider.id);
+        if (propertiesState.type === 'slider' && propertiesState.id === slider.id) {
+          refreshPropertiesPanel({ type: 'slider', id: slider.id });
+        }
+        return;
+      }
+      slider.speed = next;
+      slider.lastTimestamp = null;
+      renderSliderEntry(slider.id);
+      if (propertiesState.type === 'slider' && propertiesState.id === slider.id) {
+        refreshPropertiesPanel({ type: 'slider', id: slider.id });
+      }
+    }
+
+    function setSliderAnimating(slider, animating, options = {}) {
+      if (!slider) return;
+      const { record = true } = options;
+      if (slider.animating === animating) return;
+      if (record) {
+        recordHistory();
+      }
+      slider.animating = animating;
+      slider.lastTimestamp = null;
+      renderSliderEntry(slider.id);
+      if (propertiesState.type === 'slider' && propertiesState.id === slider.id) {
+        refreshPropertiesPanel({ type: 'slider', id: slider.id });
+      }
+      if (animating) {
+        ensureSliderVariables(slider);
+        ensureSliderAnimationLoop();
+      } else if (!state.sliders.some(entry => entry.animating)) {
+        if (sliderAnimationFrame) {
+          cancelAnimationFrame(sliderAnimationFrame);
+          sliderAnimationFrame = null;
+        }
+      }
+    }
+
+    function ensureSliderAnimationLoop() {
+      if (sliderAnimationFrame) return;
+      sliderAnimationFrame = requestAnimationFrame(sliderAnimationTick);
+    }
+
+    function sliderAnimationTick(timestamp) {
+      let hasActive = false;
+      for (const slider of state.sliders) {
+        if (!slider.animating) {
+          continue;
+        }
+        hasActive = true;
+        if (!slider.lastTimestamp) {
+          slider.lastTimestamp = timestamp;
+          continue;
+        }
+        const delta = Math.max(0, timestamp - slider.lastTimestamp);
+        slider.lastTimestamp = timestamp;
+        const speed = SLIDER_SPEEDS[slider.speed] || 1;
+        const step = slider.step || ((slider.max - slider.min) / 80) || 0.05;
+        const increment = step * speed * (delta / 16);
+        let next = slider.value + increment * (slider.direction || 1);
+        if (next > slider.max) {
+          next = slider.max;
+          slider.direction = -1;
+        } else if (next < slider.min) {
+          next = slider.min;
+          slider.direction = 1;
+        }
+        updateSliderValue(slider, next, { record: false, fromAnimation: true });
+      }
+      if (hasActive) {
+        sliderAnimationFrame = requestAnimationFrame(sliderAnimationTick);
+      } else {
+        sliderAnimationFrame = null;
+      }
+    }
+
+    function splitArguments(content) {
+      if (!content) return [];
+      const args = [];
+      let current = '';
+      let depth = 0;
+      let quote = null;
+      for (let i = 0; i < content.length; i++) {
+        const char = content[i];
+        if (quote) {
+          current += char;
+          if (char === quote && content[i - 1] !== '\\') {
+            quote = null;
+          }
+          continue;
+        }
+        if (char === '"' || char === '\'') {
+          quote = char;
+          current += char;
+          continue;
+        }
+        if (char === '(') {
+          depth += 1;
+          current += char;
+          continue;
+        }
+        if (char === ')') {
+          depth = Math.max(0, depth - 1);
+          current += char;
+          continue;
+        }
+        if (char === ',' && depth === 0) {
+          if (current.trim()) {
+            args.push(current.trim());
+          }
+          current = '';
+          continue;
+        }
+        current += char;
+      }
+      if (current.trim()) {
+        args.push(current.trim());
+      }
+      return args;
+    }
+
+    function normalizeSliderSpeed(value) {
+      if (value === undefined || value === null) return null;
+      const lower = String(value).trim().replace(/^['"]|['"]$/g, '').toLowerCase();
+      return SLIDER_SPEEDS[lower] ? lower : null;
+    }
+
+    function parseSliderRangeDefinition(expression, fallbackName) {
+      if (!expression || !expression.includes('..')) {
+        return null;
+      }
+      const rawParts = expression.split('..');
+      const parts = rawParts.map(part => part.trim()).filter(part => part.length);
+      if (parts.length < 2 || parts.length > 3) {
+        return null;
+      }
+      const min = tryEvaluateScalar(parts[0]);
+      const max = tryEvaluateScalar(parts[1]);
+      if (min === null || max === null) {
+        return {
+          name: fallbackName || null,
+          min: min === null ? undefined : min,
+          max: max === null ? undefined : max,
+          step: null,
+          invalid: true
+        };
+      }
+      const step = parts[2] !== undefined ? tryEvaluateScalar(parts[2]) : undefined;
+      return {
+        name: fallbackName || null,
+        min,
+        max,
+        step
+      };
+    }
+
+    function parseSliderCallDefinition(content, fallbackName) {
+      if (!content) return null;
+      const parts = splitArguments(content);
+      if (!parts.length) {
+        return null;
+      }
+      let name = fallbackName ? fallbackName.trim() : '';
+      const remaining = [...parts];
+      if (!name) {
+        const candidate = remaining[0];
+        const quotedName = candidate.match(/^['"](.+)['"]$/);
+        if (quotedName) {
+          name = quotedName[1].trim();
+          remaining.shift();
+        } else if (/^[A-Za-z][A-Za-z0-9_]*$/.test(candidate)) {
+          name = candidate;
+          remaining.shift();
+        }
+      }
+      if (!remaining.length) {
+        return null;
+      }
+      if (!name) {
+        name = `s${state.sliders.length + 1}`;
+      }
+      if (remaining.length < 2) {
+        return null;
+      }
+      const min = tryEvaluateScalar(remaining[0]);
+      const max = tryEvaluateScalar(remaining[1]);
+      if (min === null || max === null) {
+        return { name, invalid: true };
+      }
+      let step;
+      let value;
+      let speed;
+      for (const extra of remaining.slice(2)) {
+        const numeric = tryEvaluateScalar(extra);
+        if (numeric !== null) {
+          if (step === undefined) {
+            step = numeric;
+            continue;
+          }
+          if (value === undefined) {
+            value = numeric;
+            continue;
+          }
+        }
+        const maybeSpeed = normalizeSliderSpeed(extra);
+        if (maybeSpeed) {
+          speed = maybeSpeed;
+          continue;
+        }
+        return { name, min, max, step, value, invalid: true };
+      }
+      return { name, min, max, step, value, speed };
+    }
+
+    function commitSliderDefinition(definition) {
+      if (!definition || (!definition.name && !definition.min && !definition.max)) {
+        return null;
+      }
+      if (definition.invalid) {
+        alert('Kan schuifbalk niet aanmaken: controleer de invoer.');
+        return null;
+      }
+      const name = definition.name ? definition.name.trim() : `s${state.sliders.length + 1}`;
+      const min = Number.isFinite(definition.min) ? definition.min : undefined;
+      const max = Number.isFinite(definition.max) ? definition.max : undefined;
+      if (!Number.isFinite(min) || !Number.isFinite(max)) {
+        alert('Voer geldige minimum- en maximumwaarden in voor de schuifbalk.');
+        return null;
+      }
+      const step = Number.isFinite(definition.step) && definition.step > 0 ? definition.step : undefined;
+      const value = Number.isFinite(definition.value) ? definition.value : undefined;
+      const speed = normalizeSliderSpeed(definition.speed);
+      let slider = findSliderByName(name);
+      if (slider) {
+        const updates = {};
+        if (min !== undefined && min !== slider.min) {
+          updates.min = min;
+        }
+        if (max !== undefined && max !== slider.max) {
+          updates.max = max;
+        }
+        if (step !== undefined && step !== slider.step) {
+          updates.step = step;
+        }
+        const shouldRecordValue = Object.keys(updates).length === 0;
+        if (Object.keys(updates).length) {
+          updateSliderBounds(slider.id, updates, { record: true });
+          slider = findSliderById(slider.id) || slider;
+        }
+        if (value !== undefined) {
+          updateSliderValue(slider, value, { record: shouldRecordValue });
+        } else {
+          ensureSliderVariables(slider);
+          renderSliderEntry(slider.id);
+        }
+        if (speed && slider.speed !== speed) {
+          setSliderSpeed(slider, speed);
+        }
+        setActiveSlider(slider.id, { force: true });
+        refreshPropertiesPanel({ type: 'slider', id: slider.id });
+        state.editingFunctionId = null;
+        state.editingPointId = null;
+        return slider;
+      }
+      const existingConstant = findNumberByName(name);
+      let recorded = false;
+      if (existingConstant) {
+        recordHistory();
+        recorded = true;
+        removeObject(existingConstant.id, 'variable', { silent: true, skipHistory: true });
+      }
+      const created = createSlider(name, min, max, step, {
+        value: value !== undefined ? value : min,
+        speed: speed || 'medium',
+        skipHistory: recorded
+      });
+      setActiveSlider(created.id, { force: true });
+      refreshPropertiesPanel({ type: 'slider', id: created.id });
+      state.editingFunctionId = null;
+      state.editingPointId = null;
+      return created;
+    }
+
+    function handleScalarAssignment(name, expression) {
+      if (!name || !expression) {
+        return false;
+      }
+      const sliderCall = expression.match(/^Slider\s*\((.*)\)$/i);
+      if (sliderCall) {
+        const definition = parseSliderCallDefinition(sliderCall[1], name);
+        if (!definition) {
+          alert('Kan schuifbalk niet aanmaken: controleer de invoer.');
+          return null;
+        }
+        const result = commitSliderDefinition(definition);
+        return result ? true : null;
+      }
+      const rangeDefinition = parseSliderRangeDefinition(expression, name);
+      if (rangeDefinition) {
+        const result = commitSliderDefinition({ ...rangeDefinition, name: rangeDefinition.name || name });
+        return result ? true : null;
+      }
+      const numeric = tryEvaluateScalar(expression);
+      if (numeric !== null) {
+        const entry = assignNumericConstant(name, numeric);
+        return entry ? true : null;
+      }
+      return false;
+    }
+
+    function renameSlider(id, nextName) {
+      const slider = findSliderById(id);
+      if (!slider) return;
+      const cleaned = nextName.trim();
+      if (!cleaned) return;
+      const unique = ensureUniqueVariableName(cleaned, slider.id);
+      if (unique === slider.name) {
+        renderSliderEntry(slider.id);
+        return;
+      }
+      recordHistory();
+      const previousName = slider.name;
+      slider.name = unique;
+      delete state.variables[previousName];
+      ensureSliderVariables(slider);
+      renderSliderEntry(slider.id);
+      registerAlgebraEntry(slider.id, slider.name, 'slider');
+      refreshPropertiesPanel({ type: 'slider', id: slider.id });
+    }
+
+    function updateSliderBounds(id, updates = {}, options = {}) {
+      const slider = findSliderById(id);
+      if (!slider) return;
+      const { record = true } = options;
+      const nextMin = updates.min !== undefined ? updates.min : slider.min;
+      const nextMax = updates.max !== undefined ? updates.max : slider.max;
+      let min = Number.isFinite(nextMin) ? nextMin : slider.min;
+      let max = Number.isFinite(nextMax) ? nextMax : slider.max;
+      if (min === max) {
+        max = min + 1;
+      }
+      if (min > max) {
+        const temp = min;
+        min = max;
+        max = temp;
+      }
+      const nextStep = updates.step !== undefined ? updates.step : slider.step;
+      const step = Number.isFinite(nextStep) && nextStep > 0 ? nextStep : slider.step;
+      if (record) {
+        recordHistory();
+      }
+      slider.min = min;
+      slider.max = max;
+      slider.step = step;
+      slider.value = clampSliderValue(slider, slider.value);
+      ensureSliderVariables(slider);
+      renderSliderEntry(slider.id);
+      if (propertiesState.type === 'slider' && propertiesState.id === slider.id) {
+        refreshPropertiesPanel({ type: 'slider', id: slider.id });
+      }
+      draw();
+    }
+
+    function createSlider(name, min, max, step, options = {}) {
+      const { value, speed = 'medium', skipHistory = false } = options;
+      const baseName = name.trim() || `s${state.sliders.length + 1}`;
+      const sanitizedName = ensureUniqueVariableName(baseName, null);
+      const sliderMin = Number.isFinite(min) ? min : 0;
+      const sliderMax = Number.isFinite(max) ? max : sliderMin + 10;
+      const sliderStep = Number.isFinite(step) && step > 0 ? step : Math.max((sliderMax - sliderMin) / 20, 0.1);
+      const sliderValue = Number.isFinite(value) ? value : sliderMin;
+      if (!skipHistory) {
+        recordHistory();
+      }
+      const slider = {
+        id: crypto.randomUUID(),
+        name: sanitizedName,
+        min: sliderMin,
+        max: sliderMax,
+        step: sliderStep,
+        value: clampSliderValue({ min: sliderMin, max: sliderMax, step: sliderStep }, sliderValue),
+        speed: SLIDER_SPEEDS[speed] ? speed : 'medium',
+        animating: false,
+        direction: 1,
+        lastTimestamp: null
+      };
+      state.sliders.push(slider);
+      ensureSliderVariables(slider);
+      registerAlgebraEntry(slider.id, slider.name, 'slider');
+      draw();
+      return slider;
+    }
+
+    function findNumberById(id) {
+      return state.numbers.find(entry => entry.id === id);
+    }
+
+    function findNumberByName(name) {
+      return state.numbers.find(entry => entry.name === name);
+    }
+
+    function createNumberConstant(name, value, options = {}) {
+      const { skipHistory = false } = options;
+      const baseName = name.trim() || `k${state.numbers.length + 1}`;
+      const sanitizedName = ensureUniqueVariableName(baseName, null);
+      const numeric = Number.isFinite(value) ? value : 0;
+      if (!skipHistory) {
+        recordHistory();
+      }
+      const entry = {
+        id: crypto.randomUUID(),
+        name: sanitizedName,
+        value: numeric
+      };
+      state.numbers.push(entry);
+      state.variables[sanitizedName] = numeric;
+      registerAlgebraEntry(entry.id, `${entry.name} = ${formatNumber(entry.value)}`, 'variable', COLORS.variable);
+      draw();
+      return entry;
+    }
+
+    function updateNumberValue(entry, nextValue, options = {}) {
+      if (!entry) return;
+      const { record = true } = options;
+      const numeric = Number.isFinite(nextValue) ? nextValue : entry.value;
+      if (numeric === entry.value) {
+        registerAlgebraEntry(entry.id, `${entry.name} = ${formatNumber(entry.value)}`, 'variable', COLORS.variable);
+        return;
+      }
+      if (record) {
+        recordHistory();
+      }
+      entry.value = numeric;
+      state.variables[entry.name] = numeric;
+      registerAlgebraEntry(entry.id, `${entry.name} = ${formatNumber(entry.value)}`, 'variable', COLORS.variable);
+      if (propertiesState.type === 'variable' && propertiesState.id === entry.id) {
+        refreshPropertiesPanel({ type: 'variable', id: entry.id });
+      }
+      draw();
+    }
+
+    function assignNumericConstant(name, value) {
+      const cleaned = typeof name === 'string' ? name.trim() : '';
+      if (!cleaned) {
+        alert('Geef een geldige naam op voor de variabele.');
+        return null;
+      }
+      if (!Number.isFinite(value)) {
+        alert('Voer een geldige numerieke waarde in.');
+        return null;
+      }
+      const existingSlider = findSliderByName(cleaned);
+      if (existingSlider) {
+        updateSliderValue(existingSlider, value, { record: true });
+        setActiveSlider(existingSlider.id, { force: true });
+        refreshPropertiesPanel({ type: 'slider', id: existingSlider.id });
+        state.editingFunctionId = null;
+        state.editingPointId = null;
+        return existingSlider;
+      }
+      let entry = findNumberByName(cleaned);
+      if (entry) {
+        updateNumberValue(entry, value, { record: true });
+      } else {
+        entry = createNumberConstant(cleaned, value);
+      }
+      setActiveVariable(entry.id, { force: true });
+      refreshPropertiesPanel({ type: 'variable', id: entry.id });
+      state.editingFunctionId = null;
+      state.editingPointId = null;
+      return entry;
+    }
+
+    function renameNumber(id, nextName) {
+      const entry = findNumberById(id);
+      if (!entry) return;
+      const cleaned = nextName.trim();
+      if (!cleaned) return;
+      const unique = ensureUniqueVariableName(cleaned, entry.id);
+      if (unique === entry.name) {
+        registerAlgebraEntry(entry.id, `${entry.name} = ${formatNumber(entry.value)}`, 'variable', COLORS.variable);
+        return;
+      }
+      recordHistory();
+      const previousName = entry.name;
+      entry.name = unique;
+      delete state.variables[previousName];
+      state.variables[unique] = entry.value;
+      registerAlgebraEntry(entry.id, `${entry.name} = ${formatNumber(entry.value)}`, 'variable', COLORS.variable);
+      refreshPropertiesPanel({ type: 'variable', id: entry.id });
+      draw();
+    }
+
+    function updatePointName(id, nextName) {
+      const point = state.points.find(entry => entry.id === id);
+      if (!point) return;
+      const cleaned = nextName.trim();
+      if (!cleaned || cleaned === point.name) {
+        updatePointAlgebra(point);
+        return;
+      }
+      recordHistory();
+      point.name = cleaned;
+      updatePointAlgebra(point);
+      refreshPropertiesPanel({ type: 'point', id });
+      draw();
+    }
+
+    function updatePointColor(id, color, options = {}) {
+      const point = state.points.find(entry => entry.id === id);
+      if (!point) return;
+      const { record = true } = options;
+      const normalized = normalizeColor(color, point.color || COLORS.point);
+      if (point.color === normalized) {
+        updatePointAlgebra(point);
+        return;
+      }
+      if (record) {
+        recordHistory();
+      }
+      point.color = normalized;
+      registerAlgebraEntry(point.id, `${point.name} = (${formatNumber(point.position.x)}, ${formatNumber(point.position.y)})`, 'point', point.color);
+      if (propertiesState.type === 'point' && propertiesState.id === id) {
+        refreshPropertiesPanel({ type: 'point', id });
+      }
+      draw();
+    }
+
+    function setPointLabelVisibility(id, visible) {
+      const point = state.points.find(entry => entry.id === id);
+      if (!point) return;
+      const next = Boolean(visible);
+      if (point.showLabel === next) return;
+      recordHistory();
+      point.showLabel = next;
+      draw();
+    }
+
+    function togglePointTrace(id, enabled) {
+      const point = state.points.find(entry => entry.id === id);
+      if (!point) return;
+      const next = Boolean(enabled);
+      if (point.traceEnabled === next) return;
+      recordHistory();
+      point.traceEnabled = next;
+      if (next) {
+        point.trace = [{ x: point.position.x, y: point.position.y }];
+      } else {
+        point.trace = [];
+      }
+      draw();
+    }
+
+    function recordPointTrace(point) {
+      if (!point || !point.traceEnabled) return;
+      if (!Array.isArray(point.trace)) {
+        point.trace = [];
+      }
+      const last = point.trace[point.trace.length - 1];
+      const current = point.position;
+      if (last) {
+        const dist = Math.hypot(last.x - current.x, last.y - current.y);
+        if (dist < 0.02) {
+          return;
+        }
+      }
+      point.trace.push({ x: current.x, y: current.y });
+      if (point.trace.length > 400) {
+        point.trace.splice(0, point.trace.length - 400);
+      }
+    }
+
+    function updateFunctionLabel(id, nextLabel) {
+      const fn = state.functions.find(entry => entry.id === id);
+      if (!fn) return;
+      const cleaned = nextLabel.trim();
+      if (!cleaned || cleaned === fn.algebraLabel) {
+        registerAlgebraEntry(fn.id, `${fn.algebraLabel} = ${fn.expression}`, 'function', fn.color);
+        return;
+      }
+      recordHistory();
+      fn.algebraLabel = cleaned;
+      fn.label = cleaned;
+      registerAlgebraEntry(fn.id, `${fn.algebraLabel} = ${fn.expression}`, 'function', fn.color);
+      if (propertiesState.type === 'function' && propertiesState.id === id) {
+        refreshPropertiesPanel({ type: 'function', id });
+      }
+      draw();
+    }
+
+    function updateFunctionThickness(id, thickness, options = {}) {
+      const fn = state.functions.find(entry => entry.id === id);
+      if (!fn) return;
+      const { record = true } = options;
+      const numeric = Number.isFinite(thickness) ? Math.max(1, Math.min(12, thickness)) : fn.thickness || 2;
+      if (fn.thickness === numeric) return;
+      if (record) {
+        recordHistory();
+      }
+      fn.thickness = numeric;
+      draw();
+    }
+
+    function setFunctionLabelVisibility(id, visible) {
+      const fn = state.functions.find(entry => entry.id === id);
+      if (!fn) return;
+      const next = Boolean(visible);
+      if (fn.showLabel === next) return;
+      recordHistory();
+      fn.showLabel = next;
+      draw();
+    }
+
+    function updateFunctionColor(id, nextColor, options = {}) {
+      const { skipHistory = false, preview = false } = options;
+      const fn = state.functions.find(entry => entry.id === id);
+      if (!fn) return;
+      const normalized = normalizeColor(nextColor, fn.color || COLORS.function);
+      if (preview) {
+        if (!Object.prototype.hasOwnProperty.call(fn, '__lastCommittedColor')) {
+          fn.__lastCommittedColor = fn.color;
+        }
+        if (fn.color === normalized) {
+          return;
+        }
+        fn.color = normalized;
+      } else {
+        const baseColor = Object.prototype.hasOwnProperty.call(fn, '__lastCommittedColor')
+          ? fn.__lastCommittedColor
+          : fn.color;
+        if (normalized === baseColor) {
+          if (Object.prototype.hasOwnProperty.call(fn, '__lastCommittedColor')) {
+            delete fn.__lastCommittedColor;
+          }
+          if (fn.color === normalized) {
+            return;
+          }
+        }
+        if (!skipHistory && normalized !== baseColor) {
+          recordHistory();
+        }
+        fn.color = normalized;
+        if (Object.prototype.hasOwnProperty.call(fn, '__lastCommittedColor')) {
+          delete fn.__lastCommittedColor;
+        }
+      }
+      registerAlgebraEntry(fn.id, `${fn.algebraLabel} = ${fn.expression}`, 'function', fn.color);
+      if (state.highlightedFunctionId === id) {
+        setHighlightedFunction(id, { scroll: false, force: true });
+      }
+      draw();
+    }
+
+    function removeAlgebraEntry(id) {
+      const item = algebraList.querySelector(`[data-id="${id}"]`);
+      if (item) {
+        item.remove();
+      }
+    }
+
+    function buildQuickActions() {
+      if (!quickActions) return;
+      quickActions.innerHTML = '';
+      for (const action of QUICK_FUNCTION_ACTIONS) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'quick-action';
+        button.textContent = action.label;
+        button.dataset.action = action.action || 'insert';
+        if (action.value) {
+          button.dataset.value = action.value;
+        } else {
+          button.removeAttribute('data-value');
+        }
+        quickActions.appendChild(button);
+      }
+    }
+
+    function applyQuickAction(action) {
+      if (!action) return;
+      if (action.type === 'insert') {
+        const value = action.value || '';
+        if (!value) return;
+        commandInput.value = value;
+        const position = value.length;
+        commandInput.setSelectionRange(position, position);
+        focusCommandInput();
+        if (isCoarsePointer && !keyboardVisible) {
+          setKeyboardVisibility(true);
+        }
+        return;
+      }
+      if (action.type === 'create-slider') {
+        promptCreateSlider();
+        return;
+      }
+      if (action.type === 'define-number') {
+        promptCreateNumber();
+      }
+    }
+
+    function promptCreateSlider() {
+      let name = prompt('Naam voor de schuifbalk:', 'a');
+      if (name === null) return;
+      name = name.trim();
+      if (!name) {
+        name = `s${state.sliders.length + 1}`;
+      }
+      const minInput = prompt('Minimumwaarde:', '0');
+      if (minInput === null) return;
+      const maxInput = prompt('Maximumwaarde:', '10');
+      if (maxInput === null) return;
+      const stepInput = prompt('Stapgrootte (optioneel):', '1');
+      const min = parseLocaleNumber(minInput);
+      const max = parseLocaleNumber(maxInput);
+      const step = stepInput ? parseLocaleNumber(stepInput) : undefined;
+      if (!Number.isFinite(min) || !Number.isFinite(max)) {
+        alert('Voer geldige numerieke grenzen in.');
+        return;
+      }
+      const existing = findSliderByName(name);
+      if (existing) {
+        updateSliderBounds(existing.id, { min, max, step });
+        setActiveSlider(existing.id, { force: true });
+        refreshPropertiesPanel({ type: 'slider', id: existing.id });
+        ensureMoveTool();
+        return;
+      }
+      const created = createSlider(name, min, max, step ?? undefined, { value: min });
+      setActiveSlider(created.id, { force: true });
+      refreshPropertiesPanel({ type: 'slider', id: created.id });
+      ensureMoveTool();
+    }
+
+    function promptCreateNumber() {
+      let name = prompt('Naam voor de constante:', 'k');
+      if (name === null) return;
+      name = name.trim();
+      if (!name) {
+        name = `k${state.numbers.length + 1}`;
+      }
+      const valueInput = prompt('Waarde:', '1');
+      if (valueInput === null) return;
+      const numeric = parseLocaleNumber(valueInput);
+      if (!Number.isFinite(numeric)) {
+        alert('Voer een geldige numerieke waarde in.');
+        return;
+      }
+      const existingSlider = findSliderByName(name);
+      if (existingSlider) {
+        updateSliderValue(existingSlider, numeric, { record: true });
+        setActiveSlider(existingSlider.id, { force: true });
+        refreshPropertiesPanel({ type: 'slider', id: existingSlider.id });
+        ensureMoveTool();
+        return;
+      }
+      const existing = findNumberByName(name);
+      if (existing) {
+        updateNumberValue(existing, numeric, { record: true });
+        setActiveVariable(existing.id, { force: true });
+      } else {
+        const created = createNumberConstant(name, numeric);
+        setActiveVariable(created.id, { force: true });
+      }
+      refreshPropertiesPanel();
+      ensureMoveTool();
+    }
+
+    function ensureKeyboardBuilt() {
+      if (!isCoarsePointer) return;
+      if (keyboardBuilt) return;
+      keyboardBuilt = true;
+      keyboardTabs.innerHTML = '';
+      for (const set of KEYBOARD_SETS) {
+        const tab = document.createElement('button');
+        tab.type = 'button';
+        tab.className = 'keyboard-tab';
+        tab.dataset.set = set.id;
+        tab.textContent = set.label;
+        tab.addEventListener('click', () => {
+          ensureMoveTool();
+          setActiveKeyboardSet(set.id);
+        });
+        keyboardTabs.appendChild(tab);
+      }
+      setActiveKeyboardSet(activeKeyboardSet);
+    }
+
+    function setActiveKeyboardSet(id) {
+      activeKeyboardSet = id;
+      keyboardTabs.querySelectorAll('.keyboard-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.set === id);
+      });
+      renderKeyboardRows(id);
+    }
+
+    function createKeyboardRow(keys) {
+      const rowElement = document.createElement('div');
+      rowElement.className = 'keyboard-row';
+      for (const key of keys) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `keyboard-key${key.classes ? ` ${key.classes}` : ''}`;
+        button.textContent = key.text;
+        button.addEventListener('pointerdown', event => {
+          event.preventDefault();
+          ensureMoveTool();
+          handleKeyboardKey(key);
+        });
+        button.addEventListener('click', event => event.preventDefault());
+        rowElement.appendChild(button);
+      }
+      return rowElement;
+    }
+
+    function renderKeyboardRows(id) {
+      const set = KEYBOARD_SETS.find(entry => entry.id === id);
+      if (!set) return;
+      keyboardRows.innerHTML = '';
+      for (const row of set.rows) {
+        keyboardRows.appendChild(createKeyboardRow(row));
+      }
+      keyboardRows.appendChild(createKeyboardRow(COMMON_BOTTOM_ROW));
+    }
+
+    function handleKeyboardKey(key) {
+      focusCommandInput();
+      ensureMoveTool();
+      if (key.action === 'backspace') {
+        deleteAtCursor();
+        return;
+      }
+      if (key.action === 'enter') {
+        submitCommandFromKeyboard();
+        return;
+      }
+      if (key.action === 'left') {
+        moveCursor(-1);
+        return;
+      }
+      if (key.action === 'right') {
+        moveCursor(1);
+        return;
+      }
+      const insertion = key.insert ?? key.text;
+      const offset = key.cursorOffset ?? 0;
+      insertAtCursor(insertion, offset);
+    }
+
+    function insertAtCursor(text, cursorOffset = 0) {
+      const start = commandInput.selectionStart ?? commandInput.value.length;
+      const end = commandInput.selectionEnd ?? commandInput.value.length;
+      const before = commandInput.value.slice(0, start);
+      const after = commandInput.value.slice(end);
+      commandInput.value = before + text + after;
+      const position = start + text.length + cursorOffset;
+      commandInput.setSelectionRange(position, position);
+    }
+
+    function deleteAtCursor() {
+      const start = commandInput.selectionStart ?? commandInput.value.length;
+      const end = commandInput.selectionEnd ?? commandInput.value.length;
+      if (start !== end) {
+        const before = commandInput.value.slice(0, start);
+        const after = commandInput.value.slice(end);
+        commandInput.value = before + after;
+        commandInput.setSelectionRange(start, start);
+        return;
+      }
+      if (start === 0) return;
+      const before = commandInput.value.slice(0, start - 1);
+      const after = commandInput.value.slice(end);
+      commandInput.value = before + after;
+      commandInput.setSelectionRange(start - 1, start - 1);
+    }
+
+    function moveCursor(delta) {
+      const length = commandInput.value.length;
+      let position = (commandInput.selectionStart ?? length) + delta;
+      position = Math.max(0, Math.min(length, position));
+      commandInput.setSelectionRange(position, position);
+    }
+
+    function submitCommandFromKeyboard() {
+      if (!commandInput.value.trim()) return;
+      parseCommand(commandInput.value);
+      commandInput.value = '';
+    }
+
+    function resetFloatingKeyboardStyles() {
+      if (!keyboard) return;
+      keyboardPosition.x = null;
+      keyboardPosition.y = null;
+      keyboard.style.removeProperty('left');
+      keyboard.style.removeProperty('top');
+      keyboard.style.removeProperty('right');
+      keyboard.style.removeProperty('bottom');
+    }
+
+    function moveKeyboardTo(x, y) {
+      if (!keyboard) return;
+      const rect = keyboard.getBoundingClientRect();
+      const width = rect.width || keyboard.offsetWidth || 0;
+      const height = rect.height || keyboard.offsetHeight || 0;
+      if (!width || !height) {
+        keyboardPosition.x = x;
+        keyboardPosition.y = y;
+        return;
+      }
+      const margin = 16;
+      const minX = margin;
+      const minY = margin;
+      const maxX = Math.max(minX, window.innerWidth - width - margin);
+      const maxY = Math.max(minY, window.innerHeight - height - margin);
+      const clampedX = Math.min(Math.max(minX, x), maxX);
+      const clampedY = Math.min(Math.max(minY, y), maxY);
+      keyboard.style.left = `${clampedX}px`;
+      keyboard.style.top = `${clampedY}px`;
+      keyboard.style.right = 'auto';
+      keyboard.style.bottom = 'auto';
+      keyboardPosition.x = clampedX;
+      keyboardPosition.y = clampedY;
+    }
+
+    function positionFloatingKeyboard() {
+      if (!keyboard || isCoarsePointer || !keyboard.classList.contains('desktop-floating')) {
+        return;
+      }
+      if (!keyboardVisible) {
+        return;
+      }
+      requestAnimationFrame(() => {
+        const rect = keyboard.getBoundingClientRect();
+        const width = rect.width || keyboard.offsetWidth || 0;
+        const height = rect.height || keyboard.offsetHeight || 0;
+        if (!width || !height) {
+          return;
+        }
+        const margin = 16;
+        let x = keyboardPosition.x;
+        let y = keyboardPosition.y;
+        if (!Number.isFinite(x)) {
+          x = window.innerWidth - width - margin;
+        }
+        if (!Number.isFinite(y)) {
+          y = window.innerHeight - height - margin;
+        }
+        moveKeyboardTo(x, y);
+      });
+    }
+
+    function startKeyboardDrag(event) {
+      if (isCoarsePointer) return;
+      if (!keyboard || !keyboard.classList.contains('desktop-floating')) return;
+      if (event.button !== 0 && event.pointerType === 'mouse') return;
+      ensureMoveTool();
+      keyboardDragState.active = true;
+      keyboardDragState.pointerId = event.pointerId;
+      const rect = keyboard.getBoundingClientRect();
+      keyboardDragState.offsetX = event.clientX - rect.left;
+      keyboardDragState.offsetY = event.clientY - rect.top;
+      try {
+        keyboard.setPointerCapture(event.pointerId);
+      } catch (error) {
+        /* noop */
+      }
+      keyboard.classList.add('dragging');
+      event.preventDefault();
+    }
+
+    function updateKeyboardDrag(event) {
+      if (!keyboardDragState.active || event.pointerId !== keyboardDragState.pointerId) return;
+      event.preventDefault();
+      const x = event.clientX - keyboardDragState.offsetX;
+      const y = event.clientY - keyboardDragState.offsetY;
+      moveKeyboardTo(x, y);
+    }
+
+    function endKeyboardDrag(event) {
+      if (!keyboardDragState.active || event.pointerId !== keyboardDragState.pointerId) return;
+      keyboardDragState.active = false;
+      keyboardDragState.pointerId = null;
+      keyboard.classList.remove('dragging');
+      try {
+        keyboard.releasePointerCapture(event.pointerId);
+      } catch (error) {
+        /* noop */
+      }
+      positionFloatingKeyboard();
+    }
+
+    function setKeyboardVisibility(visible) {
+      if (!keyboard || !keyboardToggle) return;
+      const allowKeyboard = isCoarsePointer;
+      const nextVisible = allowKeyboard && Boolean(visible);
+      if (nextVisible) {
+        ensureKeyboardBuilt();
+        ensureMoveTool();
+      }
+      keyboardVisible = nextVisible;
+      keyboard.classList.toggle('active', nextVisible);
+      keyboard.setAttribute('aria-hidden', String(!nextVisible));
+      keyboardToggle.classList.toggle('active', nextVisible);
+      keyboardToggle.setAttribute('aria-label', nextVisible ? 'Verberg toetsenbord' : 'Toon toetsenbord');
+      keyboardToggle.setAttribute('aria-pressed', String(nextVisible));
+      if (nextVisible) {
+        focusCommandInput();
+      }
+      if (!allowKeyboard) {
+        document.body.classList.remove('keyboard-open');
+        document.body.style.setProperty('--keyboard-offset', '0px');
+      } else {
+        document.body.classList.toggle('keyboard-open', nextVisible);
+        if (nextVisible) {
+          requestAnimationFrame(() => {
+            const height = keyboard.offsetHeight || 0;
+            document.body.style.setProperty('--keyboard-offset', `${height}px`);
+          });
+        } else {
+          document.body.style.setProperty('--keyboard-offset', '0px');
+        }
+      }
+      requestAnimationFrame(resizeCanvas);
+    }
+
+    function prepareExpression(expression) {
+      if (!expression) return '';
+      const superscripts = {
+        '⁰': '^0',
+        '¹': '^1',
+        '²': '^2',
+        '³': '^3',
+        '⁴': '^4',
+        '⁵': '^5',
+        '⁶': '^6',
+        '⁷': '^7',
+        '⁸': '^8',
+        '⁹': '^9'
+      };
+      let normalized = expression.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, char => superscripts[char] || char);
+      normalized = normalized
+        .replace(/\s+/g, '')
+        .replace(/[,;]/g, '.')
+        .replace(/√/g, 'sqrt')
+        .replace(/π/gi, 'PI')
+        .replace(/\bpi\b/gi, 'PI')
+        .replace(/τ/gi, '(2*PI)')
+        .replace(/\btau\b/gi, '(2*PI)')
+        .replace(/[·×]/g, '*')
+        .replace(/[–—]/g, '-')
+        .replace(/÷/g, '/')
+        .replace(/\bsgn\b/gi, 'sign')
+        .replace(/\bctg\b/gi, 'cot')
+        .replace(/\|([^|]+)\|/g, 'abs($1)');
+      const lowerFunctions = ['sin','cos','tan','cot','sec','csc','asin','acos','atan','atan2','sinh','cosh','tanh','asinh','acosh','atanh','log','ln','abs','sqrt','floor','ceil','round','exp','sign','sgn','log10','log2','min','max','pow','hypot'];
+      for (const name of lowerFunctions) {
+        const regex = new RegExp(name, 'gi');
+        normalized = normalized.replace(regex, name);
+      }
+      const implicitFunctions = [...new Set(lowerFunctions)].sort((a, b) => b.length - a.length);
+      for (const name of implicitFunctions) {
+        const pattern = new RegExp(`([0-9xy)])(${name})`, 'gi');
+        normalized = normalized.replace(pattern, (_match, left, fnName) => `${left}*${fnName}`);
+      }
+      normalized = normalized
+        .replace(/\^/g, '**')
+        .replace(/(sin|cos|tan|cot|sec|csc|asin|acos|atan|sinh|cosh|tanh|asinh|acosh|atanh|ln|log|exp)\*\*([0-9]+)\(([^()]+)\)/g, (_match, fn, power, inner) => `pow(${fn}(${inner}),${power})`)
+        .replace(/--/g, '+')
+        .replace(/\+\+/g, '+')
+        .replace(/\+-/g, '-')
+        .replace(/-\+/g, '-')
+        .replace(/\be\b/gi, 'E');
+      normalized = normalized
+        .replace(/([0-9])([xy])/gi, '$1*$2')
+        .replace(/([xy])([0-9])/gi, '$1*$2')
+        .replace(/([xy])([xy])/gi, '$1*$2')
+        .replace(/([xy])\(/gi, '$1*(')
+        .replace(/\)([xy])/gi, ')*$1')
+        .replace(/([0-9])\(/g, '$1*(')
+        .replace(/\)([0-9])/g, ')*$1')
+        .replace(/\)\(/g, ')*(');
+      normalized = normalized
+        .replace(/([0-9xy)])PI/gi, '$1*PI')
+        .replace(/PI([A-Za-z0-9(])/g, 'PI*$1')
+        .replace(/([0-9xy)])E(?![+-]?\d)/gi, '$1*E')
+        .replace(/E([xy(])/gi, 'E*$1');
+      if (normalized.includes('|')) {
+        throw new Error('Ongebalanceerde absolute waarde.');
+      }
+      return normalized;
+    }
+
+    function evaluateScalarExpression(expression) {
+      const prepared = prepareExpression(expression);
+      const evaluator = new Function(
+        'vars',
+        `const ln = Math.log;
+         const log = Math.log10 ? Math.log10 : (v => Math.log(v) / Math.LN10);
+         const log10 = Math.log10 ? Math.log10 : (v => Math.log(v) / Math.LN10);
+         const log2 = Math.log2 ? Math.log2 : (v => Math.log(v) / Math.LN2);
+         const sign = Math.sign;
+         const sgn = Math.sign;
+         const abs = Math.abs;
+         const sec = x => 1 / Math.cos(x);
+         const csc = x => 1 / Math.sin(x);
+         const cot = x => 1 / Math.tan(x);
+         const sech = x => 1 / Math.cosh(x);
+         const csch = x => 1 / Math.sinh(x);
+         const coth = x => 1 / Math.tanh(x);
+         const tau = Math.PI * 2;
+         with (Math) { with (vars || {}) { return ${prepared}; } }`
+      );
+      const result = evaluator(state.variables);
+      if (!Number.isFinite(result)) {
+        throw new Error('Ongeldige waarde');
+      }
+      return result;
+    }
+
+    function tryEvaluateScalar(expression) {
+      try {
+        const result = evaluateScalarExpression(expression);
+        return Number.isFinite(result) ? result : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function registerFunction({ algebraLabel, expression, source, graphLabel, evaluationExpression }, options = {}) {
+      const {
+        id,
+        color: providedColor,
+        displayName,
+        skipHistory = false,
+        skipDraw = false,
+        skipColorAdvance = false,
+        skipAlgebra = false,
+        thickness,
+        showLabel
+      } = options;
+      const color = providedColor ?? FUNCTION_COLORS[state.functionColorIndex % FUNCTION_COLORS.length];
+      try {
+        const prepared = prepareExpression(evaluationExpression || expression);
+        const compiled = new Function(
+          'x',
+          'vars',
+          `const ln = Math.log;
+           const log = Math.log10 ? Math.log10 : (v => Math.log(v) / Math.LN10);
+           const log10 = Math.log10 ? Math.log10 : (v => Math.log(v) / Math.LN10);
+           const log2 = Math.log2 ? Math.log2 : (v => Math.log(v) / Math.LN2);
+           const sign = Math.sign;
+           const sgn = Math.sign;
+           const abs = Math.abs;
+           const sec = x => 1 / Math.cos(x);
+           const csc = x => 1 / Math.sin(x);
+           const cot = x => 1 / Math.tan(x);
+           const sech = x => 1 / Math.cosh(x);
+           const csch = x => 1 / Math.sinh(x);
+           const coth = x => 1 / Math.tanh(x);
+           const tau = Math.PI * 2;
+           with (Math) { with (vars || {}) { return ${prepared}; } }`
+        );
+        if (!skipHistory) {
+          recordHistory();
+        }
+        const fn = {
+          id: id || crypto.randomUUID(),
+          label: graphLabel,
+          algebraLabel,
+          expression,
+          source,
+          eval: x => compiled(x, state.variables),
+          evaluator: compiled,
+          color,
+          displayName: displayName || `${graphLabel} = ${expression}`,
+          evaluationExpression: evaluationExpression || expression,
+          thickness: Number.isFinite(thickness) ? Math.max(1, thickness) : 2,
+          showLabel: Boolean(showLabel)
+        };
+        state.functions.push(fn);
+        if (!skipColorAdvance) {
+          state.functionColorIndex = (state.functionColorIndex + 1) % FUNCTION_COLORS.length;
+        }
+        if (!skipAlgebra) {
+          registerAlgebraEntry(fn.id, `${algebraLabel} = ${expression}`, 'function', color);
+        }
+        if (!skipDraw) {
+          draw();
+        }
+        return fn;
+      } catch (error) {
+        console.error(error);
+        alert('Kon functie niet interpreteren. Controleer de invoer.');
+        return null;
+      }
+    }
+
+    function updatePointAlgebra(point) {
+      const item = algebraList.querySelector(`[data-id="${point.id}"]`);
+      if (item) {
+        const strong = item.querySelector('.algebra-label strong');
+        if (strong) {
+          strong.textContent = point.name;
+        }
+        const span = item.querySelector('.algebra-detail');
+        if (span) {
+          span.textContent = `= (${formatNumber(point.position.x)}, ${formatNumber(point.position.y)})`;
+        }
+        const icon = item.querySelector('.algebra-color');
+        if (icon) {
+          icon.style.color = point.color || COLORS.point;
+        }
+      }
+    }
+
+    function formatNumber(value) {
+      return Math.round(value * 1000) / 1000;
+    }
+
+    function startPinch() {
+      if (activeTouches.size < 2) {
+        state.pinch = null;
+        return;
+      }
+      const touches = Array.from(activeTouches.values());
+      const [first, second] = touches;
+      const rect = canvas.getBoundingClientRect();
+      const center = {
+        x: (first.x + second.x) / 2 - rect.left,
+        y: (first.y + second.y) / 2 - rect.top
+      };
+      state.pinch = {
+        initialDistance: Math.hypot(first.x - second.x, first.y - second.y) || 1,
+        initialScale: state.scale,
+        center
+      };
+      state.draggingPoint = null;
+      state.panning = false;
+    }
+
+    function updatePinch() {
+      if (!state.pinch || activeTouches.size < 2) {
+        return;
+      }
+      const touches = Array.from(activeTouches.values());
+      const [first, second] = touches;
+      const rect = canvas.getBoundingClientRect();
+      const center = {
+        x: (first.x + second.x) / 2 - rect.left,
+        y: (first.y + second.y) / 2 - rect.top
+      };
+      const worldCenter = screenToWorld(center.x, center.y);
+      const distance = Math.hypot(first.x - second.x, first.y - second.y) || state.pinch.initialDistance;
+      const scaleFactor = distance / state.pinch.initialDistance;
+      const nextScale = clampScale(state.pinch.initialScale * scaleFactor);
+      state.scale = nextScale;
+      const after = worldToScreen(worldCenter);
+      state.origin.x += center.x - after.x;
+      state.origin.y += center.y - after.y;
+      state.pinch.initialDistance = distance;
+      state.pinch.initialScale = state.scale;
+      state.pinch.center = center;
+      draw();
+    }
+
+    function removeObject(id, type, options = {}) {
+      const { silent = false, skipHistory = false } = options;
+      if (!id || !type) return;
+
+      switch (type) {
+        case 'point': {
+          const index = state.points.findIndex(point => point.id === id);
+          if (index === -1) break;
+          if (!skipHistory) {
+            recordHistory();
+          }
+          state.points.splice(index, 1);
+          if (state.selectedPointId === id) {
+            setSelectedPoint(null);
+          }
+          if (state.editingPointId === id) {
+            state.editingPointId = null;
+          }
+          const relatedSegments = state.segments.filter(segment => segment.p1 === id || segment.p2 === id);
+          relatedSegments.forEach(segment => removeObject(segment.id, 'segment', { silent: true, skipHistory: true }));
+          const relatedLines = state.lines.filter(line => line.p1 === id || line.p2 === id);
+          relatedLines.forEach(line => removeObject(line.id, 'line', { silent: true, skipHistory: true }));
+          const relatedCircles = state.circles.filter(circle => circle.center === id || circle.edge === id);
+          relatedCircles.forEach(circle => removeObject(circle.id, 'circle', { silent: true, skipHistory: true }));
+          const relatedPolygons = state.polygons.filter(polygon => polygon.points.includes(id));
+          relatedPolygons.forEach(polygon => removeObject(polygon.id, 'polygon', { silent: true, skipHistory: true }));
+          if (state.draggingPoint && state.draggingPoint.id === id) {
+            state.draggingPoint = null;
+          }
+          state.tempPoints = state.tempPoints.filter(pointId => pointId !== id);
+          if (state.tempPolygon) {
+            state.tempPolygon.points = state.tempPolygon.points.filter(pointId => pointId !== id);
+            if (state.tempPolygon.points.length < 2) {
+              state.tempPolygon = null;
+            }
+          }
+          break;
+        }
+        case 'segment': {
+          const index = state.segments.findIndex(segment => segment.id === id);
+          if (index === -1) break;
+          if (!skipHistory) {
+            recordHistory();
+          }
+          state.segments.splice(index, 1);
+          break;
+        }
+        case 'line': {
+          const index = state.lines.findIndex(line => line.id === id);
+          if (index === -1) break;
+          if (!skipHistory) {
+            recordHistory();
+          }
+          state.lines.splice(index, 1);
+          break;
+        }
+        case 'circle': {
+          const index = state.circles.findIndex(circle => circle.id === id);
+          if (index === -1) break;
+          if (!skipHistory) {
+            recordHistory();
+          }
+          state.circles.splice(index, 1);
+          break;
+        }
+        case 'polygon': {
+          const index = state.polygons.findIndex(polygon => polygon.id === id);
+          if (index === -1) break;
+          if (!skipHistory) {
+            recordHistory();
+          }
+          state.polygons.splice(index, 1);
+          break;
+        }
+        case 'text': {
+          const index = state.texts.findIndex(text => text.id === id);
+          if (index === -1) break;
+          if (!skipHistory) {
+            recordHistory();
+          }
+          state.texts.splice(index, 1);
+          break;
+        }
+        case 'function': {
+          const index = state.functions.findIndex(fn => fn.id === id);
+          if (index === -1) break;
+          if (!skipHistory) {
+            recordHistory();
+          }
+          state.functions.splice(index, 1);
+          if (state.highlightedFunctionId === id) {
+            setHighlightedFunction(null, { preservePoint: Boolean(state.selectedPointId) });
+          }
+          if (state.editingFunctionId === id) {
+            state.editingFunctionId = null;
+          }
+          break;
+        }
+        case 'slider': {
+          const index = state.sliders.findIndex(slider => slider.id === id);
+          if (index === -1) break;
+          const slider = state.sliders[index];
+          if (!skipHistory) {
+            recordHistory();
+          }
+          if (slider.animating && sliderAnimationFrame) {
+            slider.animating = false;
+          }
+          delete state.variables[slider.name];
+          state.sliders.splice(index, 1);
+          if (state.selectedSliderId === id) {
+            state.selectedSliderId = null;
+            refreshPropertiesPanel();
+            if (state.highlightedFunctionId) {
+              state.lastSelectionType = 'function';
+            } else if (state.selectedPointId) {
+              state.lastSelectionType = 'point';
+            } else if (state.selectedVariableId) {
+              state.lastSelectionType = 'variable';
+            } else {
+              state.lastSelectionType = 'none';
+            }
+          }
+          if (!state.sliders.some(entry => entry.animating) && sliderAnimationFrame) {
+            cancelAnimationFrame(sliderAnimationFrame);
+            sliderAnimationFrame = null;
+          }
+          break;
+        }
+        case 'variable': {
+          const index = state.numbers.findIndex(entry => entry.id === id);
+          if (index === -1) break;
+          const entry = state.numbers[index];
+          if (!skipHistory) {
+            recordHistory();
+          }
+          delete state.variables[entry.name];
+          state.numbers.splice(index, 1);
+          if (state.selectedVariableId === id) {
+            state.selectedVariableId = null;
+            refreshPropertiesPanel();
+            if (state.highlightedFunctionId) {
+              state.lastSelectionType = 'function';
+            } else if (state.selectedPointId) {
+              state.lastSelectionType = 'point';
+            } else if (state.selectedSliderId) {
+              state.lastSelectionType = 'slider';
+            } else {
+              state.lastSelectionType = 'none';
+            }
+          }
+          break;
+        }
+        default:
+          break;
+      }
+
+      removeAlgebraEntry(id);
+      if (!silent) {
+        draw();
+      }
+    }
+
+    function handlePointerDown(event) {
+      if (event.pointerType === 'touch') {
+        activeTouches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (activeTouches.size === 2) {
+          startPinch();
+          event.preventDefault();
+          return;
+        }
+        if (!event.isPrimary) {
+          event.preventDefault();
+          return;
+        }
+      }
+
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const world = screenToWorld(x, y);
+
+      if (state.pinch) {
+        event.preventDefault();
+        return;
+      }
+
+      if (state.tool !== 'move') {
+        state.pendingFunctionHighlight = null;
+        state.panCandidate = null;
+      }
+
+      if (state.tool === 'move') {
+        const point = findPointNear(world, 0.3);
+        if (point) {
+          state.pendingFunctionHighlight = null;
+          state.panCandidate = null;
+          setSelectedPoint(point.id);
+          state.draggingPoint = point;
+          const screenPos = worldToScreen(point.position);
+          state.dragOffset = { x: screenPos.x - x, y: screenPos.y - y };
+          state.dragHistoryArmed = true;
+        } else {
+          if (state.selectedPointId) {
+            setSelectedPoint(null);
+          }
+          const nearbyFunction = findFunctionNearScreen(x, y);
+          if (nearbyFunction) {
+            state.pendingFunctionHighlight = { id: nearbyFunction.id };
+            state.panning = false;
+            state.panCandidate = { x, y };
+            state.panStart = { x, y };
+          } else {
+            state.pendingFunctionHighlight = null;
+            state.panning = true;
+            state.panCandidate = null;
+            state.panStart = { x, y };
+            if (state.highlightedFunctionId) {
+              setHighlightedFunction(null, { preservePoint: Boolean(state.selectedPointId) });
+            }
+          }
+        }
+      } else if (state.tool === 'point') {
+        createPoint(world);
+      } else if (state.tool === 'line' || state.tool === 'segment' || state.tool === 'circle') {
+        handleConstructionTool(world);
+      } else if (state.tool === 'polygon') {
+        handlePolygonTool(world);
+      } else if (state.tool === 'text') {
+        handleTextTool(world);
+      }
+
+      event.preventDefault();
+    }
+
+    function handlePointerMove(event) {
+      if (event.pointerType === 'touch') {
+        if (activeTouches.has(event.pointerId)) {
+          activeTouches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        }
+        if (state.pinch && activeTouches.size >= 2) {
+          updatePinch();
+          event.preventDefault();
+          return;
+        }
+        if (!event.isPrimary) {
+          event.preventDefault();
+          return;
+        }
+      }
+
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const world = screenToWorld(x, y);
+
+      if (!state.panning && state.panCandidate) {
+        const dx = x - state.panCandidate.x;
+        const dy = y - state.panCandidate.y;
+        if (Math.hypot(dx, dy) > 6) {
+          const start = state.panCandidate;
+          state.panning = true;
+          state.panStart = { x: start.x, y: start.y };
+          state.panCandidate = null;
+          state.pendingFunctionHighlight = null;
+        }
+      }
+
+      if (state.draggingPoint) {
+        if (state.dragHistoryArmed) {
+          recordHistory();
+          state.dragHistoryArmed = false;
+        }
+        const position = screenToWorld(x + state.dragOffset.x, y + state.dragOffset.y);
+        state.draggingPoint.position = snapWorldToGrid(position);
+        updatePointAlgebra(state.draggingPoint);
+        recordPointTrace(state.draggingPoint);
+        draw();
+      } else if (state.panning) {
+        const dx = x - state.panStart.x;
+        const dy = y - state.panStart.y;
+        state.origin.x += dx;
+        state.origin.y += dy;
+        state.panStart = { x, y };
+        draw();
+      }
+
+      if (state.tool === 'polygon' && state.tempPolygon) {
+        state.tempPolygon.preview = snapWorldToGrid(world);
+        draw();
+      }
+    }
+
+    function handlePointerUp(event) {
+      if (event && event.pointerType === 'touch') {
+        activeTouches.delete(event.pointerId);
+        if (activeTouches.size >= 2) {
+          startPinch();
+        } else {
+          state.pinch = null;
+        }
+      }
+      const wasPanning = state.panning;
+      state.draggingPoint = null;
+      state.panning = false;
+      state.dragHistoryArmed = false;
+      if (state.tempPolygon) {
+        state.tempPolygon.preview = null;
+      }
+      if (state.pendingFunctionHighlight && state.tool === 'move' && !wasPanning) {
+        const fn = state.functions.find(entry => entry.id === state.pendingFunctionHighlight.id);
+        if (fn) {
+          setHighlightedFunction(fn.id, { scroll: true, force: true });
+        }
+      }
+      state.pendingFunctionHighlight = null;
+      state.panCandidate = null;
+    }
+
+    function handleConstructionTool(world) {
+      const snappedWorld = snapWorldToGrid(world);
+      let point = findPointNear(snappedWorld);
+      if (!point) {
+        point = createPoint(snappedWorld, undefined, { select: false });
+      }
+      state.tempPoints.push(point.id);
+
+      if (state.tool === 'line' && state.tempPoints.length === 2) {
+        const [p1, p2] = state.tempPoints;
+        recordHistory();
+        state.lines.push({ id: crypto.randomUUID(), p1, p2 });
+        registerAlgebraEntry(state.lines[state.lines.length - 1].id, `l: lijn(${pointName(p1)}, ${pointName(p2)})`, 'line');
+        state.tempPoints = [];
+        draw();
+      }
+
+      if (state.tool === 'segment' && state.tempPoints.length === 2) {
+        const [p1, p2] = state.tempPoints;
+        recordHistory();
+        state.segments.push({ id: crypto.randomUUID(), p1, p2 });
+        registerAlgebraEntry(state.segments[state.segments.length - 1].id, `s: segment(${pointName(p1)}, ${pointName(p2)})`, 'segment');
+        state.tempPoints = [];
+        draw();
+      }
+
+      if (state.tool === 'circle' && state.tempPoints.length === 2) {
+        const [center, edge] = state.tempPoints;
+        recordHistory();
+        state.circles.push({ id: crypto.randomUUID(), center, edge });
+        registerAlgebraEntry(state.circles[state.circles.length - 1].id, `c: cirkel(${pointName(center)}, ${pointName(edge)})`, 'circle');
+        state.tempPoints = [];
+        draw();
+      }
+    }
+
+    function handlePolygonTool(world) {
+      if (!state.tempPolygon) {
+        state.tempPolygon = { points: [], preview: null, createdPoints: [] };
+      } else {
+        state.tempPolygon.preview = null;
+      }
+      const snappedWorld = snapWorldToGrid(world);
+      let point = findPointNear(snappedWorld);
+      if (!point) {
+        point = createPoint(snappedWorld, undefined, { select: false });
+        if (point && state.tempPolygon) {
+          state.tempPolygon.createdPoints.push(point.id);
+        }
+      }
+      state.tempPolygon.points.push(point.id);
+      if (state.tempPolygon.points.length > 2 && point.id === state.tempPolygon.points[0]) {
+        const uniquePoints = [...new Set(state.tempPolygon.points.slice(0, -1))];
+        if (uniquePoints.length >= 3) {
+          recordHistory();
+          const polygon = { id: crypto.randomUUID(), points: uniquePoints };
+          state.polygons.push(polygon);
+          registerAlgebraEntry(polygon.id, `p: veelhoek(${uniquePoints.map(pointName).join(', ')})`, 'polygon');
+        }
+        state.tempPolygon = null;
+        draw();
+      }
+    }
+
+    function handleTextTool(world) {
+      const content = prompt('Tekstinhoud:');
+      if (!content) return;
+      recordHistory();
+      const label = {
+        id: crypto.randomUUID(),
+        content,
+        position: world
+      };
+      state.texts.push(label);
+      registerAlgebraEntry(label.id, `tekst: "${content}"`, 'text');
+      draw();
+    }
+
+    function pointName(id) {
+      const point = state.points.find(p => p.id === id);
+      return point ? point.name : '?';
+    }
+
+    function handleWheel(event) {
+      event.preventDefault();
+      const delta = -event.deltaY;
+      const factor = delta > 0 ? 1.1 : 0.9;
+      const mouse = screenToWorld(event.offsetX, event.offsetY);
+      state.scale = clampScale(state.scale * factor);
+      const after = worldToScreen(mouse);
+      state.origin.x += event.offsetX - after.x;
+      state.origin.y += event.offsetY - after.y;
+      draw();
+    }
+
+    function zoom(factor) {
+      const center = {
+        x: canvas.clientWidth / 2,
+        y: canvas.clientHeight / 2
+      };
+      const worldCenter = screenToWorld(center.x, center.y);
+      state.scale = clampScale(state.scale * factor);
+      const after = worldToScreen(worldCenter);
+      state.origin.x += center.x - after.x;
+      state.origin.y += center.y - after.y;
+      draw();
+    }
+
+    function resetView() {
+      recordHistory();
+      state.scale = 80;
+      state.origin = { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 };
+      draw();
+    }
+
+    function parseCommand(command) {
+      const trimmed = command.trim();
+      if (!trimmed) return;
+
+      const sliderStandalone = trimmed.match(/^Slider\s*\((.*)\)$/i);
+      if (sliderStandalone) {
+        const definition = parseSliderCallDefinition(sliderStandalone[1], null);
+        if (!definition) {
+          alert('Kan schuifbalk niet aanmaken: controleer de invoer.');
+          return;
+        }
+        commitSliderDefinition(definition);
+        return;
+      }
+
+      if (!trimmed.includes('=') && /x/i.test(trimmed)) {
+        parseCommand(`y = ${trimmed}`);
+        return;
+      }
+
+      const editingId = state.editingFunctionId;
+      const editingIndex = editingId ? state.functions.findIndex(fn => fn.id === editingId) : -1;
+      const editingFn = editingIndex >= 0 ? state.functions[editingIndex] : null;
+      const editingPointId = state.editingPointId;
+
+      const pointMatch = trimmed.match(/^([A-Za-z]+)\s*=\s*\(([-+]?\d*\.?\d+),\s*([-+]?\d*\.?\d+)\)$/);
+      if (pointMatch) {
+        const [, rawName, x, y] = pointMatch;
+        const name = rawName.trim();
+        const position = { x: parseFloat(x), y: parseFloat(y) };
+        let target = editingPointId ? state.points.find(point => point.id === editingPointId) : null;
+        if (!target) {
+          target = state.points.find(point => point.name === name);
+        }
+        if (target) {
+          recordHistory();
+          const previousName = target.name;
+          const nameChanged = previousName !== name;
+          target.name = name;
+          target.position = position;
+          if (nameChanged) {
+            rebuildAlgebraList();
+          } else {
+            updatePointAlgebra(target);
+          }
+          setSelectedPoint(target.id, { force: true });
+          state.editingPointId = null;
+          state.editingFunctionId = null;
+          draw();
+          return;
+        }
+        const point = createPoint(position, name, { snap: false });
+        updatePointAlgebra(point);
+        setSelectedPoint(point.id, { force: true });
+        state.editingPointId = null;
+        state.editingFunctionId = null;
+        draw();
+        return;
+      }
+
+      state.editingPointId = null;
+
+      const equationMatch = trimmed.match(/^([^=]+)=\s*(.+)$/);
+      if (equationMatch) {
+        const leftRaw = equationMatch[1].trim();
+        const rightRaw = equationMatch[2].trim();
+        const sanitizedLeft = leftRaw.replace(/\s+/g, '');
+
+        const functionCallMatch = sanitizedLeft.match(/^([a-zA-Z][a-zA-Z0-9_]*)\(([a-zA-Z])\)$/);
+        const simpleNameMatch = sanitizedLeft.match(/^([a-zA-Z][a-zA-Z0-9_]*)$/);
+
+        let algebraLabel;
+        let graphLabel;
+        let evaluationExpression = rightRaw;
+
+        if (simpleNameMatch && sanitizedLeft.toLowerCase() !== 'y' && !functionCallMatch) {
+          const scalarResult = handleScalarAssignment(simpleNameMatch[1], rightRaw);
+          if (scalarResult !== false) {
+            if (scalarResult) {
+              state.editingFunctionId = null;
+              state.editingPointId = null;
+            }
+            return;
+          }
+        }
+
+        if (sanitizedLeft.toLowerCase() === 'y') {
+          if (editingFn) {
+            algebraLabel = editingFn.algebraLabel;
+            graphLabel = editingFn.label;
+          } else {
+            const generated = nextFunctionLabel();
+            algebraLabel = generated;
+            graphLabel = generated;
+          }
+        } else if (functionCallMatch) {
+          const [, name, variable] = functionCallMatch;
+          const variablePattern = new RegExp(`\\b${variable}\\b`, 'gi');
+          evaluationExpression = rightRaw.replace(variablePattern, 'x');
+          algebraLabel = `${name}(${variable})`;
+          graphLabel = `${name}(x)`;
+        } else if (simpleNameMatch) {
+          const name = simpleNameMatch[1];
+          algebraLabel = `${name}(x)`;
+          graphLabel = `${name}(x)`;
+        } else {
+          const generated = nextFunctionLabel();
+          algebraLabel = generated;
+          graphLabel = generated;
+        }
+
+        if (editingFn) {
+          recordHistory();
+          state.functions.splice(editingIndex, 1);
+          removeAlgebraEntry(editingFn.id);
+          const updated = registerFunction({
+            algebraLabel,
+            expression: rightRaw,
+            source: trimmed,
+            graphLabel,
+            evaluationExpression
+          }, {
+            id: editingFn.id,
+            color: editingFn.color,
+            displayName: editingFn.displayName,
+            skipHistory: true,
+            skipDraw: true,
+            skipColorAdvance: true,
+            skipAlgebra: true
+          });
+          if (updated) {
+            state.functions.pop();
+            state.functions.splice(editingIndex, 0, updated);
+            registerAlgebraEntry(updated.id, `${algebraLabel} = ${rightRaw}`, 'function', updated.color);
+            setHighlightedFunction(updated.id, { scroll: true, force: true });
+          } else {
+            state.functions.splice(editingIndex, 0, editingFn);
+            registerAlgebraEntry(editingFn.id, `${editingFn.algebraLabel} = ${editingFn.expression}`, 'function', editingFn.color);
+            if (state.highlightedFunctionId === editingFn.id) {
+              setHighlightedFunction(editingFn.id, { scroll: true, force: true });
+            }
+          }
+          state.editingFunctionId = null;
+          draw();
+          return;
+        }
+
+        registerFunction({
+          algebraLabel,
+          expression: rightRaw,
+          source: trimmed,
+          graphLabel,
+          evaluationExpression
+        });
+        state.editingFunctionId = null;
+        return;
+      }
+
+      alert('Deze opdracht wordt nog niet ondersteund.');
+    }
+
+    function initTools() {
+      document.querySelectorAll('.tool-button[data-tool]').forEach(btn => {
+        btn.addEventListener('click', () => setTool(btn.dataset.tool));
+      });
+    }
+
+    function initSidebar() {
+      toggleSidebarBtn.addEventListener('click', () => {
+        if (window.innerWidth < 920) {
+          const open = !document.body.classList.contains('sidebar-open');
+          document.body.classList.toggle('sidebar-open', open);
+          sidebar.classList.toggle('hidden', !open);
+        } else {
+          const collapsed = document.body.classList.toggle('sidebar-collapsed');
+          sidebar.classList.toggle('collapsed-desktop', collapsed);
+          sidebar.classList.remove('hidden');
+          requestAnimationFrame(resizeCanvas);
+        }
+        ensureMoveTool();
+      });
+      closeSidebarBtn.addEventListener('click', () => {
+        if (window.innerWidth < 920) {
+          document.body.classList.remove('sidebar-open');
+          sidebar.classList.add('hidden');
+        } else {
+          document.body.classList.add('sidebar-collapsed');
+          sidebar.classList.add('collapsed-desktop');
+          sidebar.classList.remove('hidden');
+          requestAnimationFrame(resizeCanvas);
+        }
+        ensureMoveTool();
+      });
+    }
+
+    algebraList.addEventListener('click', event => {
+      const sliderActionButton = event.target.closest('[data-slider-action]');
+      if (sliderActionButton) {
+        const sliderItem = sliderActionButton.closest('.algebra-item.slider');
+        if (!sliderItem) return;
+        const slider = findSliderById(sliderItem.dataset.id);
+        if (!slider) return;
+        const action = sliderActionButton.dataset.sliderAction;
+        if (action === 'step-back') {
+          stepSlider(slider, -1);
+        } else if (action === 'step-forward') {
+          stepSlider(slider, 1);
+        } else if (action === 'toggle-animate') {
+          setSliderAnimating(slider, !slider.animating);
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        ensureMoveTool();
+        return;
+      }
+
+      const colorButton = event.target.closest('.algebra-color[data-action="color"]');
+      if (colorButton) {
+        const item = colorButton.closest('.algebra-item');
+        if (!item) return;
+        const picker = item.querySelector('.algebra-color-input');
+        if (picker) {
+          picker.click();
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      const button = event.target.closest('.delete-button');
+      if (button) {
+        const item = button.closest('.algebra-item');
+        if (!item) return;
+        removeObject(item.dataset.id, item.dataset.type);
+        ensureMoveTool();
+        return;
+      }
+      const item = event.target.closest('.algebra-item');
+      if (!item) return;
+      if (item.dataset.type === 'slider') {
+        setActiveSlider(item.dataset.id, { force: true });
+        ensureMoveTool();
+        return;
+      }
+      if (item.dataset.type === 'variable') {
+        setActiveVariable(item.dataset.id, { force: true });
+        ensureMoveTool();
+        return;
+      }
+      if (item.dataset.type === 'function') {
+        const fn = state.functions.find(entry => entry.id === item.dataset.id);
+        if (!fn) return;
+        state.editingFunctionId = fn.id;
+        state.editingPointId = null;
+        const source = fn.source || `${fn.algebraLabel} = ${fn.expression}`;
+        commandInput.value = source;
+        const position = source.length;
+        commandInput.setSelectionRange(position, position);
+        focusCommandInput();
+        setHighlightedFunction(fn.id, { scroll: true, force: true });
+        if (isCoarsePointer && !keyboardVisible) {
+          setKeyboardVisibility(true);
+        }
+      } else if (item.dataset.type === 'point') {
+        const point = state.points.find(entry => entry.id === item.dataset.id);
+        if (!point) return;
+        state.editingPointId = point.id;
+        state.editingFunctionId = null;
+        const source = `${point.name} = (${formatNumber(point.position.x)}, ${formatNumber(point.position.y)})`;
+        commandInput.value = source;
+        const position = source.length;
+        commandInput.setSelectionRange(position, position);
+        focusCommandInput();
+        setSelectedPoint(point.id, { force: true });
+        if (isCoarsePointer && !keyboardVisible) {
+          setKeyboardVisibility(true);
+        }
+      }
+      ensureMoveTool();
+    });
+
+    algebraList.addEventListener('input', event => {
+      const range = event.target.closest('.slider-range');
+      if (range) {
+        const sliderItem = range.closest('.algebra-item.slider');
+        if (!sliderItem) return;
+        const slider = findSliderById(sliderItem.dataset.id);
+        if (!slider) return;
+        const numeric = parseFloat(range.value);
+        if (Number.isFinite(numeric)) {
+          updateSliderValue(slider, numeric, { record: false });
+        }
+        return;
+      }
+      const picker = event.target.closest('.algebra-color-input');
+      if (!picker) return;
+      const item = picker.closest('.algebra-item');
+      if (!item) return;
+      updateFunctionColor(item.dataset.id, picker.value, { skipHistory: true, preview: true });
+    });
+
+    algebraList.addEventListener('change', event => {
+      const range = event.target.closest('.slider-range');
+      if (range) {
+        const sliderItem = range.closest('.algebra-item.slider');
+        if (!sliderItem) return;
+        const slider = findSliderById(sliderItem.dataset.id);
+        if (!slider) return;
+        const numeric = parseFloat(range.value);
+        if (Number.isFinite(numeric)) {
+          updateSliderValue(slider, numeric, { record: true });
+        } else {
+          renderSliderEntry(slider.id);
+        }
+        return;
+      }
+      const speedSelect = event.target.closest('.slider-speed');
+      if (speedSelect) {
+        const sliderItem = speedSelect.closest('.algebra-item.slider');
+        if (!sliderItem) return;
+        const slider = findSliderById(sliderItem.dataset.id);
+        if (!slider) return;
+        setSliderSpeed(slider, speedSelect.value);
+        return;
+      }
+      const picker = event.target.closest('.algebra-color-input');
+      if (!picker) return;
+      const item = picker.closest('.algebra-item');
+      if (!item) return;
+      updateFunctionColor(item.dataset.id, picker.value);
+    });
+
+    if (quickActions) {
+      quickActions.addEventListener('click', event => {
+        const button = event.target.closest('.quick-action');
+        if (!button) return;
+        const type = button.dataset.action || 'insert';
+        const value = button.dataset.value || '';
+        applyQuickAction({ type, value });
+        ensureMoveTool();
+      });
+    }
+
+    canvas.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+
+    function handleResponsiveSidebar() {
+      if (window.innerWidth < 920) {
+        const open = document.body.classList.contains('sidebar-open');
+        sidebar.classList.toggle('hidden', !open);
+        sidebar.classList.remove('collapsed-desktop');
+      } else {
+        document.body.classList.remove('sidebar-open');
+        const collapsed = document.body.classList.contains('sidebar-collapsed');
+        sidebar.classList.toggle('collapsed-desktop', collapsed);
+        sidebar.classList.remove('hidden');
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      handleResponsiveSidebar();
+      refreshPointerMode();
+      if (isCoarsePointer && !keyboardBuilt) {
+        ensureKeyboardBuilt();
+      }
+      positionFloatingKeyboard();
+      resizeCanvas();
+    });
+
+    window.addEventListener('orientationchange', () => {
+      refreshPointerMode(true);
+      positionFloatingKeyboard();
+    });
+
+    window.addEventListener('touchstart', () => {
+      if (!isCoarsePointer) {
+        isCoarsePointer = true;
+        updateInputMode();
+      }
+    }, { once: true, passive: true });
+
+    document.getElementById('zoom-in').addEventListener('click', () => {
+      zoom(1.2);
+      ensureMoveTool();
+    });
+    document.getElementById('zoom-out').addEventListener('click', () => {
+      zoom(0.8);
+      ensureMoveTool();
+    });
+    document.getElementById('reset-view').addEventListener('click', () => {
+      resetView();
+      ensureMoveTool();
+    });
+
+    if (undoButton) {
+      undoButton.addEventListener('click', event => {
+        event.preventDefault();
+        undo();
+        ensureMoveTool();
+      });
+    }
+
+    if (redoButton) {
+      redoButton.addEventListener('click', event => {
+        event.preventDefault();
+        redo();
+        ensureMoveTool();
+      });
+    }
+
+    keyboardToggle.addEventListener('pointerdown', event => {
+      event.preventDefault();
+      if (!isCoarsePointer) {
+        setKeyboardVisibility(false);
+        return;
+      }
+      keyboardToggle.focus();
+      ensureMoveTool();
+      setKeyboardVisibility(!keyboardVisible);
+      skipNextKeyboardToggleClick = true;
+    });
+
+    keyboardToggle.addEventListener('click', event => {
+      event.preventDefault();
+      if (skipNextKeyboardToggleClick) {
+        skipNextKeyboardToggleClick = false;
+        return;
+      }
+      if (!isCoarsePointer) {
+        setKeyboardVisibility(false);
+        return;
+      }
+      setKeyboardVisibility(!keyboardVisible);
+    });
+
+    keyboardToggle.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        if (!isCoarsePointer) {
+          setKeyboardVisibility(false);
+          return;
+        }
+        setKeyboardVisibility(!keyboardVisible);
+        skipNextKeyboardToggleClick = true;
+      }
+    });
+
+    commandInput.addEventListener('focus', () => {
+      ensureMoveTool();
+      if (isCoarsePointer && !keyboardVisible) {
+        setKeyboardVisibility(true);
+      }
+    });
+
+    commandInput.addEventListener('pointerdown', event => {
+      ensureMoveTool();
+      if (!isCoarsePointer) return;
+      event.preventDefault();
+      focusCommandInput();
+      const position = commandInput.value.length;
+      commandInput.setSelectionRange(position, position);
+      if (!keyboardVisible) {
+        setKeyboardVisibility(true);
+      }
+    });
+
+    commandInput.addEventListener('touchstart', event => {
+      ensureMoveTool();
+      if (window.PointerEvent) return;
+      if (!isCoarsePointer) return;
+      event.preventDefault();
+      focusCommandInput();
+      const position = commandInput.value.length;
+      commandInput.setSelectionRange(position, position);
+      if (!keyboardVisible) {
+        setKeyboardVisibility(true);
+      }
+    }, { passive: false });
+
+    if (keyboardHandle) {
+      keyboardHandle.addEventListener('pointerdown', startKeyboardDrag);
+    }
+
+    if (keyboard) {
+      keyboard.addEventListener('pointermove', updateKeyboardDrag);
+      keyboard.addEventListener('pointerup', endKeyboardDrag);
+      keyboard.addEventListener('pointercancel', endKeyboardDrag);
+      keyboard.addEventListener('lostpointercapture', () => {
+        keyboardDragState.active = false;
+        keyboardDragState.pointerId = null;
+        keyboard.classList.remove('dragging');
+      });
+    }
+
+    document.addEventListener('pointerdown', event => {
+      if (event.pointerType === 'touch' && !isCoarsePointer) {
+        isCoarsePointer = true;
+        updateInputMode();
+      }
+      if (!keyboardVisible) return;
+      const target = event.target;
+      if (keyboard.contains(target)) return;
+      if (keyboardToggle.contains(target)) return;
+      if (commandBar && commandBar.contains(target)) return;
+      setKeyboardVisibility(false);
+    });
+
+    window.addEventListener('keydown', event => {
+      if ((event.ctrlKey || event.metaKey) && !event.altKey) {
+        const key = event.key.toLowerCase();
+        if (key === 'z') {
+          event.preventDefault();
+          if (event.shiftKey) {
+            redo();
+          } else {
+            undo();
+          }
+        } else if (key === 'y') {
+          event.preventDefault();
+          redo();
+        }
+      }
+    });
+
+    window.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && keyboardVisible) {
+        setKeyboardVisibility(false);
+      }
+    });
+
+    commandInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        parseCommand(commandInput.value);
+        commandInput.value = '';
+      } else if (event.key === 'Escape') {
+        setKeyboardVisibility(false);
+      }
+    });
+
+    if ('ResizeObserver' in window) {
+      const resizeObserver = new ResizeObserver(() => resizeCanvas());
+      resizeObserver.observe(graphContainer);
+    }
+
+    refreshPointerMode(true);
+    if (coarsePointerMedia) {
+      if (typeof coarsePointerMedia.addEventListener === 'function') {
+        coarsePointerMedia.addEventListener('change', handlePointerPreferenceChange);
+      } else if (typeof coarsePointerMedia.addListener === 'function') {
+        coarsePointerMedia.addListener(handlePointerPreferenceChange);
+      }
+    }
+
+    const standaloneMedia = window.matchMedia('(display-mode: standalone)');
+    function handleDisplayModeChange(event) {
+      if (event.matches) {
+        enforceStandaloneViewport();
+      } else {
+        restoreViewport();
+      }
+    }
+
+    if (standaloneMedia.matches || window.navigator.standalone) {
+      enforceStandaloneViewport();
+    }
+    if (typeof standaloneMedia.addEventListener === 'function') {
+      standaloneMedia.addEventListener('change', handleDisplayModeChange);
+    } else if (typeof standaloneMedia.addListener === 'function') {
+      standaloneMedia.addListener(handleDisplayModeChange);
+    }
+    window.addEventListener('appinstalled', enforceStandaloneViewport);
+
+    if (commandBar) {
+      commandBar.style.display = 'flex';
+      commandBar.removeAttribute('hidden');
+    }
+
+    if (isCoarsePointer) {
+      ensureKeyboardBuilt();
+    }
+
+    initTools();
+    initSidebar();
+    if (window.innerWidth < 920) {
+      sidebar.classList.add('hidden');
+    }
+    handleResponsiveSidebar();
+    updateUndoRedoButtons();
+    buildQuickActions();
+    resizeCanvas();
+  </script>
+</body>
+</html>
