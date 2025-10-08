@@ -1,7 +1,7 @@
 {
   "apps": [
     {
-      "id": "rabdom-password-generator",
+      "id": "random-password-generator",
       "name": "Random Password Generator",
       "description": "Genereer sterke wachtwoorden met geschiedenis en gemakkelijk kopiëren.",
       "path": "apps/codegen",
@@ -33,6 +33,19 @@
       ],
       "badge": "Game",
       "dateAdded": "2025-10-07"
+    },
+                {
+      "id": "geo",
+      "name": "GeoCanvas",
+      "description": "Tetris is een puzzelspel waarin je vallende blokken passend moet stapelen.",
+      "path": "geogebra",
+      "tags": [
+        "math",
+        "utility"
+      ],
+      "badge": "Tool",
+      "dateAdded": "2025-10-07"
     }
+    
   ]
 }
