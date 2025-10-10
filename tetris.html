@@ -93,14 +93,14 @@
   }
   .stat b{ font-variant-numeric: tabular-nums; }
 
-  button{
+  .app button{
     border:1px solid var(--border);
     background:var(--panel);
     color:var(--text);
     border-radius:12px; padding:8px 12px; cursor:pointer; box-shadow:var(--shadow);
   }
-  button:hover{ filter:brightness(0.98) }
-  button:active{ transform: translateY(1px) }
+  .app button:hover{ filter:brightness(0.98) }
+  .app button:active{ transform: translateY(1px) }
   .controls{ display:flex; gap:8px; flex-wrap:wrap; }
 
   .layout{
@@ -239,10 +239,6 @@
       </div>
     </div>
   </main>
-
-  <footer class="site-footer">
-    <span>© 2025 Rvds</span>
-  </footer>
 
   <script src="assets/js/theme.js" defer></script>
   <script src="assets/js/tetris.js" defer></script>
