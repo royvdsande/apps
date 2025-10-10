@@ -5,133 +5,187 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Code Generator</title>
 
-<!-- Thema -->
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)">
+  <script>
+    (function() {
+      try {
+        var pref = localStorage.getItem('theme-preference') || 'system';
+        var root = document.documentElement;
+        if (pref === 'light') {
+          root.setAttribute('data-theme','light');
+        } else if (pref === 'dark') {
+          root.setAttribute('data-theme','dark');
+        } else {
+          root.removeAttribute('data-theme');
+        }
+      } catch(e) { /* noop */ }
+    })();
+  </script>
 
-<style>
-:root {
-  --bg: #f5f7fb;
-  --panel: #ffffff;
-  --border: #d6dbe3;
-  --text: #263238;
-  --muted: #607d8b;
-  --shadow: 0 1px 2px rgba(0,0,0,.08), 0 8px 30px rgba(0,0,0,.08);
-  --btn-gen: #3f51b5;
-  --btn-clear: #e53935;
-  --btn-copy: #f9fafc;
-}
+  <link rel="stylesheet" href="../styles.css" />
 
-@media (prefers-color-scheme: dark){
+  <style>
   :root {
-    --bg: #1c1c1e;
-    --panel: #2c2c2e;
-    --border: #3a3a3c;
-    --text: #f2f2f7;
-    --muted: #9ca3af;
-    --shadow: 0 1px 4px rgba(0,0,0,.6), 0 6px 20px rgba(0,0,0,.5);
-    --btn-gen: #0a84ff;
-    --btn-clear: #ff453a;
-    --btn-copy: #3a3a3c;
+    --cg-btn-gen: #3f51b5;
+    --cg-btn-clear: #e53935;
+    --cg-btn-copy: #f9fafc;
+    --cg-hover: rgba(63,81,181,0.12);
   }
-}
 
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background: var(--bg);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: var(--text);
-}
+  @media (prefers-color-scheme: dark){
+    :root {
+      --cg-btn-gen: #0a84ff;
+      --cg-btn-clear: #ff453a;
+      --cg-btn-copy: #1f2937;
+      --cg-hover: rgba(144,202,249,0.18);
+    }
+  }
 
-.card {
-  background: var(--panel);
-  padding: 20px;
-  border-radius: 16px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
-  text-align: center;
-  width: min(340px, 92%);
-}
+  :root[data-theme="dark"]{
+    --cg-btn-gen: #0a84ff;
+    --cg-btn-clear: #ff453a;
+    --cg-btn-copy: #1f2937;
+    --cg-hover: rgba(144,202,249,0.18);
+  }
 
-h1 {
-  font-size: 20px;
-  margin-bottom: 12px;
-  color: var(--text);
-}
+  :root[data-theme="light"]{
+    --cg-btn-gen: #3f51b5;
+    --cg-btn-clear: #e53935;
+    --cg-btn-copy: #f9fafc;
+    --cg-hover: rgba(63,81,181,0.12);
+  }
 
-input {
-  font-size: 22px;
-  text-align: center;
-  width: 90%;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  margin-bottom: 14px;
-  background: var(--panel);
-  color: var(--text);
-  box-shadow: inset 0 1px 3px rgba(0,0,0,.1);
-}
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+  }
 
-button {
-  font-size: 16px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 8px 14px;
-  margin: 4px;
-  cursor: pointer;
-  box-shadow: var(--shadow);
-  background: var(--btn-copy);
-  color: var(--text);
-  transition: all .15s ease;
-}
-button:hover { filter: brightness(0.95); }
-button:active { transform: translateY(1px); }
+  main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
 
-.gen { background: var(--btn-gen); color: #fff; border: none; }
-.clear { background: var(--btn-clear); color: #fff; border: none; }
+  .card {
+    background: var(--panel);
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    text-align: center;
+    width: min(360px, 92%);
+  }
 
-#history {
-  margin-top: 14px;
-  font-size: 14px;
-  text-align: left;
-  max-height: 140px;
-  overflow-y: auto;
-  padding: 8px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--text);
-  box-shadow: inset 0 1px 2px rgba(0,0,0,.05);
-}
+  h1 {
+    font-size: 22px;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
 
-.history-item {
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 6px;
-  transition: background .15s;
-}
-.history-item:hover {
-  background: rgba(63,81,181,0.15);
-}
-</style>
+  input {
+    font-size: 22px;
+    text-align: center;
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+    background: var(--panel);
+    color: var(--text);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.08);
+  }
+
+  .card button {
+    font-size: 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 14px;
+    margin: 4px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    background: var(--cg-btn-copy);
+    color: var(--text);
+    transition: all .15s ease;
+  }
+  .card button:hover { filter: brightness(0.95); }
+  .card button:active { transform: translateY(1px); }
+
+  .gen { background: var(--cg-btn-gen); color: #fff; border: none; }
+  .clear { background: var(--cg-btn-clear); color: #fff; border: none; }
+
+  #history {
+    margin-top: 14px;
+    font-size: 14px;
+    text-align: left;
+    max-height: 140px;
+    overflow-y: auto;
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.05);
+  }
+
+  .history-item {
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: background .15s;
+  }
+  .history-item:hover {
+    background: var(--cg-hover);
+  }
+  </style>
 </head>
 
 <body>
-<div class="card">
-  <h1>Willekeurige Code Generator</h1>
-  <input id="code" readonly value="Klik op 'Genereer code'">
-  <div>
-    <button class="gen" onclick="generateCode()">Genereer code</button>
-    <button class="copy" onclick="copyCode()">Kopieer huidige</button>
-    <button class="clear" onclick="clearHistory()">Verwijder geschiedenis</button>
-  </div>
-  <div id="history"></div>
-</div>
+  <header class="site-header">
+    <div class="brand" aria-label="Rvds" title="Rvds">Rvds</div>
+    <nav class="site-nav">
+      <a href="../index.html#apps">Apps</a>
+
+      <div class="theme-switch" role="group" aria-label="Thema">
+        <button class="theme-btn" data-theme="system" title="Systeem" aria-pressed="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9H3V5Zm-2 11h22v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1Z"/></svg>
+          <span class="visually-hidden">Systeem</span>
+        </button>
+        <button class="theme-btn" data-theme="light" title="Licht" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 4a1 1 0 0 0 1-1V1h-2v2a1 1 0 0 0 1 1Zm0 16a1 1 0 0 0-1 1v2h2v-2a1 1 0 0 0-1-1ZM4 11H1v2h3v-2Zm22 0h-3v2h3v-2ZM5.64 6.05 3.52 3.93l-1.41 1.41 2.12 2.12 1.41-1.41Zm15.25 15.25-2.12-2.12-1.41 1.41 2.12 2.12 1.41-1.41ZM18.36 6.05l1.41-1.41L17.66 2.1l-1.41 1.41 2.11 2.54Zm-12.02 12.9-1.41 1.41 2.12 2.12 1.41-1.41-2.12-2.12ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Z"/></svg>
+          <span class="visually-hidden">Licht</span>
+        </button>
+        <button class="theme-btn" data-theme="dark" title="Donker" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 1 0 9.79 9.79Z"/></svg>
+          <span class="visually-hidden">Donker</span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <div class="card">
+      <h1>Willekeurige Code Generator</h1>
+      <input id="code" readonly value="Klik op 'Genereer code'">
+      <div>
+        <button class="gen" onclick="generateCode()">Genereer code</button>
+        <button class="copy" onclick="copyCode()">Kopieer huidige</button>
+        <button class="clear" onclick="clearHistory()">Verwijder geschiedenis</button>
+      </div>
+      <div id="history"></div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <span>© 2025 Rvds</span>
+  </footer>
+
+  <script src="../assets/js/theme.js" defer></script>
 
 <script>
 const codeField = document.getElementById('code');

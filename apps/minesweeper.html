@@ -5,25 +5,86 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Minesweeper</title>
+
+  <script>
+    (function() {
+      try {
+        var pref = localStorage.getItem('theme-preference') || 'system';
+        var root = document.documentElement;
+        if (pref === 'light') {
+          root.setAttribute('data-theme','light');
+        } else if (pref === 'dark') {
+          root.setAttribute('data-theme','dark');
+        } else {
+          root.removeAttribute('data-theme');
+        }
+      } catch(e) { /* noop */ }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="../styles.css" />
+
   <style>
     :root{
       --cell-size: 34px;
       --gap: 4px;
-      --bg: #e6e9ef;
-      --panel: #f6f7fb;
-      --border: #c9cdd3;
-      --text: #333;
-      --shadow: 0 1px 2px rgba(0,0,0,.08), 0 6px 18px rgba(0,0,0,.06);
+      --ms-cell: #d0d6e2;
+      --ms-cell-border: #b7bfce;
+      --ms-cell-revealed: #f0f3f9;
+      --ms-cell-revealed-border: #cdd5e3;
+      --ms-cell-shadow: inset 0 2px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(0,0,0,.04);
+      --ms-mine-bg: #ffd9dd;
+      --ms-hover: rgba(63,81,181,0.15);
     }
+
+    @media (prefers-color-scheme: dark){
+      :root{
+        --ms-cell: #1f2937;
+        --ms-cell-border: #111827;
+        --ms-cell-revealed: #131c23;
+        --ms-cell-revealed-border: #223042;
+        --ms-cell-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 -1px 0 rgba(0,0,0,.6);
+        --ms-mine-bg: rgba(248,113,113,0.22);
+        --ms-hover: rgba(144,202,249,0.2);
+      }
+    }
+
+    :root[data-theme="dark"]{
+      --ms-cell: #1f2937;
+      --ms-cell-border: #111827;
+      --ms-cell-revealed: #131c23;
+      --ms-cell-revealed-border: #223042;
+      --ms-cell-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 -1px 0 rgba(0,0,0,.6);
+      --ms-mine-bg: rgba(248,113,113,0.22);
+      --ms-hover: rgba(144,202,249,0.2);
+    }
+
+    :root[data-theme="light"]{
+      --ms-cell: #d0d6e2;
+      --ms-cell-border: #b7bfce;
+      --ms-cell-revealed: #f0f3f9;
+      --ms-cell-revealed-border: #cdd5e3;
+      --ms-cell-shadow: inset 0 2px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(0,0,0,.04);
+      --ms-mine-bg: #ffd9dd;
+      --ms-hover: rgba(63,81,181,0.15);
+    }
+
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      background: linear-gradient(180deg, #f5f7fb, #eef1f7);
+      background: var(--bg-gradient);
       color: var(--text);
       min-height:100vh;
-      display:flex; align-items:center; justify-content:center;
-      padding:16px;
+      display:flex;
+      flex-direction:column;
+    }
+    main{
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
     }
     .app{
       width:min(100%, 900px);
@@ -33,31 +94,31 @@
       box-shadow: var(--shadow);
       padding: 14px;
     }
-    header{
+    .app-header{
       display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between;
       padding: 8px 8px 4px;
     }
     .left, .right{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
     .stat{
-      background:#fff; border:1px solid var(--border); border-radius:10px; padding:8px 10px; min-width:90px;
+      background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:8px 10px; min-width:90px;
       display:flex; align-items:center; gap:8px; box-shadow: var(--shadow);
     }
     .stat b{font-variant-numeric: tabular-nums}
     select, input[type=number]{
-      border:1px solid var(--border); border-radius:8px; padding:8px 10px; background:#fff;
+      border:1px solid var(--border); border-radius:8px; padding:8px 10px; background:var(--panel); color:var(--text);
     }
-    button{
-      border:1px solid var(--border); background:#fff; border-radius:10px; padding:8px 12px; cursor:pointer; box-shadow: var(--shadow);
+    .app button{
+      border:1px solid var(--border); background:var(--panel); color:var(--text); border-radius:10px; padding:8px 12px; cursor:pointer; box-shadow: var(--shadow);
     }
-    button:hover{filter:brightness(0.98)}
-    button:active{transform: translateY(1px)}
+    .app button:hover{filter:brightness(0.98)}
+    .app button:active{transform: translateY(1px)}
 
     .toolbar{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
     .group{display:flex; gap:6px; align-items:center}
     .hidden{display:none}
 
     .board-wrap{
-      margin-top:12px; padding:10px; border:1px solid var(--border); border-radius:14px; background:#fff; box-shadow: var(--shadow);
+      margin-top:12px; padding:10px; border:1px solid var(--border); border-radius:14px; background:var(--panel); box-shadow: var(--shadow);
     }
     #board{
       display:grid; grid-template-columns: repeat(10, var(--cell-size));
@@ -67,16 +128,16 @@
       user-select: none;
     }
     .cell{
-      width:var(--cell-size); height:var(--cell-size); border-radius:8px; background:#d0d6e2; border:1px solid #b7bfce;
-      display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; color:#1f2d3d;
-      box-shadow: inset 0 2px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(0,0,0,.04);
+      width:var(--cell-size); height:var(--cell-size); border-radius:8px; background:var(--ms-cell); border:1px solid var(--ms-cell-border);
+      display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; color:var(--text);
+      box-shadow: var(--ms-cell-shadow);
       position:relative;
     }
     .cell:hover{filter:brightness(1.02)}
     .cell.revealed{
-      background:#f0f3f9; border-color:#cdd5e3; box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+      background:var(--ms-cell-revealed); border-color:var(--ms-cell-revealed-border); box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
     }
-    .cell.mine.revealed{ background:#ffd9dd; }
+    .cell.mine.revealed{ background:var(--ms-mine-bg); }
     .cell.blast{ animation: blip .18s ease-out 2 alternate; }
     @keyframes blip{from{transform:scale(1)} to{transform:scale(1.08)}}
 
@@ -93,49 +154,79 @@
     .n7{ color:#424242 }
     .n8{ color:#222 }
 
-    .footer{ margin-top:10px; text-align:center; color:#666; font-size:12px }
+    .footer{ margin-top:10px; text-align:center; color:var(--muted); font-size:12px }
   </style>
 </head>
 <body>
-  <div class="app" role="application" aria-label="Minesweeper">
-    <header>
-      <div class="left">
-        <div class="stat" aria-live="polite" title="Aantal niet-geflagde mijnen">
-          ⛳ <span>Mijnen:</span> <b id="mineCount">0</b>
-        </div>
-        <div class="stat" aria-live="polite" title="Verstreken tijd in seconden">
-          ⏱️ <span>Tijd:</span> <b id="timer">0</b>s
-        </div>
-        <button id="resetBtn" title="Nieuw spel">🙂</button>
-      </div>
-      <div class="right">
-        <div class="toolbar">
-          <div class="group">
-            <label for="difficulty">Moeilijkheid:</label>
-            <select id="difficulty">
-              <option value="beginner">Beginner (9×9, 10)</option>
-              <option value="gevorderd">Gevorderd (16×16, 40)</option>
-              <option value="expert">Expert (16×30, 99)</option>
-              <option value="custom">Aangepast</option>
-            </select>
-          </div>
-          <div id="customPane" class="group hidden">
-            <label>Rijen <input id="rows" type="number" min="5" max="40" value="16" /></label>
-            <label>Kolommen <input id="cols" type="number" min="5" max="40" value="16" /></label>
-            <label>Mijnen <input id="mines" type="number" min="1" value="40" /></label>
-            <button id="applyCustom">Toepassen</button>
-          </div>
-          <button id="flagModeBtn" title="Schakel vlag-modus (voor mobiel)">🚩 Vlag-modus: UIT</button>
-        </div>
-      </div>
-    </header>
+  <header class="site-header">
+    <div class="brand" aria-label="Rvds" title="Rvds">Rvds</div>
+    <nav class="site-nav">
+      <a href="../index.html#apps">Apps</a>
 
-    <div class="board-wrap">
-      <div id="board"></div>
+      <div class="theme-switch" role="group" aria-label="Thema">
+        <button class="theme-btn" data-theme="system" title="Systeem" aria-pressed="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9H3V5Zm-2 11h22v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1Z"/></svg>
+          <span class="visually-hidden">Systeem</span>
+        </button>
+        <button class="theme-btn" data-theme="light" title="Licht" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 4a1 1 0 0 0 1-1V1h-2v2a1 1 0 0 0 1 1Zm0 16a1 1 0 0 0-1 1v2h2v-2a1 1 0 0 0-1-1ZM4 11H1v2h3v-2Zm22 0h-3v2h3v-2ZM5.64 6.05 3.52 3.93l-1.41 1.41 2.12 2.12 1.41-1.41Zm15.25 15.25-2.12-2.12-1.41 1.41 2.12 2.12 1.41-1.41ZM18.36 6.05l1.41-1.41L17.66 2.1l-1.41 1.41 2.11 2.54Zm-12.02 12.9-1.41 1.41 2.12 2.12 1.41-1.41-2.12-2.12ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Z"/></svg>
+          <span class="visually-hidden">Licht</span>
+        </button>
+        <button class="theme-btn" data-theme="dark" title="Donker" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 1 0 9.79 9.79Z"/></svg>
+          <span class="visually-hidden">Donker</span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <div class="app" role="application" aria-label="Minesweeper">
+      <div class="app-header">
+        <div class="left">
+          <div class="stat" aria-live="polite" title="Aantal niet-geflagde mijnen">
+            ⛳ <span>Mijnen:</span> <b id="mineCount">0</b>
+          </div>
+          <div class="stat" aria-live="polite" title="Verstreken tijd in seconden">
+            ⏱️ <span>Tijd:</span> <b id="timer">0</b>s
+          </div>
+          <button id="resetBtn" title="Nieuw spel">🙂</button>
+        </div>
+        <div class="right">
+          <div class="toolbar">
+            <div class="group">
+              <label for="difficulty">Moeilijkheid:</label>
+              <select id="difficulty">
+                <option value="beginner">Beginner (9×9, 10)</option>
+                <option value="gevorderd">Gevorderd (16×16, 40)</option>
+                <option value="expert">Expert (16×30, 99)</option>
+                <option value="custom">Aangepast</option>
+              </select>
+            </div>
+            <div id="customPane" class="group hidden">
+              <label>Rijen <input id="rows" type="number" min="5" max="40" value="16" /></label>
+              <label>Kolommen <input id="cols" type="number" min="5" max="40" value="16" /></label>
+              <label>Mijnen <input id="mines" type="number" min="1" value="40" /></label>
+              <button id="applyCustom">Toepassen</button>
+            </div>
+            <button id="flagModeBtn" title="Schakel vlag-modus (voor mobiel)">🚩 Vlag-modus: UIT</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="board-wrap">
+        <div id="board"></div>
+      </div>
+
+      <div class="footer">Tip: Klik met rechts om te vlaggen. Op mobiel: lang indrukken of gebruik de knop <em>Vlag-modus</em>.</div>
     </div>
+  </main>
 
-    <div class="footer">Tip: Klik met rechts om te vlaggen. Op mobiel: lang indrukken of gebruik de knop <em>Vlag-modus</em>.</div>
-  </div>
+  <footer class="site-footer">
+    <span>© 2025 Rvds</span>
+  </footer>
+
+  <script src="../assets/js/theme.js" defer></script>
 
 <script>
 // --- Minesweeper (Nederlands) -------------------------------------------------
