@@ -7,6 +7,7 @@
   --muted: #607d8b;
   --accent: #1a1a1a;
   --shadow: 0 1px 2px rgba(0,0,0,.08), 0 8px 30px rgba(0,0,0,.08);
+  --hero-gradient: linear-gradient(180deg,#f9fafe,#eef1f7);
 }
 
 *{box-sizing:border-box}
@@ -41,17 +42,13 @@ body{
 .site-nav a:hover {
   background:rgba(63,81,181,0.08);
 }
-.site-nav .gh {
-  display:inline-flex; align-items:center; padding:6px;
-  border-radius:10px; background:var(--panel);
-  border:1px solid var(--border);
-}
+
 
 /* ===== Hero ===== */
 .hero {
   text-align:center;
   padding:80px 24px 40px;
-  background:linear-gradient(180deg,#f9fafe,#eef1f7);
+  background:var(--hero-gradient);
   border-bottom:1px solid var(--border);
 }
 .hero h1 {
@@ -119,14 +116,6 @@ body{
 .empty { text-align:center; color:var(--muted); padding:16px; }
 .hidden { display:none!important; }
 
-/* ===== Footer ===== */
-.site-footer {
-  display:flex; align-items:center; justify-content:center;
-  padding:24px; border-top:1px solid var(--border);
-  background:var(--panel); color:var(--muted);
-  border-radius:16px 16px 0 0;
-}
-
 /* Mobile */
 @media(max-width:600px){
   .toolbar{flex-direction:column;align-items:stretch;}
@@ -145,6 +134,7 @@ body{
   --muted: #9fb0c0;
   --accent: #90caf9;
   --shadow: 0 1px 2px rgba(0,0,0,.35), 0 8px 30px rgba(0,0,0,.35);
+  --hero-gradient: linear-gradient(180deg,#0b1016,#0e1217);
 }
 
 /* Licht thema variabelen wanneer geforceerd */
@@ -156,6 +146,7 @@ body{
   --muted: #607d8b;
   --accent: #1a1a1a;
   --shadow: 0 1px 2px rgba(0,0,0,.08), 0 8px 30px rgba(0,0,0,.08);
+  --hero-gradient: linear-gradient(180deg,#f9fafe,#eef1f7);
 }
 
 /* Systeem-gedreven donker thema */
@@ -168,8 +159,8 @@ body{
     --muted: #9fb0c0;
     --accent: #90caf9;
     --shadow: 0 1px 2px rgba(0,0,0,.35), 0 8px 30px rgba(0,0,0,.35);
+    --hero-gradient: linear-gradient(180deg,#0b1016,#0e1217);
   }
-  .hero{ background:linear-gradient(180deg,#0b1016,#0e1217); }
   .site-nav a:hover { background:rgba(144,202,249,0.12); }
 }
 
@@ -199,20 +190,24 @@ body{
 /* ====== Verbeterde achtergrond voor thema's ====== */
 :root {
   --bg-gradient: linear-gradient(180deg, #f5f7fb, #eef1f7);
+  --hero-gradient: linear-gradient(180deg,#f9fafe,#eef1f7);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --bg-gradient: linear-gradient(180deg, #0b1016, #0e1217);
+    --hero-gradient: linear-gradient(180deg,#0b1016,#0e1217);
   }
 }
 
 :root[data-theme="light"] {
   --bg-gradient: linear-gradient(180deg, #f5f7fb, #eef1f7);
+  --hero-gradient: linear-gradient(180deg,#f9fafe,#eef1f7);
 }
 
 :root[data-theme="dark"] {
   --bg-gradient: linear-gradient(180deg, #0b1016, #0e1217);
+  --hero-gradient: linear-gradient(180deg,#0b1016,#0e1217);
 }
 
 body {
