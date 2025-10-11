@@ -5292,7 +5292,7 @@
 
     function updateSliderValue(slider, nextValue, options = {}) {
       if (!slider) return;
-      const { record = true, fromAnimation = false } = options;
+      const { record = true, fromAnimation = false, skipDraw = false } = options;
       const clamped = clampSliderValue(slider, nextValue);
       if (!Number.isFinite(clamped)) return;
       const changed = Math.abs(slider.value - clamped) > 1e-9;
@@ -5315,7 +5315,9 @@
           }
         }
       }
-      draw();
+      if (!skipDraw) {
+        draw();
+      }
     }
 
     function setSliderSpeed(slider, speed) {
@@ -5388,6 +5390,7 @@
 
     function sliderAnimationTick(timestamp) {
       let hasActive = false;
+      let needsDraw = false;
       for (const slider of state.sliders) {
         if (!slider.animating) {
           continue;
@@ -5427,7 +5430,11 @@
           slider.direction = 1;
         }
         slider.animationValue = next;
-        updateSliderValue(slider, next, { record: false, fromAnimation: true });
+        updateSliderValue(slider, next, { record: false, fromAnimation: true, skipDraw: true });
+        needsDraw = true;
+      }
+      if (needsDraw) {
+        draw();
       }
       if (hasActive) {
         sliderAnimationFrame = requestAnimationFrame(sliderAnimationTick);
