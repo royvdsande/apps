@@ -12,7 +12,7 @@
       "badge": "Tool",
       "dateAdded": "2025-10-07"
     },
-        {
+    {
       "id": "minesweeper",
       "name": "Minesweeper",
       "description": "Minesweeper is een puzzelspel waarin je mijnen moet vermijden.",
@@ -23,7 +23,7 @@
       "badge": "Game",
       "dateAdded": "2025-10-07"
     },
-            {
+    {
       "id": "tetris",
       "name": "Tetris",
       "description": "Tetris is een puzzelspel waarin je vallende blokken passend moet stapelen.",
@@ -34,7 +34,7 @@
       "badge": "Game",
       "dateAdded": "2025-10-07"
     },
-                {
+    {
       "id": "geo",
       "name": "GeoCanvas",
       "description": "Tetris is een puzzelspel waarin je vallende blokken passend moet stapelen.",
@@ -45,7 +45,18 @@
       ],
       "badge": "Tool",
       "dateAdded": "2025-10-07"
+    },
+    {
+      "id": "planner-viewer",
+      "name": "Planner Viewer",
+      "description": "Upload je rooster-afbeelding en scroll vloeiend horizontaal op volledige vensterhoogte.",
+      "path": "apps/apps/planner-viewer.html",
+      "tags": [
+        "utility",
+        "images"
+      ],
+      "badge": "Tool",
+      "dateAdded": "2025-10-07"
     }
-    
   ]
 }
