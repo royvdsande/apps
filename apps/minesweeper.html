@@ -35,6 +35,7 @@
       --ms-cell-shadow: inset 0 2px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(0,0,0,.04);
       --ms-mine-bg: #ffd9dd;
       --ms-hover: rgba(63,81,181,0.15);
+      --header-height: 72px;
     }
 
     @media (prefers-color-scheme: dark){
@@ -70,21 +71,27 @@
     }
 
     *{box-sizing:border-box}
+    html, body{height:100%; overflow:hidden;}
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
       background: var(--bg-gradient);
       color: var(--text);
-      min-height:100vh;
+      min-height:100dvh;
       display:flex;
       flex-direction:column;
+      overflow:hidden;
     }
     main{
       flex:1;
+      min-height:0;
+      height:calc(100dvh - var(--header-height));
+      max-height:calc(100dvh - var(--header-height));
       display:flex;
       align-items:center;
       justify-content:center;
-      padding:24px;
+      padding:clamp(12px, 3vh, 24px);
+      overflow:hidden;
     }
     .app{
       width:min(100%, 900px);
@@ -93,6 +100,11 @@
       border-radius: 16px;
       box-shadow: var(--shadow);
       padding: 14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      max-height:100%;
+      overflow:hidden;
     }
     .app-header{
       display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between;
@@ -118,10 +130,12 @@
     .hidden{display:none}
 
     .board-wrap{
-      margin-top:12px; padding:10px; border:1px solid var(--border); border-radius:14px; background:var(--panel); box-shadow: var(--shadow);
+      margin-top:12px; padding:12px; border:1px solid var(--border); border-radius:14px; background:var(--panel); box-shadow: var(--shadow);
+      display:flex; align-items:center; justify-content:center;
+      flex:1; min-height:0; overflow:hidden;
     }
     #board{
-      display:grid; grid-template-columns: repeat(10, var(--cell-size));
+      display:grid; grid-template-columns: repeat(10, var(--cell-size)); grid-auto-rows: var(--cell-size);
       gap: var(--gap);
       justify-content:center;
       touch-action: manipulation;
@@ -154,7 +168,7 @@
     .n7{ color:#424242 }
     .n8{ color:#222 }
 
-    .footer{ margin-top:10px; text-align:center; color:var(--muted); font-size:12px }
+    .footer{ margin-top:auto; text-align:center; color:var(--muted); font-size:12px }
   </style>
 </head>
 <body>
@@ -258,8 +272,26 @@
   const elMines = document.getElementById('mines');
   const elApplyCustom = document.getElementById('applyCustom');
   const elFlagMode = document.getElementById('flagModeBtn');
+  const rootEl = document.documentElement;
+  const headerEl = document.querySelector('.site-header');
+  const mainEl = document.querySelector('main');
+  const boardWrap = document.querySelector('.board-wrap');
+  const footerEl = document.querySelector('.footer');
 
   function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+  function syncViewportMetrics() {
+    if (headerEl) {
+      rootEl.style.setProperty('--header-height', `${headerEl.offsetHeight}px`);
+    }
+  }
+
+  syncViewportMetrics();
+
+  if ('ResizeObserver' in window && headerEl) {
+    const headerObserver = new ResizeObserver(syncViewportMetrics);
+    headerObserver.observe(headerEl);
+  }
   function idxIn(r, c) { return r >= 0 && r < rows && c >= 0 && c < cols; }
   function neighbors(r, c) {
     const ns = [];
@@ -371,16 +403,20 @@
   }
 
   function updateCellSizing() {
-    const container = document.querySelector('.app');
-    const wrap = document.querySelector('.board-wrap');
-    const availableWidth = Math.max(320, (wrap?.clientWidth || container?.clientWidth || window.innerWidth) - 32);
-    const availableHeight = Math.max(260, window.innerHeight - 280);
-    let size = Math.floor(availableWidth / cols);
-    if (availableHeight > 0) {
-      size = Math.min(size, Math.floor(availableHeight / rows));
-    }
-    size = Math.max(20, Math.min(size, 44));
-    const gap = Math.max(2, Math.round(size * 0.12));
+    if (!boardWrap) return;
+    const wrapStyles = getComputedStyle(boardWrap);
+    const padX = (parseFloat(wrapStyles.paddingLeft) || 0) + (parseFloat(wrapStyles.paddingRight) || 0);
+    const padY = (parseFloat(wrapStyles.paddingTop) || 0) + (parseFloat(wrapStyles.paddingBottom) || 0);
+    const availableWidth = Math.max(200, boardWrap.clientWidth - padX);
+    const rect = boardWrap.getBoundingClientRect();
+    const mainStyles = mainEl ? getComputedStyle(mainEl) : null;
+    const mainBottom = mainStyles ? (parseFloat(mainStyles.paddingBottom) || 0) : 0;
+    const footerHeight = footerEl ? footerEl.offsetHeight + (parseFloat(getComputedStyle(footerEl).marginTop) || 0) : 0;
+    const reserved = Math.max(16, mainBottom + footerHeight + 12);
+    const availableHeight = Math.max(200, window.innerHeight - rect.top - reserved - padY);
+    let size = Math.floor(Math.min(availableWidth / cols, availableHeight / rows));
+    size = clamp(size, 20, 48);
+    const gap = clamp(Math.round(size * 0.12), 2, Math.round(size * 0.2));
     document.documentElement.style.setProperty('--cell-size', `${size}px`);
     document.documentElement.style.setProperty('--gap', `${gap}px`);
   }
@@ -713,9 +749,17 @@
 
   let resizeTimer = null;
   window.addEventListener('resize', () => {
+    syncViewportMetrics();
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(updateCellSizing, 120);
+    resizeTimer = setTimeout(() => {
+      updateCellSizing();
+    }, 120);
   });
+
+  if ('ResizeObserver' in window && boardWrap) {
+    const boardObserver = new ResizeObserver(() => updateCellSizing());
+    boardObserver.observe(boardWrap);
+  }
 
   if (!loadPrefs()) {
     elDiff.value = 'beginner';

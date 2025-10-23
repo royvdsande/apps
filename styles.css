@@ -28,8 +28,8 @@ body{
   background:var(--panel);
   border-bottom:1px solid var(--border);
   box-shadow:var(--shadow);
-  position:sticky; top:0; z-index:50;
-  border-radius:0 0 16px 16px;
+  position:sticky; top:0; left:0; right:0; z-index:50;
+  width:100%;
 }
 .brand {
   font-weight:700; font-size:22px; color:var(--accent);

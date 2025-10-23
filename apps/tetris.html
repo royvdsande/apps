@@ -31,6 +31,7 @@
     --board-bg: #e9eef7;
     --grid: #d3dae6;
     --overlay-bg: rgba(255,255,255,.78);
+    --header-height: 72px;
   }
   @media (prefers-color-scheme: dark){
     :root{
@@ -51,7 +52,7 @@
   }
 
   *{box-sizing:border-box}
-  html,body{height:100%}
+  html,body{height:100%; overflow:hidden;}
 
   /* body gebruikt dezelfde achtergrond als styles.css */
   body{
@@ -59,19 +60,36 @@
     font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
     background: var(--bg-gradient);
     color: var(--text);
+    display:flex;
+    flex-direction:column;
+    min-height:100dvh;
+    overflow:hidden;
   }
 
-  main{ padding:16px; }
+  main{
+    flex:1;
+    min-height:0;
+    height:calc(100dvh - var(--header-height));
+    max-height:calc(100dvh - var(--header-height));
+    display:flex;
+    justify-content:center;
+    padding:clamp(12px, 3vh, 24px);
+    overflow:hidden;
+  }
 
   /* Container voor het spel */
   .app{
     width:min(1024px, 100%);
-    margin:16px auto;
     background:var(--panel);
     border:1px solid var(--border);
     border-radius:16px;
     box-shadow:var(--shadow);
     padding:20px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    max-height:100%;
+    overflow:hidden;
   }
 
   header.gamebar{
@@ -105,21 +123,38 @@
 
   .layout{
     display:grid;
-    grid-template-columns: 1fr 260px;
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 260px);
     gap:16px;
+    flex:1;
+    min-height:0;
+    align-items:stretch;
   }
+
+  .layout > *{min-height:0;}
 
   .panel{
     background:var(--panel);
     border:1px solid var(--border);
     border-radius:14px; padding:10px; box-shadow:var(--shadow);
+    display:flex;
+    flex-direction:column;
   }
   .panel h3{ margin:0 0 8px; font-size:14px; color:var(--muted); letter-spacing:.2px; }
 
-  .board-wrap{ position:relative; }
+  .board-wrap{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+    padding:12px;
+    overflow:hidden;
+  }
   canvas.board{
     display:block; margin:0 auto; background:var(--board-bg);
     border:1px solid var(--border); border-radius:12px;
+    max-width:100%;
+    height:auto;
   }
   .overlay{
     position:absolute; inset:0; display:none; align-items:center; justify-content:center;
@@ -131,7 +166,15 @@
   }
   .overlay small{ display:block; color:var(--muted); font-weight:500; margin-top:6px; }
 
-  .side{ display:flex; flex-direction:column; gap:12px; }
+  .side{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    min-height:0;
+    overflow:auto;
+    padding-right:4px;
+  }
+  .side .panel{ flex-shrink:0; }
   .mini{
     display:block; margin:0 auto; background:var(--panel);
     border:1px solid var(--border); border-radius:10px;
@@ -144,13 +187,14 @@
   .help{ color:var(--muted); font-size:12px; }
 
   /* mobiele knoppen */
-  .mobile{ display:grid; grid-template-columns: repeat(5, 1fr); gap:8px; margin-top:8px; }
+  .mobile{ display:grid; grid-template-columns: repeat(5, 1fr); gap:8px; margin-top:auto; width:100%; max-width:420px; }
   .mobile button{ padding:12px 8px; font-size:16px; }
   @media (min-width: 880px){ .mobile{ display:none; } }
 
   /* Als viewport smaller is, zet zijpaneel onderaan */
   @media (max-width: 900px){
     .layout{ grid-template-columns: 1fr; }
+    .side{ overflow:visible; padding-right:0; }
   }
 </style>
 </head>
