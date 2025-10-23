@@ -9,6 +9,11 @@
   const holdCv = document.getElementById('hold');
   const nextCtx = nextCv?.getContext('2d');
   const holdCtx = holdCv?.getContext('2d');
+  const rootEl = document.documentElement;
+  const headerEl = document.querySelector('.site-header');
+  const boardWrap = boardCv.closest('.board-wrap');
+  const mainEl = document.querySelector('main');
+  const mobileControls = boardWrap?.querySelector('.mobile');
 
   const elScore = document.getElementById('score');
   const elLines = document.getElementById('lines');
@@ -28,7 +33,9 @@
 
   const W = 10;
   const H = 20;
-  const CELL = 28;
+  let cellSize = 28;
+  let previewCellSize = 22;
+  let holdCellSize = 24;
   const PREVIEWS = 3;
   const KEY_REPEAT = { delay: 160, interval: 45 };
 
@@ -74,6 +81,31 @@
   ctx.imageSmoothingEnabled = false;
   if (nextCtx) nextCtx.imageSmoothingEnabled = false;
   if (holdCtx) holdCtx.imageSmoothingEnabled = false;
+
+  function syncViewportMetrics() {
+    if (headerEl) {
+      rootEl.style.setProperty('--header-height', `${headerEl.offsetHeight}px`);
+    }
+  }
+
+  syncViewportMetrics();
+
+  if ('ResizeObserver' in window && headerEl) {
+    const headerObserver = new ResizeObserver(syncViewportMetrics);
+    headerObserver.observe(headerEl);
+  }
+
+  if ('ResizeObserver' in window && boardWrap) {
+    const boardObserver = new ResizeObserver(() => {
+      requestAnimationFrame(() => {
+        updateBoardSizing();
+        draw();
+        drawNext();
+        drawHold();
+      });
+    });
+    boardObserver.observe(boardWrap);
+  }
 
   let board = createBoard();
   let queue = [];
@@ -290,6 +322,65 @@
     dropInterval = Math.max(80, 1000 - (level - 1) * 75);
   }
 
+  function updateBoardSizing() {
+    if (!boardWrap) return;
+    const wrapStyles = getComputedStyle(boardWrap);
+    const padX = (parseFloat(wrapStyles.paddingLeft) || 0) + (parseFloat(wrapStyles.paddingRight) || 0);
+    const padY = (parseFloat(wrapStyles.paddingTop) || 0) + (parseFloat(wrapStyles.paddingBottom) || 0);
+    const wrapWidth = Math.max(160, (boardWrap.clientWidth || (boardCv.parentElement?.clientWidth ?? boardCv.width)) - padX);
+    const rect = boardWrap.getBoundingClientRect();
+    let mobileHeight = 0;
+    if (mobileControls) {
+      const mobileDisplay = getComputedStyle(mobileControls).display;
+      if (mobileDisplay !== 'none') {
+        const mobileStyles = getComputedStyle(mobileControls);
+        mobileHeight = mobileControls.offsetHeight + (parseFloat(mobileStyles.marginTop) || 0) + (parseFloat(mobileStyles.marginBottom) || 0);
+      }
+    }
+    const mainStyles = mainEl ? getComputedStyle(mainEl) : null;
+    const bottomPadding = mainStyles ? (parseFloat(mainStyles.paddingBottom) || 0) : 0;
+    const reserved = Math.max(16, mobileHeight + bottomPadding + 12);
+    const availableHeight = Math.max(240, window.innerHeight - rect.top - reserved - padY);
+    const sizeCandidate = Math.floor(Math.min(wrapWidth / W, availableHeight / H));
+    const newSize = Math.max(16, Math.min(48, sizeCandidate));
+    if (!Number.isFinite(newSize) || newSize <= 0) return;
+    cellSize = newSize;
+    const width = cellSize * W;
+    const height = cellSize * H;
+    if (boardCv.width !== width || boardCv.height !== height) {
+      boardCv.width = width;
+      boardCv.height = height;
+    }
+    boardCv.style.width = `${width}px`;
+    boardCv.style.height = `${height}px`;
+    ctx.imageSmoothingEnabled = false;
+
+    previewCellSize = Math.max(16, Math.min(28, Math.round(cellSize * 0.8)));
+    holdCellSize = Math.max(16, Math.min(32, Math.round(cellSize * 0.9)));
+
+    if (nextCv && nextCtx) {
+      const cols = 4;
+      const rows = 4;
+      const blockWidth = cols * previewCellSize;
+      const blockHeight = rows * previewCellSize;
+      const horizontalPadding = Math.round(previewCellSize * 1.5);
+      const topPadding = Math.round(previewCellSize * 0.75);
+      const bottomPadding = Math.round(previewCellSize * 1.1);
+      const gapY = Math.max(Math.round(previewCellSize * 0.9), Math.round(previewCellSize * 0.6));
+      nextCv.width = blockWidth + horizontalPadding * 2;
+      nextCv.height = topPadding + PREVIEWS * blockHeight + Math.max(0, PREVIEWS - 1) * gapY + bottomPadding;
+      nextCtx.imageSmoothingEnabled = false;
+    }
+
+    if (holdCv && holdCtx) {
+      const padding = Math.round(holdCellSize * 1.5);
+      const dimension = 4 * holdCellSize + padding * 2;
+      holdCv.width = dimension;
+      holdCv.height = dimension;
+      holdCtx.imageSmoothingEnabled = false;
+    }
+  }
+
   function updateStats() {
     elScore.textContent = String(score);
     elLines.textContent = String(lines);
@@ -301,19 +392,19 @@
     const bg = (cs.getPropertyValue('--board-bg') || '#e9eef7').trim();
     const grid = (cs.getPropertyValue('--grid') || '#d3dae6').trim();
     ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W * CELL, H * CELL);
+    ctx.fillRect(0, 0, W * cellSize, H * cellSize);
     ctx.strokeStyle = grid;
     ctx.lineWidth = 1;
     for (let x = 1; x < W; x++) {
       ctx.beginPath();
-      ctx.moveTo(x * CELL + 0.5, 0);
-      ctx.lineTo(x * CELL + 0.5, H * CELL);
+      ctx.moveTo(x * cellSize + 0.5, 0);
+      ctx.lineTo(x * cellSize + 0.5, H * cellSize);
       ctx.stroke();
     }
     for (let y = 1; y < H; y++) {
       ctx.beginPath();
-      ctx.moveTo(0, y * CELL + 0.5);
-      ctx.lineTo(W * CELL, y * CELL + 0.5);
+      ctx.moveTo(0, y * cellSize + 0.5);
+      ctx.lineTo(W * cellSize, y * cellSize + 0.5);
       ctx.stroke();
     }
   }
@@ -354,18 +445,18 @@
     for (let r = 0; r < H; r++) {
       for (let c = 0; c < W; c++) {
         const color = board[r][c];
-        if (color) drawCell(c, r, color, ctx, CELL);
+        if (color) drawCell(c, r, color, ctx, cellSize);
       }
     }
     const ghost = getGhostPiece();
     if (ghost && current && ghost.y !== current.y) {
       ctx.save();
       ctx.globalAlpha = 0.35;
-      renderPiece(ghost, ctx, CELL);
+      renderPiece(ghost, ctx, cellSize);
       ctx.restore();
     }
     if (current) {
-      renderPiece(current, ctx, CELL);
+      renderPiece(current, ctx, cellSize);
     }
   }
 
@@ -387,26 +478,33 @@
   }
 
   function drawNext() {
-    if (!nextCtx) return;
+    if (!nextCtx || !nextCv) return;
     nextCtx.clearRect(0, 0, nextCv.width, nextCv.height);
-    const previewSize = 22;
     const cols = 4;
     const rows = 4;
-    const blockWidth = cols * previewSize;
-    const blockHeight = rows * previewSize;
+    const blockWidth = cols * previewCellSize;
+    const blockHeight = rows * previewCellSize;
+    const horizontalPadding = Math.round(previewCellSize * 1.5);
+    const topPadding = Math.round(previewCellSize * 0.75);
+    const gapY = Math.max(Math.round(previewCellSize * 0.9), Math.round(previewCellSize * 0.6));
+    const offsetCols = horizontalPadding / previewCellSize;
+    let currentY = topPadding;
     queue.slice(0, PREVIEWS).forEach((type, index) => {
       const matrix = SHAPES[type][0];
       const cells = matrixCells(matrix);
-      const offsetX = Math.floor((nextCv.width - blockWidth) / 2 / previewSize);
-      const offsetY = Math.floor((8 + index * (blockHeight + 12)) / previewSize);
+      const offsetRows = currentY / previewCellSize;
       for (const [cx, cy] of cells) {
-        drawCell(offsetX + cx, offsetY + cy, COLORS[type], nextCtx, previewSize);
+        drawCell(offsetCols + cx, offsetRows + cy, COLORS[type], nextCtx, previewCellSize);
+      }
+      currentY += blockHeight;
+      if (index < PREVIEWS - 1) {
+        currentY += gapY;
       }
     });
   }
 
   function drawHold() {
-    drawMini(holdCtx, hold, 24);
+    drawMini(holdCtx, hold, holdCellSize);
   }
 
   function spawn() {
@@ -537,6 +635,7 @@
   }
 
   function reset() {
+    updateBoardSizing();
     board = createBoard();
     queue = [];
     ensureQueue();
@@ -684,7 +783,22 @@
     darkScheme.addListener(draw);
   }
 
-  window.addEventListener('resize', () => draw());
+  let resizeRaf = null;
+  function handleResize() {
+    if (resizeRaf) return;
+    resizeRaf = requestAnimationFrame(() => {
+      resizeRaf = null;
+      syncViewportMetrics();
+      updateBoardSizing();
+      draw();
+      drawNext();
+      drawHold();
+    });
+  }
+
+  window.addEventListener('resize', handleResize);
 
   init();
+
+  handleResize();
 })();
