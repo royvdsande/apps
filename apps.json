@@ -50,7 +50,7 @@
       "id": "planner-viewer",
       "name": "Planner Viewer",
       "description": "Upload je rooster-afbeelding en scroll vloeiend horizontaal op volledige vensterhoogte.",
-      "path": "apps/apps/planner-viewer.html",
+      "path": "apps/planner-viewer.html",
       "tags": [
         "utility",
         "images"
