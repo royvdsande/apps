@@ -3,7 +3,7 @@
     {
       "id": "random-password-generator",
       "name": "Random Password Generator",
-      "description": "Genereer sterke wachtwoorden met geschiedenis en gemakkelijk kopiëren.",
+      "description": "Genereer sterke wachtwoorden met geschiedenis en gemakkelijk kopiëren",
       "path": "apps/codegen",
       "tags": [
         "utility",
@@ -15,7 +15,7 @@
     {
       "id": "minesweeper",
       "name": "Minesweeper",
-      "description": "Minesweeper is een puzzelspel waarin je mijnen moet vermijden.",
+      "description": "Minesweeper is een puzzelspel waarin je mijnen moet vermijden",
       "path": "apps/minesweeper",
       "tags": [
         "game"
@@ -26,7 +26,7 @@
     {
       "id": "tetris",
       "name": "Tetris",
-      "description": "Tetris is een puzzelspel waarin je vallende blokken passend moet stapelen.",
+      "description": "Tetris is een puzzelspel waarin je vallende blokken passend moet stapelen",
       "path": "apps/tetris",
       "tags": [
         "game"
@@ -37,23 +37,11 @@
     {
       "id": "geo",
       "name": "GeoCanvas",
-      "description": "Tetris is een puzzelspel waarin je vallende blokken passend moet stapelen.",
+      "description": "Geef complexe grafieken weer",
       "path": "https://canvas.royvds.nl/",
       "tags": [
         "math",
         "utility"
-      ],
-      "badge": "Tool",
-      "dateAdded": "2025-10-07"
-    },
-    {
-      "id": "planner-viewer",
-      "name": "Planner Viewer",
-      "description": "Upload je rooster-afbeelding en scroll vloeiend horizontaal op volledige vensterhoogte.",
-      "path": "apps/planner-viewer.html",
-      "tags": [
-        "utility",
-        "images"
       ],
       "badge": "Tool",
       "dateAdded": "2025-10-07"
