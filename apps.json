@@ -62,7 +62,7 @@
       "id": "wave-on-a-string",
       "name": "Golf op een koort",
       "description": "Simuleer een golf op een kralenkoort, met dank aan PhET.",
-      "path": "apps/planner-viewer.html",
+      "path": "apps/wave-on-a-string.html",
       "tags": [
         "utility",
         "images"
