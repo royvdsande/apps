@@ -1,39 +1,161 @@
-<!DOCTYPE HTML>
-<!-- saved from url=(0025)http://phet.colorado.edu/ -->
+<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="utf-8"/>
-  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-  <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1"/>
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="phet-sim-level" content="production">
-
-  <!-- metadata for Open Graph protocol -->
-  <meta property="og:title" content="&#8234;Golf op een koord&#8236; 1.1.38"/>
-  <meta property="og:type" content="phet:simulation"/>
-  <meta property="og:url" content="http://phet.colorado.edu/sims/html/wave-on-a-string/latest/wave-on-a-string_nl.html"/>
-  <meta property="og:image" content="http://phet.colorado.edu/sims/html/wave-on-a-string/latest/wave-on-a-string-600.png"/>
-
-  <title>&#8234;Golf op een koord&#8236; 1.1.38</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Golf op een koord</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/wave-on-a-string-modern.css">
 </head>
-<!--
-‪Wave on a String‬ 1.1.38
-Copyright 2002-2025, Regents of the University of Colorado
-PhET Interactive Simulations, University of Colorado Boulder
+<body>
+  <main id="app-shell">
+    <header class="app-header">
+      <div class="title-group">
+        <span class="badge">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3l7.794 4.5v9L12 21l-7.794-4.5v-9L12 3z" stroke="#38bdf8" stroke-width="1.2" fill="rgba(56,189,248,0.12)"/>
+            <circle cx="12" cy="12" r="2.6" fill="#38bdf8"/>
+          </svg>
+          Moderne simulatie
+        </span>
+        <h1>Golf op een koord</h1>
+        <p>Ervaar hoe amplitude, spanning en demping de golfvorm veranderen. De vernieuwde interface plaatst de klassieke simulatie in een eigentijds kader.</p>
+      </div>
+      <div class="app-actions">
+        <button class="action-button" type="button" data-action="reset">Reset simulatie</button>
+        <button class="action-button secondary" type="button" data-action="fullscreen">Volledig scherm</button>
+      </div>
+    </header>
+    <section class="sim-card">
+      <div class="sim-wrapper" id="sim-wrapper">
+        <div class="sim-loader">
+          <div class="spinner"></div>
+          <p>Simulatie wordt geladen...</p>
+        </div>
+      </div>
+      <div class="insights">
+        <article class="insight">
+          <h3>Experimenteer vrij</h3>
+          <p>Gebruik de bediening in de simulatie om amplitude, spanning, demping en de golfbron te verkennen.</p>
+        </article>
+        <article class="insight">
+          <h3>Meet en vergelijk</h3>
+          <p>Schakel hulpmiddelen zoals meetlat en momentopnames in om scenario&#8217;s te analyseren.</p>
+        </article>
+        <article class="insight">
+          <h3>Onderwijs klaar</h3>
+          <p>De moderne omlijsting werkt soepel op laptops, tablets en digiborden.</p>
+        </article>
+      </div>
+    </section>
+    <footer>Credits voor de oorspronkelijke simulatie gaan naar <strong>PhET Interactive Simulations</strong>. Deze versie vernieuwt uitsluitend de gebruikerservaring.</footer>
+  </main>
+  <script type="module">
+    const appShell = document.getElementById('app-shell');
+    const simWrapper = document.getElementById('sim-wrapper');
+    const loader = simWrapper.querySelector('.sim-loader');
 
-This file is licensed under Creative Commons Attribution 4.0
-For alternate source code licensing, see https://github.com/phetsims
-For licenses for third-party software used by this simulation, see below
-For more information, see http://phet.colorado.edu/en/licensing/html
+    const moveSimIntoWrapper = () => {
+      const movable = Array.from(document.body.children).filter(node => {
+        if (node === appShell || node === simWrapper) return false;
+        if (node.tagName === 'SCRIPT') return false;
+        return !node.classList.contains('sim-loader');
+      });
 
-The PhET name and PhET logo are registered trademarks of The Regents of the
-University of Colorado. Permission is granted to use the PhET name and PhET logo
-only for attribution purposes. Use of the PhET name and/or PhET logo for promotional,
-marketing, or advertising purposes requires a separate license agreement from the
-University of Colorado. Contact phethelp@colorado.edu regarding licensing.
--->
-<body bgcolor="black">
-<script type="text/javascript">
+      if (!movable.length) return false;
+      movable.forEach(node => {
+        simWrapper.appendChild(node);
+        node.classList.add('sim-root');
+      });
+      simWrapper.classList.add('loaded');
+      loader?.remove();
+      return true;
+    };
+
+    const observer = new MutationObserver(() => {
+      if (moveSimIntoWrapper()) {
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true });
+    moveSimIntoWrapper();
+
+    const removeBranding = () => {
+      const selectors = [
+        'a[href*="phet.colorado.edu"]',
+        'a[href*="phetsims"]',
+        '[class*="phet"]',
+        '[id*="phet"]',
+        'img[alt*="phet" i]',
+        'img[src*="phet" i]'
+      ];
+
+      selectors.forEach(selector => {
+        simWrapper.querySelectorAll(selector).forEach(el => {
+          el.remove();
+        });
+      });
+
+      simWrapper.querySelectorAll('*').forEach(el => {
+        if (el.childElementCount === 0 && /\bPhET\b/i.test(el.textContent)) {
+          el.remove();
+        } else {
+          const aria = el.getAttribute?.('aria-label');
+          if (aria && /\bPhET\b/i.test(aria)) {
+            const cleaned = aria.replace(/\bPhET\b/gi, '').trim();
+            el.setAttribute('aria-label', cleaned || 'Simulatie');
+          }
+          const title = el.getAttribute?.('title');
+          if (title && /\bPhET\b/i.test(title)) {
+            const cleanedTitle = title.replace(/\bPhET\b/gi, '').trim();
+            if (cleanedTitle) {
+              el.setAttribute('title', cleanedTitle);
+            } else {
+              el.removeAttribute('title');
+            }
+          }
+        }
+      });
+    };
+
+    const brandingObserver = new MutationObserver(removeBranding);
+    brandingObserver.observe(simWrapper, { childList: true, subtree: true });
+    removeBranding();
+
+    const resetButton = document.querySelector('[data-action="reset"]');
+    const fullscreenButton = document.querySelector('[data-action="fullscreen"]');
+
+    const getSim = () => window.phet?.joist?.sim ?? null;
+
+    resetButton?.addEventListener('click', () => {
+      try {
+        const sim = getSim();
+        sim?.resetAll?.();
+      } catch (error) {
+        console.warn('Reset mislukt', error);
+      }
+    });
+
+    fullscreenButton?.addEventListener('click', () => {
+      const target = simWrapper.querySelector('.sim-root');
+      if (!target) return;
+      if (!document.fullscreenElement) {
+        target.requestFullscreen?.().catch(() => {});
+      } else {
+        document.exitFullscreen?.();
+      }
+    });
+
+    document.addEventListener('keydown', event => {
+      if ((event.key === 'Enter' && event.metaKey) || event.key === 'F11') {
+        event.preventDefault();
+        fullscreenButton?.click();
+      }
+    });
+  </script>
+  <script type="text/javascript">
   window.phet = {};
   window.phet.chipper = {};
   window.phet.chipper.project = 'wave-on-a-string';
