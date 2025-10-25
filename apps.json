@@ -57,6 +57,18 @@
       ],
       "badge": "Tool",
       "dateAdded": "2025-10-07"
+    },
+        {
+      "id": "wave-on-a-string",
+      "name": "Golf op een koort",
+      "description": "Simuleer een golf op een kralenkoort, met dank aan PhET.",
+      "path": "apps/planner-viewer.html",
+      "tags": [
+        "utility",
+        "images"
+      ],
+      "badge": "Tool",
+      "dateAdded": "2025-10-07"
     }
   ]
 }
