@@ -10,29 +10,7 @@
         "security"
       ],
       "badge": "Tool",
-      "dateAdded": "2025-10-07"
-    },
-    {
-      "id": "minesweeper",
-      "name": "Minesweeper",
-      "description": "Minesweeper is een puzzelspel waarin je mijnen moet vermijden",
-      "path": "apps/minesweeper",
-      "tags": [
-        "game"
-      ],
-      "badge": "Game",
-      "dateAdded": "2025-10-07"
-    },
-    {
-      "id": "tetris",
-      "name": "Tetris",
-      "description": "Tetris is een puzzelspel waarin je vallende blokken passend moet stapelen",
-      "path": "apps/tetris",
-      "tags": [
-        "game"
-      ],
-      "badge": "Game",
-      "dateAdded": "2025-10-07"
+      "dateAdded": "-"
     },
     {
       "id": "geo",
@@ -44,7 +22,18 @@
         "utility"
       ],
       "badge": "Tool",
-      "dateAdded": "2025-10-07"
+      "dateAdded": "-"
+    },
+        {
+      "id": "binas",
+      "name": "Digitale Binas",
+      "description": "Handige digitale inhoudsopgave voor de BiNaS",
+      "path": "https://binas.royvds.nl",
+      "tags": [
+        "utility"
+      ],
+      "badge": "Tool",
+      "dateAdded": "-"
     }
   ]
 }
