@@ -54,20 +54,20 @@
 
   <main>
     <section class="hero">
-      <h1>Mijn Web‑apps</h1>
-      <p>Een strakke en snelle showcase van mijn HTML-projecten. Klik, ontdek en speel.</p>
-      <div class="actions">
-<!--        <a class="btn primary" href="#apps">Bekijk apps</a>-->
-<!--        <a class="btn ghost" href="add-app.html">Nieuwe app toevoegen</a>-->
+      <p class="eyebrow">Rvds</p>
+      <h1>Digitale speelplaats</h1>
+      <p>Een rustige verzameling van mijn favoriete web-experimenten en tools.</p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#apps">Bekijk de apps</a>
+        <a class="btn ghost" href="add-app.html">App toevoegen</a>
       </div>
     </section>
 
     <section id="apps" class="apps-section" aria-label="App overzicht">
       <div class="toolbar">
         <div class="search">
-          <input id="searchInput" type="search" placeholder="Zoek op naam, tags…" aria-label="Zoeken" />
+          <input id="searchInput" type="search" placeholder="Zoek op naam of beschrijving" aria-label="Zoeken" />
         </div>
-        <div id="tagsContainer" class="tags" aria-label="Filter op tags"></div>
       </div>
 
       <div id="appsGrid" class="grid" role="list" aria-busy="true"></div>
@@ -75,13 +75,11 @@
       <template id="cardTemplate">
         <article class="card" role="listitem">
           <div class="card-top">
-            <div class="badge"></div>
             <h3 class="title"></h3>
             <p class="desc"></p>
           </div>
           <div class="card-bottom">
             <div class="meta">
-              <span class="tags"></span>
               <span class="date"></span>
             </div>
             <div class="buttons">
