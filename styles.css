@@ -19,6 +19,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+*::selection,
+*::-moz-selection {
+  background: transparent;
+  color: inherit;
+}
+
 .page {
   max-width: 900px;
   margin: 0 auto;
