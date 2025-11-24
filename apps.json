@@ -4,7 +4,7 @@
       "id": "random-password-generator",
       "name": "Random Password Generator",
       "description": "Genereer sterke wachtwoorden met geschiedenis en gemakkelijk kopiëren",
-      "path": "apps/codegen",
+      "path": "https://codegen.royvds.nl",
       "tags": [
         "utility",
         "security"
@@ -16,7 +16,7 @@
       "id": "geo",
       "name": "GeoCanvas",
       "description": "Geef complexe grafieken weer",
-      "path": "https://canvas.royvds.nl/",
+      "path": "https://canvas.royvds.nl",
       "tags": [
         "math",
         "utility"
