@@ -4,96 +4,39 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Rvds • Apps</title>
-  <meta name="description" content="Rvds – Een mooie showcase van mijn web-apps en HTML-projecten." />
+  <meta name="description" content="Rvds – apps en tools." />
   <link rel="stylesheet" href="styles.css" />
-
-  <script>
-    // Vroege thema-toepassing om FOUC te voorkomen
-    (function() {
-      try {
-        var pref = localStorage.getItem('theme-preference') || 'system';
-        var root = document.documentElement;
-        if (pref === 'light') {
-          root.setAttribute('data-theme','light');
-        } else if (pref === 'dark') {
-          root.setAttribute('data-theme','dark');
-        } else {
-          root.removeAttribute('data-theme');
-        }
-      } catch(e) { /* noop */ }
-    })();
-  </script>
-
 </head>
 <body>
-  <header class="site-header">
-    <div class="brand" aria-label="Rvds" title="Rvds">Rvds</div>
-    <nav class="site-nav">
-      <a href="#apps">Apps</a>
+  <main class="page">
+    <header class="masthead">
+      <div class="brand">Rvds</div>
+      <p class="intro">Apps en kleine tools, simpel gepresenteerd.</p>
+    </header>
 
-      <div class="theme-switch" role="group" aria-label="Thema">
-        <button class="theme-btn" data-theme="system" title="Systeem" aria-pressed="true">
-          <!-- laptop icon -->
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9H3V5Zm-2 11h22v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1Z"/></svg>
-          <span class="visually-hidden">Systeem</span>
-        </button>
-        <button class="theme-btn" data-theme="light" title="Licht" aria-pressed="false">
-          <!-- sun icon -->
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 4a1 1 0 0 0 1-1V1h-2v2a1 1 0 0 0 1 1Zm0 16a1 1 0 0 0-1 1v2h2v-2a1 1 0 0 0-1-1ZM4 11H1v2h3v-2Zm22 0h-3v2h3v-2ZM5.64 6.05 3.52 3.93l-1.41 1.41 2.12 2.12 1.41-1.41Zm15.25 15.25-2.12-2.12-1.41 1.41 2.12 2.12 1.41-1.41ZM18.36 6.05l1.41-1.41L17.66 2.1l-1.41 1.41 2.11 2.54Zm-12.02 12.9-1.41 1.41 2.12 2.12 1.41-1.41-2.12-2.12ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Z"/></svg>
-          <span class="visually-hidden">Licht</span>
-        </button>
-        <button class="theme-btn" data-theme="dark" title="Donker" aria-pressed="false">
-          <!-- moon icon -->
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 1 0 9.79 9.79Z"/></svg>
-          <span class="visually-hidden">Donker</span>
-        </button>
+    <section class="apps" aria-label="Apps">
+      <div class="apps-bar">
+        <h2>Apps</h2>
+        <label class="search" for="searchInput">
+          <input id="searchInput" type="search" placeholder="Zoek op naam of beschrijving" aria-label="Zoek apps" />
+        </label>
       </div>
 
-    </nav>
-  </header>
-
-  <main>
-    <section class="hero">
-      <p class="eyebrow">Rvds</p>
-      <h1>Digitale speelplaats</h1>
-      <p>Een rustige verzameling van mijn favoriete web-experimenten en tools.</p>
-      <div class="hero-actions">
-        <a class="btn primary" href="#apps">Bekijk de apps</a>
-        <a class="btn ghost" href="add-app.html">App toevoegen</a>
-      </div>
-    </section>
-
-    <section id="apps" class="apps-section" aria-label="App overzicht">
-      <div class="toolbar">
-        <div class="search">
-          <input id="searchInput" type="search" placeholder="Zoek op naam of beschrijving" aria-label="Zoeken" />
-        </div>
-      </div>
-
-      <div id="appsGrid" class="grid" role="list" aria-busy="true"></div>
-
-      <template id="cardTemplate">
-        <article class="card" role="listitem">
-          <div class="card-top">
-            <h3 class="title"></h3>
-            <p class="desc"></p>
-          </div>
-          <div class="card-bottom">
-            <div class="meta">
-              <span class="date"></span>
-            </div>
-            <div class="buttons">
-              <a class="btn small primary" target="_blank" rel="noopener">Openen</a>
-            </div>
-          </div>
-        </article>
-      </template>
-
-      <div id="emptyState" class="empty hidden">Geen apps gevonden. Pas je filter aan.</div>
+      <div id="status" class="status">Bezig met laden…</div>
+      <div id="appsGrid" class="apps-grid" role="list"></div>
     </section>
   </main>
 
-  <script src="assets/js/theme.js" defer></script>
+  <template id="cardTemplate">
+    <article class="app-card" role="listitem">
+      <div class="app-text">
+        <h3 class="app-title"></h3>
+        <p class="app-desc"></p>
+      </div>
+      <a class="app-button" target="_blank" rel="noopener noreferrer">Open</a>
+    </article>
+  </template>
+
   <script src="assets/js/main.js" defer></script>
 </body>
 </html>
