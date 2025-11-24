@@ -1,8 +1,8 @@
 {
   "apps": [
     {
-      "id": "random-password-generator",
-      "name": "Random Password Generator",
+      "id": "password-generator",
+      "name": "Password Generator",
       "description": "Genereer sterke wachtwoorden met geschiedenis en gemakkelijk kopiëren",
       "path": "https://codegen.royvds.nl",
       "tags": [
