@@ -24,6 +24,18 @@
       "badge": "Tool",
       "dateAdded": "-"
     },
+    {
+      "id": "ai",
+      "name": "ChadGPT",
+      "description": "Gebruik meerde llm's in één chat",
+      "path": "https://ai.royvds.nl",
+      "tags": [
+        "math",
+        "utility"
+      ],
+      "badge": "Tool",
+      "dateAdded": "-"
+    },
         {
       "id": "binas",
       "name": "Digitale Binas",
