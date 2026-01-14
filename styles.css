@@ -19,10 +19,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-*::selection,
-*::-moz-selection {
-  background: transparent;
-  color: inherit;
+:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
 }
 
 .page {
