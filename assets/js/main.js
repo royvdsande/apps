@@ -59,4 +59,12 @@ async function loadApps() {
 
 els.search?.addEventListener('input', filterApps);
 
+document.addEventListener('keydown', (e) => {
+  const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
+  if ((e.key === '/' && !isInput) || ((e.metaKey || e.ctrlKey) && e.key === 'k')) {
+    e.preventDefault();
+    els.search?.focus();
+  }
+});
+
 loadApps();
