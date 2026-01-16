@@ -111,6 +111,22 @@ body {
   font-size: 14px;
 }
 
+.app-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.tag {
+  font-size: 12px;
+  padding: 2px 8px;
+  background: var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-weight: 500;
+}
+
 .app-button {
   display: inline-flex;
   align-items: center;

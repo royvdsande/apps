@@ -23,6 +23,18 @@ function render(apps) {
     node.querySelector('.app-title').textContent = app.name || 'Naam ontbreekt';
     node.querySelector('.app-desc').textContent = app.description || 'Geen beschrijving.';
 
+    const tagsContainer = node.querySelector('.app-tags');
+    if (app.tags && Array.isArray(app.tags) && app.tags.length > 0) {
+      app.tags.forEach((tag) => {
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.textContent = tag;
+        tagsContainer.appendChild(span);
+      });
+    } else {
+      tagsContainer.remove();
+    }
+
     const button = node.querySelector('.app-button');
     button.href = app.path || '#';
     button.setAttribute('aria-label', `Open ${app.name || 'app'}`);
