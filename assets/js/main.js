@@ -12,11 +12,10 @@ function render(apps) {
 
   if (!apps.length) {
     els.status.textContent = 'Geen apps gevonden.';
-    els.status.hidden = false;
-    return;
+  } else {
+    els.status.textContent = `${apps.length} app${apps.length === 1 ? '' : 's'}`;
   }
-
-  els.status.hidden = true;
+  els.status.hidden = false;
 
   apps.forEach((app) => {
     const node = els.template.content.cloneNode(true);
