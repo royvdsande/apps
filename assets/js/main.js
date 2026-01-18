@@ -3,6 +3,7 @@ const els = {
   template: document.getElementById('cardTemplate'),
   status: document.getElementById('status'),
   search: document.getElementById('searchInput'),
+  announcer: document.getElementById('announcer'),
 };
 
 let APPS = [];
@@ -13,10 +14,14 @@ function render(apps) {
   if (!apps.length) {
     els.status.textContent = 'Geen apps gevonden.';
     els.status.hidden = false;
+    if (els.announcer) els.announcer.textContent = '';
     return;
   }
 
   els.status.hidden = true;
+  if (els.announcer) {
+    els.announcer.textContent = `${apps.length} ${apps.length === 1 ? 'app' : 'apps'} gevonden`;
+  }
 
   apps.forEach((app) => {
     const node = els.template.content.cloneNode(true);
