@@ -70,13 +70,34 @@ body {
   margin-bottom: 16px;
 }
 
+.search {
+  position: relative;
+}
+
 .search input {
-  padding: 10px 12px;
+  padding: 10px 36px 10px 12px;
   border-radius: 10px;
   border: 1px solid var(--border);
   min-width: 200px;
   background: #f8f9fb;
   color: var(--text);
+}
+
+.search kbd {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: #fff;
+  color: var(--muted);
+  box-shadow: 0 1px 0 var(--border);
 }
 
 .status {
@@ -134,4 +155,5 @@ body {
   .app-card { flex-direction: column; align-items: flex-start; }
   .app-button { width: 100%; text-align: center; }
   .search input { width: 100%; }
+  .search kbd { display: none; }
 }
