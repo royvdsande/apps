@@ -17,9 +17,10 @@
     <section class="apps" aria-label="Apps">
       <div class="apps-bar">
         <h2>Apps</h2>
-        <label class="search" for="searchInput">
-          <input id="searchInput" type="search" placeholder="Zoek naar een app (/)" aria-label="Zoek apps" />
-        </label>
+        <div class="search-wrapper">
+          <input id="searchInput" type="search" placeholder="Zoek naar een app..." aria-label="Zoek apps" aria-keyshortcuts="/" />
+          <kbd class="search-shortcut" aria-hidden="true">/</kbd>
+        </div>
       </div>
 
       <div id="status" class="status" aria-live="polite">Bezig met laden…</div>
