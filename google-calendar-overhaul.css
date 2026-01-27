@@ -1,0 +1,162 @@
+/*
+ * Google Calendar Overhaul - Professional / Apple-like Theme
+ *
+ * Instructions:
+ * Install the "Stylish" or "Stylus" browser extension.
+ * Create a new style for "calendar.google.com".
+ * Paste this CSS into the style editor.
+ */
+
+:root {
+  /* Apple / Professional Design Tokens */
+  --apple-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --apple-blue: #007AFF;
+  --apple-blue-hover: #0062cc;
+  --apple-gray-bg: #F5F5F7;
+  --apple-white: #FFFFFF;
+  --apple-text: #1D1D1F;
+  --apple-text-secondary: #86868B;
+  --apple-border: #D2D2D7;
+  --apple-border-radius: 6px;
+  --apple-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  /* Override Google Material 3 (GM3) Tokens found in widgets */
+  /* Colors */
+  --gm3-sys-color-primary: var(--apple-blue) !important;
+  --gm3-sys-color-on-primary: #ffffff !important;
+  --gm3-sys-color-primary-container: rgba(0, 122, 255, 0.1) !important;
+  --gm3-sys-color-on-primary-container: var(--apple-blue) !important;
+
+  --gm3-sys-color-secondary: var(--apple-text-secondary) !important;
+  --gm3-sys-color-on-secondary: #ffffff !important;
+  --gm3-sys-color-secondary-container: #e5e5ea !important;
+  --gm3-sys-color-on-secondary-container: var(--apple-text) !important;
+
+  --gm3-sys-color-surface: var(--apple-white) !important;
+  --gm3-sys-color-on-surface: var(--apple-text) !important;
+  --gm3-sys-color-surface-variant: var(--apple-gray-bg) !important;
+  --gm3-sys-color-on-surface-variant: var(--apple-text-secondary) !important;
+
+  --gm3-sys-color-outline: var(--apple-border) !important;
+  --gm3-sys-color-outline-variant: #e5e5ea !important;
+
+  --gm3-sys-color-background: var(--apple-white) !important;
+  --gm3-sys-color-on-background: var(--apple-text) !important;
+
+  /* Shapes - Flattening the "Pill" look */
+  --gm3-sys-shape-corner-small: var(--apple-border-radius) !important;
+  --gm3-sys-shape-corner-medium: var(--apple-border-radius) !important;
+  --gm3-sys-shape-corner-large: var(--apple-border-radius) !important;
+  --gm3-sys-shape-corner-extra-large: var(--apple-border-radius) !important;
+  --gm3-sys-shape-corner-full: var(--apple-border-radius) !important; /* Force pills to be rounded rects */
+}
+
+/* Typography Overrides */
+body, button, input, textarea, select {
+  font-family: var(--apple-font) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* General Layout & Backgrounds */
+body {
+  background-color: var(--apple-white) !important;
+  color: var(--apple-text) !important;
+}
+
+/* Button Styling Overrides */
+/* Targets generic buttons and specific classes observed in widgets like .NQV3m (Meer van Google button) */
+button,
+[role="button"],
+.NQV3m,
+.UojMw,
+.gAlnEe,
+.O52YZb,
+.SPoQac {
+  border-radius: var(--apple-border-radius) !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  box-shadow: none !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Primary Buttons */
+.NQV3m {
+  border: 1px solid var(--apple-border) !important;
+  background-color: var(--apple-white) !important;
+  color: var(--apple-blue) !important;
+}
+
+.NQV3m:hover {
+  background-color: var(--apple-gray-bg) !important;
+}
+
+/* Remove "Material" Ripple effects if possible by hiding overflow or pseudo-elements */
+.NQV3m::before,
+.NQV3m::after {
+  display: none !important;
+}
+
+/* Header / Top Bar (Generic targeting as main structure is unknown) */
+header,
+[role="banner"] {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid var(--apple-border) !important;
+  box-shadow: none !important;
+}
+
+/* Calendar Grid (Generic targeting) */
+[role="grid"] {
+  border-color: var(--apple-border) !important;
+}
+
+/* Events (Generic targeting based on common structure) */
+[data-eventid] {
+  border-radius: 4px !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+  border: 1px solid rgba(0,0,0,0.05) !important;
+}
+
+/* Mini Calendar / Datepicker */
+[role="grid"][aria-label*="month"] {
+  /* Cleaner look for mini calendar */
+}
+
+/* Sidebar */
+[role="navigation"] {
+  background-color: var(--apple-gray-bg) !important;
+  border-right: 1px solid var(--apple-border) !important;
+}
+
+/* Remove excessive rounded corners on "Active" states in sidebar (Material You pills) */
+[role="navigation"] .gm3-sys-shape-corner-full,
+[role="navigation"] [class*="rounded"] {
+  border-radius: var(--apple-border-radius) !important;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C1C1C1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A8A8A8;
+}
+
+/* Selection Color */
+::selection {
+  background-color: rgba(0, 122, 255, 0.2) !important;
+  color: inherit !important;
+}
