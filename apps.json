@@ -35,17 +35,6 @@
       ],
       "badge": "Tool",
       "dateAdded": "-"
-    },
-        {
-      "id": "binas",
-      "name": "Digitale Binas",
-      "description": "Handige digitale inhoudsopgave voor de BiNaS",
-      "path": "https://binas.royvds.nl",
-      "tags": [
-        "utility"
-      ],
-      "badge": "Tool",
-      "dateAdded": "-"
     }
   ]
 }
