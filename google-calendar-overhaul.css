@@ -9,7 +9,6 @@
 
 :root {
   /* Apple / Professional Design Tokens */
-  --apple-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --apple-blue: #007AFF;
   --apple-blue-hover: #0062cc;
   --apple-gray-bg: #F5F5F7;
@@ -49,13 +48,6 @@
   --gm3-sys-shape-corner-large: var(--apple-border-radius) !important;
   --gm3-sys-shape-corner-extra-large: var(--apple-border-radius) !important;
   --gm3-sys-shape-corner-full: var(--apple-border-radius) !important; /* Force pills to be rounded rects */
-}
-
-/* Typography Overrides */
-body, button, input, textarea, select {
-  font-family: var(--apple-font) !important;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 /* General Layout & Backgrounds */
@@ -110,13 +102,6 @@ header,
 /* Calendar Grid (Generic targeting) */
 [role="grid"] {
   border-color: var(--apple-border) !important;
-}
-
-/* Events (Generic targeting based on common structure) */
-[data-eventid] {
-  border-radius: 4px !important;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
-  border: none !important;
 }
 
 /* Mini Calendar / Datepicker */
