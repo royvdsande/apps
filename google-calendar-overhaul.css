@@ -17,7 +17,7 @@
   --apple-text-secondary: #86868B;
   --apple-border: #D2D2D7;
   --apple-border-radius: 6px;
-  --apple-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --apple-shadow: 0 4px 12px rgba(0, 0, 0, 0.12); /* Slightly stronger shadow for popups */
 
   /* Override Google Material 3 (GM3) Tokens found in widgets */
   /* Colors */
@@ -42,6 +42,10 @@
   --gm3-sys-color-background: var(--apple-white) !important;
   --gm3-sys-color-on-background: var(--apple-text) !important;
 
+  --gm3-sys-color-surface-container: var(--apple-white) !important;
+  --gm3-sys-color-surface-container-high: var(--apple-white) !important;
+  --gm3-sys-color-surface-container-highest: var(--apple-gray-bg) !important;
+
   /* Shapes - Flattening the "Pill" look */
   --gm3-sys-shape-corner-small: var(--apple-border-radius) !important;
   --gm3-sys-shape-corner-medium: var(--apple-border-radius) !important;
@@ -60,6 +64,7 @@ body {
 /* Targets generic buttons and specific classes observed in widgets like .NQV3m (Meer van Google button) */
 button,
 [role="button"],
+div[role="button"],
 .NQV3m,
 .UojMw,
 .gAlnEe,
@@ -104,11 +109,6 @@ header,
   border-color: var(--apple-border) !important;
 }
 
-/* Mini Calendar / Datepicker */
-[role="grid"][aria-label*="month"] {
-  /* Cleaner look for mini calendar */
-}
-
 /* Sidebar */
 [role="navigation"] {
   background-color: var(--apple-gray-bg) !important;
@@ -119,6 +119,34 @@ header,
 [role="navigation"] .gm3-sys-shape-corner-full,
 [role="navigation"] [class*="rounded"] {
   border-radius: var(--apple-border-radius) !important;
+}
+
+/* Aggressive Container Resets for Dialogs, Menus, and Popups */
+[role="dialog"],
+[role="alertdialog"],
+[role="menu"],
+[role="listbox"],
+[class*="dialog"],
+.JZFjpd, /* Observed class for popups */
+.EHzcec  /* Observed class for widgets */
+{
+  border-radius: 8px !important;
+  box-shadow: var(--apple-shadow) !important;
+  background-color: var(--apple-white) !important;
+  border: 1px solid var(--apple-border) !important;
+}
+
+/* Main View Container Reset */
+/* Attempts to target the large rounded container next to sidebar */
+[role="main"] > div,
+.tSk5Xd,
+.kFwPee {
+  border-radius: 8px !important; /* Reduce from 28px */
+}
+
+/* Checkboxes - attempt to normalize */
+[role="checkbox"] [class*="box"] {
+  border-radius: 4px !important;
 }
 
 /* Scrollbars */
